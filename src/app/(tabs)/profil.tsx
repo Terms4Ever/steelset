@@ -7,6 +7,7 @@ import { Card, Screen, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { workoutsToCsv } from '@/lib/csv';
 import { exportCsv } from '@/lib/export';
+import { requestHealth } from '@/lib/health';
 import { fmtNum } from '@/lib/format';
 import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
 
@@ -53,6 +54,11 @@ export default function Profil() {
       { text: 'Zrušit', style: 'cancel' },
       { text: 'Smazat', style: 'destructive', onPress: () => wipeAll() },
     ]);
+  };
+
+  const onConnectHealth = async () => {
+    await requestHealth();
+    setSetting('healthEnabled', true);
   };
 
   return (
@@ -120,12 +126,26 @@ export default function Profil() {
         </Row>
       </Section>
 
+      {Platform.OS === 'ios' && (
+        <Section title="APPLE HEALTH">
+          {settings.healthEnabled ? (
+            <Row icon="heart" label="Apple Health" last>
+              <Txt size={type.label} weight="semibold" color={palette.accent}>
+                Připojeno
+              </Txt>
+            </Row>
+          ) : (
+            <RowButton icon="heart-outline" label="Připojit Apple Health" last onPress={onConnectHealth} />
+          )}
+        </Section>
+      )}
+
       <Section title="DATA">
         <RowButton icon="download-outline" label="Export dat (CSV)" onPress={onExport} />
         <RowButton icon="trash-outline" label="Smazat všechna data" danger last onPress={onWipe} />
       </Section>
 
-      <Section title="SETLY">
+      <Section title="LIFTBOOK">
         <Row icon="star-outline" label="Liftbook Pro" last>
           <Txt size={type.label} weight="semibold" color={palette.accent}>
             Lifetime

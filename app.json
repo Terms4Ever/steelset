@@ -52,7 +52,19 @@
       ],
       "expo-sharing",
       "expo-apple-authentication",
-      ["react-native-cloud-storage", { "iCloudContainerEnvironment": "Production" }]
+      [
+        "react-native-cloud-storage",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ],
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "Liftbook čte tep z hodinek a váhu z Apple Health, aby je přiřadil k tvým tréninkům.",
+          "NSHealthUpdateUsageDescription": "Liftbook zapisuje dokončené tréninky do Apple Health."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": false,
