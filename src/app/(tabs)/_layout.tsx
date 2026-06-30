@@ -3,6 +3,7 @@ import { Tabs } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { MiniWorkoutBar } from '@/components/MiniWorkoutBar';
 import { Txt } from '@/components/ui';
 import { palette, space } from '@/constants/theme';
 
@@ -16,15 +17,17 @@ const TABS: Record<string, { label: string; icon: keyof typeof Ionicons.glyphMap
 function TabBar({ state, navigation }: { state: any; navigation: any }) {
   const insets = useSafeAreaInsets();
   return (
-    <View
-      style={{
-        flexDirection: 'row',
-        backgroundColor: palette.surface,
-        borderTopWidth: 1,
-        borderTopColor: palette.hairline,
-        paddingTop: 10,
-        paddingBottom: Math.max(insets.bottom, 12),
-      }}>
+    <View>
+      <MiniWorkoutBar />
+      <View
+        style={{
+          flexDirection: 'row',
+          backgroundColor: palette.surface,
+          borderTopWidth: 1,
+          borderTopColor: palette.hairline,
+          paddingTop: 10,
+          paddingBottom: Math.max(insets.bottom, 12),
+        }}>
       {state.routes.map((route: any, i: number) => {
         const cfg = TABS[route.name];
         if (!cfg) return null;
@@ -45,6 +48,7 @@ function TabBar({ state, navigation }: { state: any; navigation: any }) {
           </Pressable>
         );
       })}
+      </View>
     </View>
   );
 }

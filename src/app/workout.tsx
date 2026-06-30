@@ -38,6 +38,10 @@ export default function Workout() {
 
   const active = useMemo(() => activeWorkout({ workouts, activeWorkoutId: activeId }), [workouts, activeId]);
   const exById = useMemo(() => exByIdSel({ customExercises: custom }), [custom]);
+  const showsW = (exId: string) => {
+    const t = exById[exId]?.tracking;
+    return t === undefined || t === 'weight_reps' || t === 'weighted_bw' || t === 'distance_time';
+  };
 
   const [, setTick] = useState(0);
   const [focus, setFocus] = useState<Focus>(null);
@@ -144,13 +148,16 @@ export default function Workout() {
   };
   const next = () => {
     if (!focus) return;
+    const le = active.exercises[focus.ex];
     if (focus.field === 'weight') return focusCell(focus.ex, focus.set, 'reps');
     // move to next undone set in same exercise, else next exercise
-    const le = active.exercises[focus.ex];
     const ns = le.sets.findIndex((s, i) => i > focus.set && !s.done);
-    if (ns !== -1) return focusCell(focus.ex, ns, 'weight');
+    if (ns !== -1) return focusCell(focus.ex, ns, showsW(le.exerciseId) ? 'weight' : 'reps');
     const ne = active.exercises.findIndex((x, i) => i > focus.ex && x.sets.some((s) => !s.done));
-    if (ne !== -1) return focusCell(ne, active.exercises[ne].sets.findIndex((s) => !s.done), 'weight');
+    if (ne !== -1) {
+      const nx = active.exercises[ne];
+      return focusCell(ne, nx.sets.findIndex((s) => !s.done), showsW(nx.exerciseId) ? 'weight' : 'reps');
+    }
     setFocus(null);
   };
 
@@ -160,24 +167,25 @@ export default function Workout() {
       haptic.tap();
       return toggleSetDone(ex, set);
     }
-    if (!s.weight || !s.reps) {
-      haptic.warning();
-      return focusCell(ex, set, !s.weight ? 'weight' : 'reps');
-    }
     const exId = active.exercises[ex].exerciseId;
-    const wasPR = isPR(workouts, exId, s.weight, s.reps);
+    const showW = showsW(exId);
+    if ((showW && (!s.weight || !s.reps)) || (!showW && !s.reps)) {
+      haptic.warning();
+      return focusCell(ex, set, showW && !s.weight ? 'weight' : 'reps');
+    }
+    const wasPR = showW && isPR(workouts, exId, s.weight, s.reps);
     updateSet(ex, set, { done: true });
     if (!active.manual) setRest(restDefault);
     if (wasPR) {
       haptic.success();
-      setPr(`Nový rekord! ${fmtWeight(s.weight, unit)} × ${s.reps}`);
+      setPr(`Nový rekord! ${fmtWeight(s.weight!, unit)} × ${s.reps}`);
     } else {
       haptic.light();
     }
     // advance focus
     const le = active.exercises[ex];
     const ns = le.sets.findIndex((x, i) => i > set && !x.done);
-    if (ns !== -1) focusCell(ex, ns, 'weight');
+    if (ns !== -1) focusCell(ex, ns, showW ? 'weight' : 'reps');
     else setFocus(null);
   };
 
@@ -245,6 +253,8 @@ export default function Workout() {
 
         {active.exercises.map((le, ex) => {
           const exDef = exById[le.exerciseId];
+          const showW = showsW(le.exerciseId);
+          const repsLbl = exDef?.tracking === 'time' ? 'ČAS (s)' : 'OPAK.';
           const prev = lastPerformance(workouts, le.exerciseId);
           const tag = supTag(le, ex);
           const grouped = !!le.supersetGroup;
@@ -278,11 +288,13 @@ export default function Workout() {
                 <Txt size={type.caption} weight="semibold" color={palette.textMute} style={{ width: 40 }}>
                   SÉRIE
                 </Txt>
+                {showW && (
+                  <Txt size={type.caption} weight="semibold" color={palette.textMute} style={{ flex: 1, textAlign: 'center' }}>
+                    {unit.toUpperCase()}
+                  </Txt>
+                )}
                 <Txt size={type.caption} weight="semibold" color={palette.textMute} style={{ flex: 1, textAlign: 'center' }}>
-                  {unit.toUpperCase()}
-                </Txt>
-                <Txt size={type.caption} weight="semibold" color={palette.textMute} style={{ flex: 1, textAlign: 'center' }}>
-                  OPAK.
+                  {repsLbl}
                 </Txt>
                 <View style={{ width: 48 }} />
               </View>
@@ -313,7 +325,9 @@ export default function Workout() {
                       </View>
                     </Pressable>
 
-                    <Cell focused={isFocus(focus, ex, si, 'weight')} value={cellValue(ex, si, 'weight')} ghost={p?.weight != null ? fmtNum(toDisplayWeight(p.weight, unit)).replace(',', '.') : ''} done={s.done} onPress={() => focusCell(ex, si, 'weight')} />
+                    {showW && (
+                      <Cell focused={isFocus(focus, ex, si, 'weight')} value={cellValue(ex, si, 'weight')} ghost={p?.weight != null ? fmtNum(toDisplayWeight(p.weight, unit)).replace(',', '.') : ''} done={s.done} onPress={() => focusCell(ex, si, 'weight')} />
+                    )}
                     <Cell focused={isFocus(focus, ex, si, 'reps')} value={cellValue(ex, si, 'reps')} ghost={p?.reps != null ? String(p.reps) : ''} done={s.done} onPress={() => focusCell(ex, si, 'reps')} />
 
                     <Pressable onLongPress={() => removeSet(ex, si)} onPress={() => commit(ex, si)} style={{ width: 48, alignItems: 'center' }}>
