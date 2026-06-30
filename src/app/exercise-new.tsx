@@ -1,0 +1,114 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, ScrollView, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { PrimaryButton, Txt } from '@/components/ui';
+import { palette, radius, space, type } from '@/constants/theme';
+import { Equipment, MuscleGroup, TrackingType } from '@/data/types';
+import { useStore } from '@/store/useStore';
+
+const MUSCLES: MuscleGroup[] = ['Hrudník', 'Záda', 'Nohy', 'Ramena', 'Biceps', 'Triceps', 'Břicho', 'Hýždě', 'Lýtka', 'Předloktí'];
+const EQUIPMENT: Equipment[] = ['Činka', 'Jednoručky', 'Kladka', 'Stroj', 'Vlastní váha', 'Kettlebell', 'Guma'];
+const TRACKING: { value: TrackingType; label: string }[] = [
+  { value: 'weight_reps', label: 'Váha × opak.' },
+  { value: 'bodyweight_reps', label: 'Vlastní váha × opak.' },
+  { value: 'weighted_bw', label: 'Přidaná váha' },
+  { value: 'reps', label: 'Jen opakování' },
+  { value: 'time', label: 'Jen čas' },
+  { value: 'distance_time', label: 'Vzdálenost × čas' },
+];
+
+function Chip({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={{
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        borderRadius: radius.pill,
+        backgroundColor: on ? palette.accent : palette.surface2,
+      }}>
+      <Txt size={type.label} weight="semibold" color={on ? palette.bg : palette.textDim}>
+        {label}
+      </Txt>
+    </Pressable>
+  );
+}
+
+export default function ExerciseNew() {
+  const router = useRouter();
+  const params = useLocalSearchParams<{ name?: string }>();
+  const addExercise = useStore((s) => s.addExercise);
+
+  const [name, setName] = useState(params.name ?? '');
+  const [primary, setPrimary] = useState<MuscleGroup | null>(null);
+  const [equipment, setEquipment] = useState<Equipment>('Činka');
+  const [tracking, setTracking] = useState<TrackingType>('weight_reps');
+
+  const valid = name.trim().length > 0 && primary !== null;
+
+  const save = () => {
+    if (!valid) return;
+    addExercise({ name: name.trim(), primary: primary!, equipment, tracking, defaultBar: equipment === 'Činka' ? 20 : undefined });
+    router.back();
+  };
+
+  return (
+    <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }} edges={['top']}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.xl, paddingVertical: 10 }}>
+        <Txt size={type.title} weight="bold">
+          Nový cvik
+        </Txt>
+        <Pressable onPress={() => router.back()} hitSlop={10}>
+          <Ionicons name="close" size={26} color={palette.textDim} />
+        </Pressable>
+      </View>
+
+      <ScrollView contentContainerStyle={{ padding: space.xl, paddingBottom: 40 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <Label>Název</Label>
+        <TextInput
+          value={name}
+          onChangeText={setName}
+          placeholder="např. Bench na multipressu"
+          placeholderTextColor={palette.textMute}
+          style={{ backgroundColor: palette.surface2, borderRadius: radius.sm, color: palette.text, fontFamily: 'Inter_600SemiBold', fontSize: 16, paddingHorizontal: 14, paddingVertical: 13 }}
+        />
+
+        <Label>Primární sval *</Label>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {MUSCLES.map((m) => (
+            <Chip key={m} label={m} on={primary === m} onPress={() => setPrimary(m)} />
+          ))}
+        </View>
+
+        <Label>Vybavení</Label>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {EQUIPMENT.map((e) => (
+            <Chip key={e} label={e} on={equipment === e} onPress={() => setEquipment(e)} />
+          ))}
+        </View>
+
+        <Label>Typ měření</Label>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {TRACKING.map((t) => (
+            <Chip key={t.value} label={t.label} on={tracking === t.value} onPress={() => setTracking(t.value)} />
+          ))}
+        </View>
+
+        <View style={{ marginTop: space.xxl }}>
+          <PrimaryButton label="Uložit cvik" onPress={save} style={{ opacity: valid ? 1 : 0.4 }} disabled={!valid} />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+function Label({ children }: { children: string }) {
+  return (
+    <Txt size={type.label} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5, marginTop: space.xl, marginBottom: 10 }}>
+      {children}
+    </Txt>
+  );
+}

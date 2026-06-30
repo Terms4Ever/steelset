@@ -1,0 +1,164 @@
+import { Exercise, LoggedExercise, MuscleGroup, SetEntry, Workout } from '@/data/types';
+
+const MS_DAY = 86_400_000;
+const MS_WEEK = 7 * MS_DAY;
+
+/** Estimated 1RM (Epley). Returns 0 for invalid input. */
+export function e1rm(weight: number | null, reps: number | null): number {
+  if (!weight || !reps || weight <= 0 || reps <= 0) return 0;
+  if (reps === 1) return weight;
+  return weight * (1 + reps / 30);
+}
+
+/** A set counts toward stats only if completed with real numbers. */
+export function isCountable(s: SetEntry): boolean {
+  return s.done && !!s.weight && !!s.reps && s.weight > 0 && s.reps > 0;
+}
+
+/** Volume (tonnage) of one logged exercise = Σ weight×reps of countable sets. */
+export function exerciseVolume(le: LoggedExercise): number {
+  return le.sets.reduce((sum, s) => (isCountable(s) ? sum + s.weight! * s.reps! : sum), 0);
+}
+
+/** Total tonnage of a whole workout. */
+export function workoutVolume(w: Workout): number {
+  return w.exercises.reduce((sum, le) => sum + exerciseVolume(le), 0);
+}
+
+/** Best estimated 1RM for an exercise across finished workouts (optionally before a cutoff). */
+export function bestE1rm(workouts: Workout[], exerciseId: string, before = Infinity): number {
+  let best = 0;
+  for (const w of workouts) {
+    if (!w.finishedAt || w.finishedAt >= before) continue;
+    for (const le of w.exercises) {
+      if (le.exerciseId !== exerciseId) continue;
+      for (const s of le.sets) {
+        if (isCountable(s)) best = Math.max(best, e1rm(s.weight, s.reps));
+      }
+    }
+  }
+  return best;
+}
+
+/** The most recent finished sets logged for an exercise - used to pre-fill "minule". */
+export function lastPerformance(workouts: Workout[], exerciseId: string): SetEntry[] | null {
+  const finished = workouts
+    .filter((w) => w.finishedAt && w.exercises.some((le) => le.exerciseId === exerciseId))
+    .sort((a, b) => b.finishedAt! - a.finishedAt!);
+  if (!finished.length) return null;
+  const le = finished[0].exercises.find((x) => x.exerciseId === exerciseId)!;
+  return le.sets.filter(isCountable);
+}
+
+/**
+ * Is (weight×reps) a personal record for this exercise vs all prior finished history?
+ * PR = its estimated 1RM strictly beats the previous best e1RM.
+ */
+export function isPR(workouts: Workout[], exerciseId: string, weight: number | null, reps: number | null, before = Infinity): boolean {
+  const value = e1rm(weight, reps);
+  if (value <= 0) return false;
+  return value > bestE1rm(workouts, exerciseId, before) + 1e-9;
+}
+
+/** Volume per muscle group since a timestamp (primary muscle gets full credit, secondary half). */
+export function muscleVolume(
+  workouts: Workout[],
+  exercisesById: Record<string, Exercise>,
+  since = 0,
+): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const w of workouts) {
+    if (!w.finishedAt || w.finishedAt < since) continue;
+    for (const le of w.exercises) {
+      const ex = exercisesById[le.exerciseId];
+      if (!ex) continue;
+      const vol = exerciseVolume(le);
+      if (vol <= 0) continue;
+      out[ex.primary] = (out[ex.primary] ?? 0) + vol;
+      for (const m of ex.secondary ?? []) out[m] = (out[m] ?? 0) + vol * 0.5;
+    }
+  }
+  return out;
+}
+
+/** Number of completed working sets per muscle group in a window (for weekly set targets). */
+export function muscleSetCount(
+  workouts: Workout[],
+  exercisesById: Record<string, Exercise>,
+  since = 0,
+): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const w of workouts) {
+    if (!w.finishedAt || w.finishedAt < since) continue;
+    for (const le of w.exercises) {
+      const ex = exercisesById[le.exerciseId];
+      if (!ex) continue;
+      const sets = le.sets.filter((s) => isCountable(s) && s.type !== 'W').length;
+      if (!sets) continue;
+      out[ex.primary] = (out[ex.primary] ?? 0) + sets;
+    }
+  }
+  return out;
+}
+
+/** ISO-ish week key (year*100 + weekOfYear-ish) using UTC week buckets from epoch. */
+function weekBucket(ms: number): number {
+  return Math.floor(ms / MS_WEEK);
+}
+
+/**
+ * Consecutive-week training streak counting back from `now`.
+ * Current week counts if trained; otherwise streak measured from last completed week.
+ */
+export function weekStreak(workouts: Workout[], now: number): number {
+  const weeks = new Set<number>();
+  for (const w of workouts) if (w.finishedAt) weeks.add(weekBucket(w.finishedAt));
+  if (!weeks.size) return 0;
+  const thisWeek = weekBucket(now);
+  // start from current week if trained, else previous week
+  let cursor = weeks.has(thisWeek) ? thisWeek : thisWeek - 1;
+  let streak = 0;
+  while (weeks.has(cursor)) {
+    streak++;
+    cursor--;
+  }
+  return streak;
+}
+
+/** Workouts whose finishedAt falls in [now-window, now]. */
+export function workoutsInWindow(workouts: Workout[], now: number, windowMs: number): Workout[] {
+  return workouts.filter((w) => w.finishedAt && w.finishedAt >= now - windowMs && w.finishedAt <= now);
+}
+
+export function weeklyVolume(workouts: Workout[], now: number): number {
+  return workoutsInWindow(workouts, now, MS_WEEK).reduce((s, w) => s + workoutVolume(w), 0);
+}
+
+/**
+ * Composite Strength Score - one motivating number that goes up.
+ * Sum of best e1RM across the major compound lifts, scaled. Bodyweight-independent,
+ * stable, and only ever increases as PRs land.
+ */
+const SCORE_LIFTS = ['squat', 'bench-barbell', 'deadlift', 'ohp', 'row-barbell', 'pullup'];
+export function strengthScore(workouts: Workout[]): number {
+  let total = 0;
+  for (const id of SCORE_LIFTS) total += bestE1rm(workouts, id);
+  return Math.round(total / 2);
+}
+
+/** e1RM trend points (sorted by time) for charting one exercise. */
+export function e1rmTrend(workouts: Workout[], exerciseId: string): { at: number; value: number }[] {
+  const pts: { at: number; value: number }[] = [];
+  for (const w of workouts) {
+    if (!w.finishedAt) continue;
+    let best = 0;
+    for (const le of w.exercises) {
+      if (le.exerciseId !== exerciseId) continue;
+      for (const s of le.sets) if (isCountable(s)) best = Math.max(best, e1rm(s.weight, s.reps));
+    }
+    if (best > 0) pts.push({ at: w.finishedAt, value: best });
+  }
+  return pts.sort((a, b) => a.at - b.at);
+}
+
+export const MS = { DAY: MS_DAY, WEEK: MS_WEEK };
