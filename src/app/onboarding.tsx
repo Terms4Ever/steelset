@@ -29,7 +29,7 @@ export default function Onboarding() {
           <Ionicons name="checkmark" size={40} color={palette.accent} />
         </View>
         <Txt size={28} weight="bold" style={{ marginTop: 16 }}>
-          Setly
+          Liftbook
         </Txt>
         <Txt size={type.body} weight="medium" color={palette.textDim} style={{ marginTop: 4, textAlign: 'center' }}>
           Silový deník, který ví, kdy jsi připravený.
