@@ -73,6 +73,7 @@ export default function RootLayout() {
         <Stack.Screen name="exercises" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="exercise-new" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="routine/[id]" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="history/[id]" options={{ animation: 'slide_from_right' }} />
       </Stack>
     </SafeAreaProvider>
   );

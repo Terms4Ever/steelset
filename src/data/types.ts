@@ -88,7 +88,8 @@ export type Unit = 'kg' | 'lb';
 export interface Settings {
   unit: Unit;
   restDefaultSec: number;
-  increment: number; // přírůstek pro steppery (kg)
+  increment: number; // přírůstek pro steppery v kg
+  incrementLb: number; // přírůstek pro steppery v lb
   onboarded: boolean;
 }
 

@@ -28,6 +28,7 @@ export default function Workout() {
   const activeId = useStore((s) => s.activeWorkoutId);
   const custom = useStore((s) => s.customExercises);
   const increment = useStore((s) => s.settings.increment);
+  const incrementLb = useStore((s) => s.settings.incrementLb);
   const restDefault = useStore((s) => s.settings.restDefaultSec);
   const unit = useStore((s) => s.settings.unit);
   const { updateSet, addSet, toggleSetDone, removeSet, finishWorkout, discardWorkout, startWorkout, linkSuperset, setWorkoutDate } = useStore();
@@ -381,7 +382,7 @@ export default function Workout() {
 
       {focus && (
         <Animated.View entering={SlideInDown.duration(180)}>
-          <Keypad onKey={key} onStep={step} onNext={next} inc={focus.field === 'reps' ? { full: 5, half: 1 } : unitIncrement(unit, increment)} />
+          <Keypad onKey={key} onStep={step} onNext={next} inc={focus.field === 'reps' ? { full: 5, half: 1 } : unitIncrement(unit, increment, incrementLb)} />
         </Animated.View>
       )}
     </View>

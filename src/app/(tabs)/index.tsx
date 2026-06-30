@@ -142,7 +142,7 @@ export default function Dnesek() {
             {finished.slice(0, 5).map((w, i) => {
               const setCount = w.exercises.reduce((n, le) => n + le.sets.length, 0);
               return (
-                <View key={w.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: space.lg, borderTopWidth: i === 0 ? 0 : 1, borderTopColor: palette.hairline }}>
+                <Pressable key={w.id} onPress={() => router.push(`/history/${w.id}`)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: space.lg, borderTopWidth: i === 0 ? 0 : 1, borderTopColor: palette.hairline }}>
                   <View style={{ flex: 1 }}>
                     <Txt size={type.body} weight="semibold">
                       {w.name}
@@ -154,7 +154,8 @@ export default function Dnesek() {
                   <Txt size={type.body} weight="bold" num color={palette.textDim}>
                     {fmtWeight(workoutVolume(w), unit)}
                   </Txt>
-                </View>
+                  <Ionicons name="chevron-forward" size={18} color={palette.textMute} />
+                </Pressable>
               );
             })}
           </Card>

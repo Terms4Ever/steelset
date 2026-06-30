@@ -22,10 +22,10 @@ export function fmtWeight(kg: number, unit: Unit): string {
   return `${fmtNum(toDisplayWeight(kg, unit))} ${unit}`;
 }
 
-/** Stepper increments in the user's display unit (kg uses the user setting, lb fixed 5/2.5). */
-export function unitIncrement(unit: Unit, kgIncrement: number): { full: number; half: number } {
-  if (unit === 'lb') return { full: 5, half: 2.5 };
-  return { full: kgIncrement, half: kgIncrement / 2 };
+/** Stepper increments in the user's display unit (separate setting per unit). */
+export function unitIncrement(unit: Unit, kgIncrement: number, lbIncrement: number): { full: number; half: number } {
+  const inc = unit === 'lb' ? lbIncrement : kgIncrement;
+  return { full: inc, half: inc / 2 };
 }
 
 export function fmtClock(totalSec: number): string {
