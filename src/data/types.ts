@@ -65,6 +65,8 @@ export interface Workout {
   startedAt: number; // epoch ms (u manuálního zápisu = zvolené datum tréninku)
   finishedAt?: number; // epoch ms; undefined = probíhá
   manual?: boolean; // true = zpětný zápis (bez živého časovače)
+  avgHr?: number; // průměrný tep z Apple Health (z hodinek)
+  maxHr?: number; // maximální tep z Apple Health
   exercises: LoggedExercise[];
 }
 
@@ -90,6 +92,7 @@ export interface Settings {
   restDefaultSec: number;
   increment: number; // přírůstek pro steppery v kg
   incrementLb: number; // přírůstek pro steppery v lb
+  healthEnabled: boolean; // propojení s Apple Health
   onboarded: boolean;
 }
 

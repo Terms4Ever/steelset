@@ -76,6 +76,16 @@ export default function WorkoutDetail() {
         <Txt size={type.body} weight="medium" color={palette.textMute} style={{ marginTop: 2 }}>
           {dayName(when)} {fmtDateShort(when)} · {w.exercises.length} cviků · {fmtWeight(workoutVolume(w), unit)}
         </Txt>
+        {(w.avgHr || w.maxHr) && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
+            <Ionicons name="heart" size={15} color={palette.red} />
+            <Txt size={type.label} weight="semibold" num>
+              {w.avgHr ? `⌀ ${w.avgHr}` : ''}
+              {w.avgHr && w.maxHr ? ' · ' : ''}
+              {w.maxHr ? `max ${w.maxHr}` : ''} tep/min
+            </Txt>
+          </View>
+        )}
 
         <View style={{ marginTop: space.xl, gap: space.md }}>
           {w.exercises.map((le, i) => (

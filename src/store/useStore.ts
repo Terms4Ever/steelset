@@ -60,9 +60,10 @@ interface Actions {
   discardWorkout: () => void;
   deleteWorkout: (id: string) => void;
   editWorkout: (id: string) => void;
+  setWorkoutHr: (id: string, avg?: number, max?: number) => void;
 }
 
-const DEFAULT_SETTINGS: Settings = { unit: 'kg', restDefaultSec: 90, increment: 2.5, incrementLb: 5, onboarded: false };
+const DEFAULT_SETTINGS: Settings = { unit: 'kg', restDefaultSec: 90, increment: 2.5, incrementLb: 5, healthEnabled: false, onboarded: false };
 
 function patchActive(workouts: Workout[], activeId: string | null, fn: (w: Workout) => Workout): Workout[] {
   if (!activeId) return workouts;
@@ -293,6 +294,11 @@ export const useStore = create<State & Actions>()(
           workouts: s.workouts.map((w) =>
             w.id === id ? { ...w, manual: true, startedAt: w.finishedAt ?? w.startedAt, finishedAt: undefined } : w,
           ),
+        })),
+
+      setWorkoutHr: (id, avg, max) =>
+        set((s) => ({
+          workouts: s.workouts.map((w) => (w.id === id ? { ...w, avgHr: avg, maxHr: max } : w)),
         })),
     }),
     {

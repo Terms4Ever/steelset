@@ -11,6 +11,7 @@ import { LoggedExercise, SetEntry, SetType } from '@/data/types';
 import { isPR, lastPerformance, MS } from '@/lib/calc';
 import { dayName, fmtClock, fmtDateShort, fmtNum, fmtWeight, fromDisplayWeight, toDisplayWeight, unitIncrement } from '@/lib/format';
 import { haptic } from '@/lib/haptic';
+import { heartRateFor, saveWorkout } from '@/lib/health';
 import { activeWorkout, exercisesById as exByIdSel, useStore } from '@/store/useStore';
 
 const SET_TAG_COLOR: Record<SetType, string> = {
@@ -31,7 +32,8 @@ export default function Workout() {
   const incrementLb = useStore((s) => s.settings.incrementLb);
   const restDefault = useStore((s) => s.settings.restDefaultSec);
   const unit = useStore((s) => s.settings.unit);
-  const { updateSet, addSet, toggleSetDone, removeSet, finishWorkout, discardWorkout, startWorkout, linkSuperset, setWorkoutDate } = useStore();
+  const { updateSet, addSet, toggleSetDone, removeSet, finishWorkout, discardWorkout, startWorkout, linkSuperset, setWorkoutDate, setWorkoutHr } = useStore();
+  const healthEnabled = useStore((s) => s.settings.healthEnabled);
   const insets = useSafeAreaInsets();
 
   const active = useMemo(() => activeWorkout({ workouts, activeWorkoutId: activeId }), [workouts, activeId]);
@@ -180,8 +182,18 @@ export default function Workout() {
   };
 
   const onFinish = () => {
+    const w = active;
     finishWorkout();
     router.replace('/');
+    // Apple Health: write the workout + pull heart rate the Watch recorded (live workouts only).
+    if (w && !w.manual && healthEnabled) {
+      const start = w.startedAt;
+      const end = Date.now();
+      void saveWorkout(start, end);
+      heartRateFor(start, end).then((hr) => {
+        if (hr.avg || hr.max) setWorkoutHr(w.id, hr.avg, hr.max);
+      });
+    }
   };
   const onDiscard = () => {
     discardWorkout();
