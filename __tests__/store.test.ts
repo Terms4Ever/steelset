@@ -72,6 +72,17 @@ describe('store · full workout lifecycle', () => {
     expect(s().activeWorkoutId).toBeNull();
   });
 
+  it('keeps an empty live session that ran ≥2 min so Apple Watch heart rate has a home', () => {
+    s().startWorkout(null); // live, no sets logged (pure cardio / HR test)
+    s().setWorkoutDate(Date.now() - 3 * 60 * 1000); // started 3 minutes ago
+    s().finishWorkout();
+    const h = history(s());
+    expect(h).toHaveLength(1);
+    expect(h[0].exercises).toHaveLength(0);
+    expect(h[0].manual).toBeFalsy();
+    expect(h[0].finishedAt).toBeGreaterThan(0);
+  });
+
   it('drops uncompleted sets but keeps completed ones on finish', () => {
     s().startWorkout(null);
     s().addExerciseToActive('squat');

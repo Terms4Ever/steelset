@@ -38,11 +38,17 @@ export async function requestHealth(): Promise<boolean> {
   }
 }
 
+// HKWorkoutActivityType.traditionalStrengthTraining is the numeric enum value 50.
+// The native module expects a number here, NOT a string identifier.
+function strengthType(m: any): number {
+  return m?.WorkoutActivityType?.traditionalStrengthTraining ?? 50;
+}
+
 export async function saveWorkout(startMs: number, endMs: number): Promise<void> {
   const m = hk();
   if (!m?.saveWorkoutSample || endMs <= startMs) return;
   try {
-    await m.saveWorkoutSample('traditionalStrengthTraining', [], new Date(startMs), new Date(endMs));
+    await m.saveWorkoutSample(strengthType(m), [], new Date(startMs), new Date(endMs));
   } catch {
     // ignore
   }
@@ -53,9 +59,11 @@ export async function heartRateFor(startMs: number, endMs: number): Promise<{ av
   const m = hk();
   if (!m?.queryQuantitySamples || endMs <= startMs) return {};
   try {
+    // limit is REQUIRED (0 = all); date window goes under filter.date.{startDate,endDate}.
     const samples = await m.queryQuantitySamples(HR, {
       unit: 'count/min',
-      filter: { startDate: new Date(startMs), endDate: new Date(endMs) },
+      limit: 0,
+      filter: { date: { startDate: new Date(startMs), endDate: new Date(endMs) } },
     });
     const vals: number[] = (samples ?? []).map((s: any) => s?.quantity).filter((v: any) => typeof v === 'number');
     if (!vals.length) return {};
@@ -103,7 +111,7 @@ export async function healthSelfTest(): Promise<string> {
   try {
     const end = new Date();
     const start = new Date(Date.now() - 10 * 60 * 1000);
-    await m.saveWorkoutSample('traditionalStrengthTraining', [], start, end);
+    await m.saveWorkoutSample(strengthType(m), [], start, end);
     out.push('Zápis test tréninku: OK (mrkni v Apple Health → Workouts)');
   } catch (e) {
     out.push('Zápis CHYBA: ' + err(e));
@@ -111,7 +119,11 @@ export async function healthSelfTest(): Promise<string> {
   try {
     const end = new Date();
     const start = new Date(Date.now() - 6 * 3600 * 1000);
-    const samples = await m.queryQuantitySamples(HR, { unit: 'count/min', filter: { startDate: start, endDate: end } });
+    const samples = await m.queryQuantitySamples(HR, {
+      unit: 'count/min',
+      limit: 0,
+      filter: { date: { startDate: start, endDate: end } },
+    });
     const n = samples?.length ?? 0;
     out.push('Tep – vzorků za 6 h: ' + n);
     if (n) out.push('Poslední tep: ' + Math.round(samples[n - 1]?.quantity) + ' /min');
