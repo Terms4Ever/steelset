@@ -109,7 +109,11 @@ export default function Profil() {
           <Toggle options={['kg', 'lb']} value={settings.unit} onChange={(v) => setUnit(v as any)} />
         </Row>
         <Row icon="layers-outline" label="Přírůstek (steppery)">
-          <Stepper value={settings.increment} step={1.25} min={0.5} suffix=" kg" onChange={(v) => setSetting('increment', v)} />
+          {settings.unit === 'lb' ? (
+            <Stepper value={settings.incrementLb} step={2.5} min={1} suffix=" lb" onChange={(v) => setSetting('incrementLb', v)} />
+          ) : (
+            <Stepper value={settings.increment} step={1.25} min={0.5} suffix=" kg" onChange={(v) => setSetting('increment', v)} />
+          )}
         </Row>
         <Row icon="timer-outline" label="Výchozí odpočinek" last>
           <Stepper value={settings.restDefaultSec} step={15} min={15} suffix=" s" onChange={(v) => setSetting('restDefaultSec', v)} />

@@ -16,6 +16,8 @@ export default function Exercises() {
   const router = useRouter();
   const params = useLocalSearchParams<{ target?: string; routineId?: string }>();
   const custom = useStore((s) => s.customExercises);
+  const favs = useStore((s) => s.favoriteExercises);
+  const toggleFavorite = useStore((s) => s.toggleFavorite);
   const routines = useStore((s) => s.routines);
   const addExerciseToActive = useStore((s) => s.addExerciseToActive);
   const updateRoutine = useStore((s) => s.updateRoutine);
@@ -27,6 +29,10 @@ export default function Exercises() {
     if (!nq) return all;
     return all.filter((e) => norm(e.name).includes(nq) || norm(e.primary).includes(nq) || norm(e.equipment).includes(nq));
   }, [all, q]);
+  const sorted = useMemo(() => {
+    const favSet = new Set(favs);
+    return [...filtered].sort((a, b) => (favSet.has(b.id) ? 1 : 0) - (favSet.has(a.id) ? 1 : 0));
+  }, [filtered, favs]);
 
   const pick = (id: string) => {
     if (params.target === 'routine' && params.routineId) {
@@ -80,23 +86,29 @@ export default function Exercises() {
           </Txt>
         </Pressable>
 
-        {filtered.map((e) => (
-          <Pressable key={e.id} onPress={() => pick(e.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: palette.hairlineSoft }}>
-            <View style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: palette.surface2, alignItems: 'center', justifyContent: 'center' }}>
-              <Ionicons name="barbell-outline" size={18} color={palette.textDim} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Txt size={type.body} weight="semibold">
-                {e.name}
-              </Txt>
-              <Txt size={type.caption} weight="medium" color={palette.textMute}>
-                {e.primary} · {e.equipment}
-                {e.custom ? ' · vlastní' : ''}
-              </Txt>
-            </View>
-            <Ionicons name="add-circle-outline" size={22} color={palette.accent} />
-          </Pressable>
-        ))}
+        {sorted.map((e) => {
+          const fav = favs.includes(e.id);
+          return (
+            <Pressable key={e.id} onPress={() => pick(e.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: palette.hairlineSoft }}>
+              <View style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: palette.surface2, alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="barbell-outline" size={18} color={palette.textDim} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Txt size={type.body} weight="semibold">
+                  {e.name}
+                </Txt>
+                <Txt size={type.caption} weight="medium" color={palette.textMute}>
+                  {e.primary} · {e.equipment}
+                  {e.custom ? ' · vlastní' : ''}
+                </Txt>
+              </View>
+              <Pressable onPress={() => toggleFavorite(e.id)} hitSlop={10} style={{ padding: 4 }}>
+                <Ionicons name={fav ? 'star' : 'star-outline'} size={20} color={fav ? palette.amber : palette.textMute} />
+              </Pressable>
+              <Ionicons name="add-circle-outline" size={22} color={palette.accent} />
+            </Pressable>
+          );
+        })}
 
         {filtered.length === 0 && query.length === 0 && (
           <Txt size={type.body} color={palette.textMute} style={{ marginTop: 20 }}>

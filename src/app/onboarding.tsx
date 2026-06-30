@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
@@ -25,13 +26,12 @@ export default function Onboarding() {
   return (
     <Screen>
       <View style={{ alignItems: 'center', marginTop: space.xl }}>
-        <View style={{ width: 64, height: 64, borderRadius: 18, backgroundColor: palette.accentDeep, alignItems: 'center', justifyContent: 'center' }}>
-          <Ionicons name="checkmark" size={40} color={palette.accent} />
-        </View>
-        <Txt size={28} weight="bold" style={{ marginTop: 16 }}>
-          Liftbook
-        </Txt>
-        <Txt size={type.body} weight="medium" color={palette.textDim} style={{ marginTop: 4, textAlign: 'center' }}>
+        <Image
+          source={require('../../assets/images/liftbook-wordmark.png')}
+          style={{ width: 230, height: 80 }}
+          contentFit="contain"
+        />
+        <Txt size={type.body} weight="medium" color={palette.textDim} style={{ marginTop: 8, textAlign: 'center' }}>
           Silový deník, který ví, kdy jsi připravený.
         </Txt>
       </View>

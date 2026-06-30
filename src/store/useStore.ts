@@ -19,6 +19,7 @@ export interface AppleUser {
 
 interface State {
   customExercises: Exercise[];
+  favoriteExercises: string[];
   routines: Routine[];
   workouts: Workout[];
   activeWorkoutId: string | null;
@@ -40,6 +41,7 @@ interface Actions {
   addExercise: (e: Omit<Exercise, 'id' | 'custom'>) => string;
   updateExercise: (id: string, patch: Partial<Exercise>) => void;
   deleteExercise: (id: string) => void;
+  toggleFavorite: (id: string) => void;
   // routines
   addRoutine: (r: Omit<Routine, 'id'>) => string;
   updateRoutine: (id: string, patch: Partial<Routine>) => void;
@@ -56,9 +58,11 @@ interface Actions {
   linkSuperset: (exIndex: number) => void;
   finishWorkout: () => void;
   discardWorkout: () => void;
+  deleteWorkout: (id: string) => void;
+  editWorkout: (id: string) => void;
 }
 
-const DEFAULT_SETTINGS: Settings = { unit: 'kg', restDefaultSec: 90, increment: 2.5, onboarded: false };
+const DEFAULT_SETTINGS: Settings = { unit: 'kg', restDefaultSec: 90, increment: 2.5, incrementLb: 5, onboarded: false };
 
 function patchActive(workouts: Workout[], activeId: string | null, fn: (w: Workout) => Workout): Workout[] {
   if (!activeId) return workouts;
@@ -69,6 +73,7 @@ export const useStore = create<State & Actions>()(
   persist(
     (set, get) => ({
       customExercises: [],
+      favoriteExercises: [],
       routines: [],
       workouts: [],
       activeWorkoutId: null,
@@ -99,6 +104,7 @@ export const useStore = create<State & Actions>()(
       wipeAll: () =>
         set({
           customExercises: [],
+          favoriteExercises: [],
           routines: [],
           workouts: [],
           activeWorkoutId: null,
@@ -117,6 +123,13 @@ export const useStore = create<State & Actions>()(
         })),
       deleteExercise: (id) =>
         set((s) => ({ customExercises: s.customExercises.filter((e) => e.id !== id) })),
+
+      toggleFavorite: (id) =>
+        set((s) => ({
+          favoriteExercises: s.favoriteExercises.includes(id)
+            ? s.favoriteExercises.filter((x) => x !== id)
+            : [...s.favoriteExercises, id],
+        })),
 
       addRoutine: (r) => {
         const id = uid('r');
@@ -266,17 +279,39 @@ export const useStore = create<State & Actions>()(
           workouts: s.workouts.filter((w) => w.id !== s.activeWorkoutId),
           activeWorkoutId: null,
         })),
+
+      deleteWorkout: (id) =>
+        set((s) => ({
+          workouts: s.workouts.filter((w) => w.id !== id),
+          activeWorkoutId: s.activeWorkoutId === id ? null : s.activeWorkoutId,
+        })),
+
+      // Re-open a finished workout for editing; keeps its original date (manual mode).
+      editWorkout: (id) =>
+        set((s) => ({
+          activeWorkoutId: id,
+          workouts: s.workouts.map((w) =>
+            w.id === id ? { ...w, manual: true, startedAt: w.finishedAt ?? w.startedAt, finishedAt: undefined } : w,
+          ),
+        })),
     }),
     {
       name: 'setly-store-v1',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (s) => ({
         customExercises: s.customExercises,
+        favoriteExercises: s.favoriteExercises,
         routines: s.routines,
         workouts: s.workouts,
         activeWorkoutId: s.activeWorkoutId,
         settings: s.settings,
         appleUser: s.appleUser,
+      }),
+      // deep-merge settings so newly added fields (e.g. incrementLb) keep their defaults for existing users
+      merge: (persisted: any, current) => ({
+        ...current,
+        ...(persisted ?? {}),
+        settings: { ...current.settings, ...(persisted?.settings ?? {}) },
       }),
       onRehydrateStorage: () => (state) => state?.setHydrated(true),
     },
