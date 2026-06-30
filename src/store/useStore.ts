@@ -261,6 +261,9 @@ export const useStore = create<State & Actions>()(
         set((s) => {
           const id = s.activeWorkoutId;
           if (!id) return {};
+          // keep an empty LIVE session that ran a while (cardio / Apple Watch HR with no logged sets),
+          // but still discard accidental quick opens
+          const KEEP_EMPTY_MS = 120_000;
           const workouts = s.workouts
             // drop sets that were never completed, then drop empty exercises
             .map((w) => {
@@ -270,8 +273,12 @@ export const useStore = create<State & Actions>()(
                 .filter((le) => le.sets.length > 0);
               return { ...w, exercises, finishedAt: w.manual ? w.startedAt : Date.now() };
             })
-            // if nothing was logged, discard the empty session entirely
-            .filter((w) => !(w.id === id && w.exercises.length === 0));
+            .filter((w) => {
+              if (w.id !== id) return true;
+              if (w.exercises.length > 0) return true;
+              // empty session: keep real live workouts (ran ≥2 min) so heart rate has a home; drop the rest
+              return !w.manual && Date.now() - w.startedAt >= KEEP_EMPTY_MS;
+            });
           return { workouts, activeWorkoutId: null };
         }),
 
