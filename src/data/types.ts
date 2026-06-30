@@ -1,4 +1,4 @@
-// Domain model for Setly - strength tracker.
+// Domain model for Liftbook - strength tracker.
 
 export type TrackingType =
   | 'weight_reps' // činka/jednoručky: váha × opakování

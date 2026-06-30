@@ -122,7 +122,7 @@ export default function Profil() {
       </Section>
 
       <Section title="SETLY">
-        <Row icon="star-outline" label="Setly Pro" last>
+        <Row icon="star-outline" label="Liftbook Pro" last>
           <Txt size={type.label} weight="semibold" color={palette.accent}>
             Lifetime
           </Txt>
@@ -130,7 +130,7 @@ export default function Profil() {
       </Section>
 
       <Txt size={type.caption} color={palette.textMute} style={{ textAlign: 'center', marginTop: space.xl }}>
-        Setly · v1.0.0 · data zůstávají v telefonu
+        Liftbook · v1.0.0 · data zůstávají v telefonu
       </Txt>
     </Screen>
   );
