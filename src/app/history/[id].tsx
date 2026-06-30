@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -8,6 +8,7 @@ import { PrimaryButton, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { exerciseVolume, workoutVolume } from '@/lib/calc';
 import { dayName, fmtDateShort, fmtWeight } from '@/lib/format';
+import { heartRateFor } from '@/lib/health';
 import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
 
 const TAG: Record<string, string> = { W: 'Z', R: '', D: 'D', F: 'F' };
@@ -20,9 +21,26 @@ export default function WorkoutDetail() {
   const unit = useStore((s) => s.settings.unit);
   const deleteWorkout = useStore((s) => s.deleteWorkout);
   const editWorkout = useStore((s) => s.editWorkout);
+  const setWorkoutHr = useStore((s) => s.setWorkoutHr);
+  const healthEnabled = useStore((s) => s.settings.healthEnabled);
 
   const w = workouts.find((x) => x.id === id);
   const exById = useMemo(() => exByIdSel({ customExercises: custom }), [custom]);
+  const [hrLoading, setHrLoading] = useState(false);
+
+  const canPullHr = !!w && !w.manual && healthEnabled && !!w.finishedAt;
+  const fetchHr = async () => {
+    if (!w || !w.finishedAt) return;
+    setHrLoading(true);
+    const hr = await heartRateFor(w.startedAt, w.finishedAt);
+    setHrLoading(false);
+    if (hr.avg || hr.max) setWorkoutHr(w.id, hr.avg, hr.max);
+  };
+  // auto-pull once when opening (watch HR has usually synced by now)
+  useEffect(() => {
+    if (canPullHr && !w?.avgHr && !w?.maxHr) fetchHr();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   if (!w) {
     return (
@@ -85,6 +103,17 @@ export default function WorkoutDetail() {
               {w.maxHr ? `max ${w.maxHr}` : ''} tep/min
             </Txt>
           </View>
+        )}
+        {canPullHr && (
+          <Pressable
+            onPress={fetchHr}
+            disabled={hrLoading}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, alignSelf: 'flex-start', backgroundColor: palette.surface2, paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.pill }}>
+            <Ionicons name="heart-outline" size={15} color={palette.accent} />
+            <Txt size={type.label} weight="semibold" color={palette.accent}>
+              {hrLoading ? 'Načítám…' : w.avgHr || w.maxHr ? 'Načíst tep znovu' : 'Načíst tep z Health'}
+            </Txt>
+          </Pressable>
         )}
 
         <View style={{ marginTop: space.xl, gap: space.md }}>

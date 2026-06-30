@@ -7,7 +7,7 @@ import { Card, Screen, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { workoutsToCsv } from '@/lib/csv';
 import { exportCsv } from '@/lib/export';
-import { requestHealth } from '@/lib/health';
+import { healthSelfTest, requestHealth } from '@/lib/health';
 import { fmtNum } from '@/lib/format';
 import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
 
@@ -59,6 +59,11 @@ export default function Profil() {
   const onConnectHealth = async () => {
     await requestHealth();
     setSetting('healthEnabled', true);
+  };
+
+  const onTestHealth = async () => {
+    const res = await healthSelfTest();
+    Alert.alert('Apple Health – test', res);
   };
 
   return (
@@ -129,11 +134,14 @@ export default function Profil() {
       {Platform.OS === 'ios' && (
         <Section title="APPLE HEALTH">
           {settings.healthEnabled ? (
-            <Row icon="heart" label="Apple Health" last>
-              <Txt size={type.label} weight="semibold" color={palette.accent}>
-                Připojeno
-              </Txt>
-            </Row>
+            <>
+              <Row icon="heart" label="Apple Health">
+                <Txt size={type.label} weight="semibold" color={palette.accent}>
+                  Připojeno
+                </Txt>
+              </Row>
+              <RowButton icon="pulse-outline" label="Test Apple Health (diagnostika)" last onPress={onTestHealth} />
+            </>
           ) : (
             <RowButton icon="heart-outline" label="Připojit Apple Health" last onPress={onConnectHealth} />
           )}
