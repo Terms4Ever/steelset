@@ -1,4 +1,4 @@
-// Domain model for Liftbook - strength tracker.
+// Domain model for Steelset - strength tracker.
 
 export type TrackingType =
   | 'weight_reps' // činka/jednoručky: váha × opakování

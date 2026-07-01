@@ -9,7 +9,7 @@ const HR = 'HKQuantityTypeIdentifierHeartRate';
 const BODYMASS = 'HKQuantityTypeIdentifierBodyMass';
 const WORKOUT = 'HKWorkoutTypeIdentifier';
 const READ = [HR, BODYMASS, WORKOUT];
-// Liftbook does NOT write workouts to Apple Health (that clutters the Fitness/Kondice app).
+// Steelset does NOT write workouts to Apple Health (that clutters the Fitness/Kondice app).
 // Workout write permission is requested only so the user can clean up test entries a previous
 // version saved — see deleteMyHealthWorkouts().
 const SHARE = [WORKOUT];
@@ -81,7 +81,7 @@ export async function requestHealth(): Promise<boolean> {
   }
 }
 
-/** Delete every workout Liftbook previously wrote to Apple Health. HealthKit only lets an app
+/** Delete every workout Steelset previously wrote to Apple Health. HealthKit only lets an app
  *  delete its OWN samples, so this never touches Apple Watch / other apps' workouts. Returns count. */
 export async function deleteMyHealthWorkouts(): Promise<number> {
   const m = hk();

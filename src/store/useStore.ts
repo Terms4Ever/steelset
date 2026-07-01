@@ -407,7 +407,7 @@ export function activeWorkout(s: Pick<State, 'workouts' | 'activeWorkoutId'>): W
 export function history(s: Pick<State, 'workouts'>): Workout[] {
   return s.workouts.filter((w) => w.finishedAt).sort((a, b) => b.finishedAt! - a.finishedAt!);
 }
-/** True if a natively-logged Liftbook workout overlaps [start, end] — so a Health workout for the
+/** True if a natively-logged Steelset workout overlaps [start, end] — so a Health workout for the
  *  same session isn't offered again as a separate import (avoids duplicate records). */
 export function localCoversWindow(workouts: Workout[], start: number, end: number): boolean {
   return workouts.some((w) => w.finishedAt != null && !w.healthUuid && start < w.finishedAt && w.startedAt < end);
