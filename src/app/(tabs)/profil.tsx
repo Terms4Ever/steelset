@@ -8,8 +8,8 @@ import { Card, Screen, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { workoutsToCsv } from '@/lib/csv';
 import { exportCsv } from '@/lib/export';
-import { deleteMyHealthWorkouts, healthSelfTest, requestHealth } from '@/lib/health';
-import { fmtNum } from '@/lib/format';
+import { deleteMyHealthWorkouts, healthSelfTest, latestBodyweightKg, requestHealth } from '@/lib/health';
+import { fmtNum, fromDisplayWeight, toDisplayWeight } from '@/lib/format';
 import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
 
 export default function Profil() {
@@ -66,6 +66,12 @@ export default function Profil() {
   const onTestHealth = async () => {
     const res = await healthSelfTest();
     Alert.alert('Apple Health – test', res);
+  };
+
+  const onPullBodyweight = async () => {
+    const kg = await latestBodyweightKg();
+    if (kg && kg > 0) setSetting('bodyweightKg', Math.round(kg * 10) / 10);
+    else Alert.alert('Apple Health', 'Váhu se nepodařilo načíst. Zadej ji ručně, nebo si ji zapiš v Health.');
   };
 
   const onCleanupHealth = () => {
@@ -138,6 +144,22 @@ export default function Profil() {
       <Section title="JEDNOTKY">
         <Row icon="barbell-outline" label="Váhové jednotky">
           <Toggle options={['kg', 'lb']} value={settings.unit} onChange={(v) => setUnit(v as any)} />
+        </Row>
+        <Row icon="body-outline" label="Tělesná váha">
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            {Platform.OS === 'ios' && settings.healthEnabled && (
+              <Pressable onPress={onPullBodyweight} hitSlop={6}>
+                <Ionicons name="download-outline" size={18} color={palette.accent} />
+              </Pressable>
+            )}
+            <Stepper
+              value={Math.round(toDisplayWeight(settings.bodyweightKg, settings.unit) * 10) / 10}
+              step={settings.unit === 'lb' ? 1 : 0.5}
+              min={30}
+              suffix={` ${settings.unit}`}
+              onChange={(v) => setSetting('bodyweightKg', fromDisplayWeight(v, settings.unit))}
+            />
+          </View>
         </Row>
         <Row icon="layers-outline" label="Přírůstek (steppery)">
           {settings.unit === 'lb' ? (
@@ -246,7 +268,7 @@ function Stepper({ value, step, min, suffix, onChange }: { value: number; step: 
         <Ionicons name="remove-circle" size={26} color={palette.textDim} />
       </Pressable>
       <Txt size={type.body} weight="bold" num style={{ minWidth: 56, textAlign: 'center' }}>
-        {fmtNum(value)}
+        {fmtNum(value, 2)}
         {suffix}
       </Txt>
       <Pressable onPress={() => onChange(Math.round((value + step) * 100) / 100)} hitSlop={6}>

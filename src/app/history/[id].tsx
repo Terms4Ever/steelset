@@ -51,6 +51,18 @@ export default function WorkoutDetail() {
     [w],
   );
 
+  // average heart rate during one exercise's working window (from its set timestamps + the HR series)
+  const exHr = (le: { sets: { doneAt?: number }[] }): number | null => {
+    const series = w?.hrSeries;
+    if (!series?.length) return null;
+    const times = le.sets.map((s) => s.doneAt).filter((t): t is number => typeof t === 'number');
+    if (!times.length) return null;
+    const lo = Math.min(...times) - 90000; // include ~90 s before the first completed set (the effort)
+    const hi = Math.max(...times);
+    const pts = series.filter((p) => p.t >= lo && p.t <= hi).map((p) => p.bpm);
+    return pts.length ? Math.round(pts.reduce((a, b) => a + b, 0) / pts.length) : null;
+  };
+
   if (!w) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg, alignItems: 'center', justifyContent: 'center' }}>
@@ -170,6 +182,17 @@ export default function WorkoutDetail() {
                   {fmtWeight(exerciseVolume(le), unit)}
                 </Txt>
               </View>
+              {(() => {
+                const hr = exHr(le);
+                return hr ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 }}>
+                    <Ionicons name="heart" size={13} color={palette.red} />
+                    <Txt size={type.caption} weight="semibold" num color={palette.textMute}>
+                      ⌀ {hr} tep při cviku
+                    </Txt>
+                  </View>
+                ) : null;
+              })()}
               <View style={{ marginTop: 10, gap: 6 }}>
                 {le.sets.map((s, si) => (
                   <View key={si} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
