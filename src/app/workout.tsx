@@ -387,7 +387,16 @@ export default function Workout() {
           </Txt>
         </Pressable>
 
-        <Pressable onPress={onDiscard} style={{ marginTop: 16, paddingVertical: 12, alignItems: 'center' }}>
+        <Pressable
+          onPress={onFinish}
+          style={{ marginTop: 24, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, borderRadius: radius.md, backgroundColor: palette.accent }}>
+          <Ionicons name="checkmark-circle" size={20} color={palette.bg} />
+          <Txt size={type.body} weight="bold" color={palette.bg}>
+            Ukončit trénink
+          </Txt>
+        </Pressable>
+
+        <Pressable onPress={onDiscard} style={{ marginTop: 14, paddingVertical: 12, alignItems: 'center' }}>
           <Txt size={type.label} weight="semibold" color={palette.red}>
             Zahodit trénink
           </Txt>
