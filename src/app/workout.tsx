@@ -366,7 +366,7 @@ export default function Workout() {
                       style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, marginTop: 6 }}>
                       <Ionicons name={linked ? 'unlink-outline' : 'git-merge-outline'} size={14} color={linked ? palette.textMute : palette.accent} />
                       <Txt size={type.caption} weight="semibold" color={linked ? palette.textMute : palette.accent}>
-                        {linked ? 'Zrušit supersérii' : 'Superséria s dalším cvikem'}
+                        {linked ? 'Zrušit supersérii' : 'Supersérie s dalším cvikem'}
                       </Txt>
                     </Pressable>
                   );
