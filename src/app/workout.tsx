@@ -383,20 +383,22 @@ export default function Workout() {
           </Txt>
         </Pressable>
 
+        <View style={{ height: 1, backgroundColor: palette.hairline, marginTop: 24, marginBottom: 20 }} />
+
         <Pressable
           onPress={onFinish}
-          style={{ marginTop: 24, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, borderRadius: radius.md, backgroundColor: palette.accent }}>
+          style={({ pressed }) => ({ paddingVertical: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, borderRadius: radius.md, backgroundColor: palette.accent, opacity: pressed ? 0.85 : 1 })}>
           <Ionicons name="checkmark-circle" size={20} color={palette.bg} />
-          <Txt size={type.body} weight="bold" color={palette.bg}>
+          <Txt size={17} weight="bold" color={palette.bg}>
             Ukončit trénink
           </Txt>
         </Pressable>
 
         <Pressable
           onPress={onDiscard}
-          style={{ marginTop: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, borderRadius: radius.md, borderWidth: 1, borderColor: palette.red }}>
-          <Ionicons name="trash-outline" size={18} color={palette.red} />
-          <Txt size={type.body} weight="bold" color={palette.red}>
+          style={({ pressed }) => ({ marginTop: 10, paddingVertical: 13, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7, borderRadius: radius.md, backgroundColor: palette.surface2, opacity: pressed ? 0.85 : 1 })}>
+          <Ionicons name="trash-outline" size={17} color={palette.red} />
+          <Txt size={type.label} weight="semibold" color={palette.red}>
             Zahodit trénink
           </Txt>
         </Pressable>
