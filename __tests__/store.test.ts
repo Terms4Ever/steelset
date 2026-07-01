@@ -159,13 +159,33 @@ describe('store · full workout lifecycle', () => {
     expect([...s().dismissedHealth].sort()).toEqual(['A', 'B', 'C']);
   });
 
-  it('pre-fills bodyweight for a bodyweight exercise (shyby) so weight is not empty', () => {
+  it('pre-fills bodyweight for a weighted-bodyweight exercise (shyby) so weight is not empty', () => {
     s().setSetting('bodyweightKg', 91);
     s().startWorkout(null);
     s().addExerciseToActive('pullup'); // weighted_bw
     const a = activeWorkout(s())!;
     expect(a.exercises[0].sets.length).toBeGreaterThan(0);
     expect(a.exercises[0].sets.every((st) => st.weight === 91)).toBe(true);
+  });
+
+  it('does NOT pre-fill weight for a bodyweight_reps exercise (kliky) — no phantom tonnage', () => {
+    s().setSetting('bodyweightKg', 91);
+    s().startWorkout(null);
+    s().addExerciseToActive('pushup'); // bodyweight_reps, weight column hidden
+    const a = activeWorkout(s())!;
+    expect(a.exercises[0].sets.every((st) => st.weight === null)).toBe(true);
+  });
+
+  it('removing a superset member drops the now-orphaned superset tag', () => {
+    s().startWorkout(null);
+    s().addExerciseToActive('squat');
+    s().addExerciseToActive('bench-barbell');
+    s().linkSuperset(0); // link squat + bench into one superset
+    expect(activeWorkout(s())!.exercises[0].supersetGroup).toBeTruthy();
+    s().removeActiveExercise(1); // remove bench → squat would be a superset-of-one
+    const a = activeWorkout(s())!;
+    expect(a.exercises).toHaveLength(1);
+    expect(a.exercises[0].supersetGroup).toBeUndefined();
   });
 
   it('editing a heart-rate workout preserves its window (editEndAt set, start unchanged)', () => {

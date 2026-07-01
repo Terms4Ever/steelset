@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, AppState, Pressable, ScrollView, View } from 'react-native';
 import Animated, { SlideInDown, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -50,30 +50,33 @@ export default function Workout() {
   const [pr, setPr] = useState<string | null>(null);
   // rest is timestamp-based so it keeps counting real time across backgrounding
   const restLeft = restEndAt != null ? Math.max(0, Math.ceil((restEndAt - Date.now()) / 1000)) : null;
+  const restEndRef = useRef<number | null>(null);
+  restEndRef.current = restEndAt;
 
   useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 1000);
-    // re-sync elapsed + rest the instant the app returns to the foreground
-    const sub = AppState.addEventListener('change', (st) => st === 'active' && setTick((t) => t + 1));
+    // fire the rest-complete haptic + clear the banner as soon as the timer elapses — driven by the
+    // 1s tick and by AppState 'active', so it stays correct after the app was backgrounded (single source).
+    const check = () => {
+      if (restEndRef.current != null && Date.now() >= restEndRef.current) {
+        haptic.medium();
+        setRestEndAt(null);
+      }
+    };
+    const id = setInterval(() => {
+      setTick((t) => t + 1);
+      check();
+    }, 1000);
+    const sub = AppState.addEventListener('change', (st) => {
+      if (st === 'active') {
+        setTick((t) => t + 1);
+        check();
+      }
+    });
     return () => {
       clearInterval(id);
       sub.remove();
     };
   }, []);
-  useEffect(() => {
-    if (restEndAt == null) return;
-    const ms = restEndAt - Date.now();
-    if (ms <= 0) {
-      haptic.medium();
-      setRestEndAt(null);
-      return;
-    }
-    const id = setTimeout(() => {
-      haptic.medium();
-      setRestEndAt(null);
-    }, ms);
-    return () => clearTimeout(id);
-  }, [restEndAt]);
   useEffect(() => {
     if (!pr) return;
     const id = setTimeout(() => setPr(null), 2800);
@@ -304,7 +307,7 @@ export default function Workout() {
                   onPress={() =>
                     Alert.alert('Odebrat cvik?', exDef?.name ?? 'Cvik', [
                       { text: 'Zrušit', style: 'cancel' },
-                      { text: 'Odebrat', style: 'destructive', onPress: () => removeActiveExercise(ex) },
+                      { text: 'Odebrat', style: 'destructive', onPress: () => { setFocus(null); removeActiveExercise(ex); } },
                     ])
                   }
                   style={{ width: 44, height: 44, borderRadius: radius.sm, backgroundColor: palette.surface2, alignItems: 'center', justifyContent: 'center' }}>
@@ -433,7 +436,7 @@ export default function Workout() {
         </Animated.View>
       )}
 
-      {restLeft !== null && !pr && (
+      {restLeft !== null && restLeft > 0 && !pr && (
         <Animated.View entering={SlideInDown.duration(220)} style={{ position: 'absolute', left: space.xl, right: space.xl, bottom: focus ? 322 : 28, backgroundColor: palette.surface2, borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: palette.hairline }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Ionicons name="timer-outline" size={18} color={palette.accent} />
@@ -443,7 +446,7 @@ export default function Workout() {
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <RestBtn label="-15" onPress={() => setRestEndAt((e) => Math.max(Date.now(), (e ?? Date.now()) - 15000))} />
-            <RestBtn label="+15" onPress={() => setRestEndAt((e) => (e ?? Date.now()) + 15000)} />
+            <RestBtn label="+15" onPress={() => setRestEndAt((e) => Math.max(Date.now(), e ?? Date.now()) + 15000)} />
             <RestBtn label="Přeskočit" onPress={() => setRestEndAt(null)} />
           </View>
         </Animated.View>

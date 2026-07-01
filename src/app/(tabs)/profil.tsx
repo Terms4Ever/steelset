@@ -155,7 +155,7 @@ export default function Profil() {
             <Stepper
               value={Math.round(toDisplayWeight(settings.bodyweightKg, settings.unit) * 10) / 10}
               step={settings.unit === 'lb' ? 1 : 0.5}
-              min={30}
+              min={Math.round(toDisplayWeight(30, settings.unit))}
               suffix={` ${settings.unit}`}
               onChange={(v) => setSetting('bodyweightKg', fromDisplayWeight(v, settings.unit))}
             />

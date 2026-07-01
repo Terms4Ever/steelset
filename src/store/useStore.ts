@@ -179,14 +179,21 @@ export const useStore = create<State & Actions>()(
       },
 
       setWorkoutDate: (ms) =>
-        set((s) => ({ workouts: patchActive(s.workouts, s.activeWorkoutId, (w) => ({ ...w, startedAt: ms })) })),
+        set((s) => ({
+          workouts: patchActive(s.workouts, s.activeWorkoutId, (w) => {
+            // shift a stashed edit-end by the same delta so an edited workout keeps its duration (no collapse)
+            const delta = ms - w.startedAt;
+            return { ...w, startedAt: ms, ...(w.editEndAt != null ? { editEndAt: w.editEndAt + delta } : {}) };
+          }),
+        })),
 
       addExerciseToActive: (exerciseId) =>
         set((s) => {
-          // bodyweight exercises pre-fill the weight with the user's bodyweight so they don't retype it
+          // weighted-bodyweight exercises (shyby, dipy) pre-fill the weight with the user's bodyweight so
+          // they don't retype it. bodyweight_reps (kliky) keep the column HIDDEN → no phantom tonnage.
           const ex = allExercises(s).find((e) => e.id === exerciseId);
           const bw = s.settings.bodyweightKg;
-          const usesBW = !!ex && (ex.tracking === 'weighted_bw' || ex.tracking === 'bodyweight_reps');
+          const usesBW = !!ex && ex.tracking === 'weighted_bw';
           let sets = prefillSets(lastPerformance(s.workouts, exerciseId), 3);
           if (usesBW && bw > 0) sets = sets.map((st) => ({ ...st, weight: st.weight ?? bw }));
           return {
@@ -248,10 +255,18 @@ export const useStore = create<State & Actions>()(
 
       removeActiveExercise: (exIndex) =>
         set((s) => ({
-          workouts: patchActive(s.workouts, s.activeWorkoutId, (w) => ({
-            ...w,
-            exercises: w.exercises.filter((_, i) => i !== exIndex),
-          })),
+          workouts: patchActive(s.workouts, s.activeWorkoutId, (w) => {
+            let exercises = w.exercises.filter((_, i) => i !== exIndex);
+            // drop superset tags that now have fewer than 2 members (no orphaned superset-of-one)
+            const counts: Record<string, number> = {};
+            exercises.forEach((le) => {
+              if (le.supersetGroup) counts[le.supersetGroup] = (counts[le.supersetGroup] ?? 0) + 1;
+            });
+            exercises = exercises.map((le) =>
+              le.supersetGroup && (counts[le.supersetGroup] ?? 0) < 2 ? (({ supersetGroup, ...rest }) => rest)(le) : le,
+            );
+            return { ...w, exercises };
+          }),
         })),
 
       linkSuperset: (exIndex) =>

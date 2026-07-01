@@ -45,23 +45,22 @@ export default function WorkoutDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  // completed-set timestamps → vertical markers on the HR chart
+  // completed-set timestamps → vertical markers on the HR chart. Only keep those that fall inside the
+  // workout window; a set (re)completed while editing gets an edit-time doneAt that would land outside.
   const setMarkers = useMemo(
-    () => (w ? w.exercises.flatMap((le) => le.sets.map((s) => s.doneAt).filter((t): t is number => typeof t === 'number')) : []),
+    () =>
+      w
+        ? w.exercises
+            .flatMap((le) => le.sets.map((s) => s.doneAt))
+            .filter((t): t is number => typeof t === 'number' && t >= w.startedAt && t <= (w.finishedAt ?? w.startedAt))
+        : [],
     [w],
   );
-
-  // average heart rate during one exercise's working window (from its set timestamps + the HR series)
-  const exHr = (le: { sets: { doneAt?: number }[] }): number | null => {
-    const series = w?.hrSeries;
-    if (!series?.length) return null;
-    const times = le.sets.map((s) => s.doneAt).filter((t): t is number => typeof t === 'number');
-    if (!times.length) return null;
-    const lo = Math.min(...times) - 90000; // include ~90 s before the first completed set (the effort)
-    const hi = Math.max(...times);
-    const pts = series.filter((p) => p.t >= lo && p.t <= hi).map((p) => p.bpm);
-    return pts.length ? Math.round(pts.reduce((a, b) => a + b, 0) / pts.length) : null;
-  };
+  // HR samples that actually fall inside the workout window (the chart plots only these)
+  const hrInWindow = useMemo(
+    () => (w?.hrSeries ? w.hrSeries.filter((p) => p.t >= w.startedAt && p.t <= (w.finishedAt ?? w.startedAt)).length : 0),
+    [w],
+  );
 
   if (!w) {
     return (
@@ -151,7 +150,7 @@ export default function WorkoutDetail() {
           </Pressable>
         )}
 
-        {w.hrSeries && w.hrSeries.length >= 2 && (
+        {w.hrSeries && hrInWindow >= 2 && (
           <View style={{ marginTop: space.lg, backgroundColor: palette.surface, borderRadius: radius.md, padding: space.lg, borderWidth: 1, borderColor: palette.hairline }}>
             <Txt size={type.caption} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5, marginBottom: 10 }}>
               TEP BĚHEM TRÉNINKU
@@ -182,17 +181,6 @@ export default function WorkoutDetail() {
                   {fmtWeight(exerciseVolume(le), unit)}
                 </Txt>
               </View>
-              {(() => {
-                const hr = exHr(le);
-                return hr ? (
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 4 }}>
-                    <Ionicons name="heart" size={13} color={palette.red} />
-                    <Txt size={type.caption} weight="semibold" num color={palette.textMute}>
-                      ⌀ {hr} tep při cviku
-                    </Txt>
-                  </View>
-                ) : null;
-              })()}
               <View style={{ marginTop: 10, gap: 6 }}>
                 {le.sets.map((s, si) => (
                   <View key={si} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
