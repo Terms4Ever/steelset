@@ -8,7 +8,7 @@ import { Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { fmtClock, relativeDay } from '@/lib/format';
 import { HealthWorkout, heartRateFor, listHealthWorkouts } from '@/lib/health';
-import { useStore } from '@/store/useStore';
+import { localCoversWindow, useStore } from '@/store/useStore';
 
 export default function HealthImport() {
   const router = useRouter();
@@ -23,6 +23,11 @@ export default function HealthImport() {
   const importedUuids = useMemo(
     () => new Set(workouts.map((w) => w.healthUuid).filter((x): x is string => !!x)),
     [workouts],
+  );
+  // hide Health workouts already logged live in Liftbook (same session → one record, no duplicate)
+  const visible = useMemo(
+    () => list.filter((hw) => !localCoversWindow(workouts, hw.start, hw.end)),
+    [list, workouts],
   );
 
   const load = async () => {
@@ -58,13 +63,13 @@ export default function HealthImport() {
   const onImportAll = async () => {
     if (busy) return;
     setBusy('__all__');
-    for (const hw of list) {
+    for (const hw of visible) {
       if (!importedUuids.has(hw.uuid)) await doImport(hw); // importHealthWorkout dedups internally too
     }
     setBusy(null);
   };
 
-  const pending = list.filter((hw) => !importedUuids.has(hw.uuid));
+  const pending = visible.filter((hw) => !importedUuids.has(hw.uuid));
   const now = Date.now();
 
   return (
@@ -112,15 +117,15 @@ export default function HealthImport() {
           <View style={{ paddingVertical: 40, alignItems: 'center' }}>
             <ActivityIndicator color={palette.accent} />
           </View>
-        ) : list.length === 0 ? (
+        ) : visible.length === 0 ? (
           <Txt size={type.body} weight="medium" color={palette.textMute}>
             {Platform.OS === 'ios'
-              ? 'Žádné tréninky v Apple Health. Zaznamenej trénink na hodinkách a ukonči ho.'
+              ? 'Žádné nové tréninky. Buď žádné na hodinkách, nebo už je máš zapsané v Liftbooku.'
               : 'Import je dostupný jen na iPhonu.'}
           </Txt>
         ) : (
           <View style={{ gap: space.sm }}>
-            {list.map((hw) => {
+            {visible.map((hw) => {
               const imported = importedUuids.has(hw.uuid);
               const isBusy = busy === hw.uuid;
               return (

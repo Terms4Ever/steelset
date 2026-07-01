@@ -284,13 +284,20 @@ export const useStore = create<State & Actions>()(
               const exercises = w.exercises
                 .map((le) => ({ ...le, sets: le.sets.filter((st) => st.done) }))
                 .filter((le) => le.sets.length > 0);
-              return { ...w, exercises, finishedAt: w.manual ? w.startedAt : Date.now() };
+              // editEndAt restores the original end (imported/HR workouts keep their duration + HR window)
+              const rawEnd = w.editEndAt ?? (w.manual ? w.startedAt : Date.now());
+              const finishedAt = Math.max(rawEnd, w.startedAt); // never invert if the date was changed mid-edit
+              const { editEndAt, ...rest } = w;
+              return { ...rest, exercises, finishedAt };
             })
             .filter((w) => {
               if (w.id !== id) return true;
               if (w.exercises.length > 0) return true;
-              // empty session: keep real live workouts (ran ≥2 min) so heart rate has a home; drop the rest
-              return !w.manual && Date.now() - w.startedAt >= KEEP_EMPTY_MS;
+              // keep empty sessions that carry Apple Health data (imported / heart rate), or a real
+              // live run (ran ≥2 min); drop accidental quick opens
+              const hasHealth =
+                w.source === 'health' || !!w.healthUuid || w.avgHr != null || w.maxHr != null || !!w.hrSeries?.length;
+              return hasHealth || (!w.manual && Date.now() - w.startedAt >= KEEP_EMPTY_MS);
             });
           return { workouts, activeWorkoutId: null };
         }),
@@ -311,9 +318,14 @@ export const useStore = create<State & Actions>()(
       editWorkout: (id) =>
         set((s) => ({
           activeWorkoutId: id,
-          workouts: s.workouts.map((w) =>
-            w.id === id ? { ...w, manual: true, startedAt: w.finishedAt ?? w.startedAt, finishedAt: undefined } : w,
-          ),
+          workouts: s.workouts.map((w) => {
+            if (w.id !== id) return w;
+            // imported / HR workouts: preserve original start AND end (duration + heart-rate window) while adding sets
+            if (w.source === 'health' || w.healthUuid) {
+              return { ...w, manual: true, editEndAt: w.finishedAt ?? w.startedAt, finishedAt: undefined };
+            }
+            return { ...w, manual: true, startedAt: w.finishedAt ?? w.startedAt, finishedAt: undefined };
+          }),
         })),
 
       setWorkoutHr: (id, avg, max, series) =>
@@ -360,11 +372,23 @@ export const useStore = create<State & Actions>()(
         dismissedHealth: s.dismissedHealth,
       }),
       // deep-merge settings so newly added fields (e.g. incrementLb) keep their defaults for existing users
-      merge: (persisted: any, current) => ({
-        ...current,
-        ...(persisted ?? {}),
-        settings: { ...current.settings, ...(persisted?.settings ?? {}) },
-      }),
+      merge: (persisted: any, current) => {
+        const merged = {
+          ...current,
+          ...(persisted ?? {}),
+          settings: { ...current.settings, ...(persisted?.settings ?? {}) },
+        };
+        // editEndAt is transient (only the actively-edited workout carries it); drop any stray copy that
+        // survived an app kill mid-edit so it never lingers on a finished record.
+        if (Array.isArray(merged.workouts)) {
+          merged.workouts = merged.workouts.map((w: any) =>
+            w && w.editEndAt != null && w.id !== merged.activeWorkoutId
+              ? (({ editEndAt, ...rest }) => rest)(w)
+              : w,
+          );
+        }
+        return merged;
+      },
       onRehydrateStorage: () => (state) => state?.setHydrated(true),
     },
   ),
@@ -382,5 +406,10 @@ export function activeWorkout(s: Pick<State, 'workouts' | 'activeWorkoutId'>): W
 }
 export function history(s: Pick<State, 'workouts'>): Workout[] {
   return s.workouts.filter((w) => w.finishedAt).sort((a, b) => b.finishedAt! - a.finishedAt!);
+}
+/** True if a natively-logged Liftbook workout overlaps [start, end] — so a Health workout for the
+ *  same session isn't offered again as a separate import (avoids duplicate records). */
+export function localCoversWindow(workouts: Workout[], start: number, end: number): boolean {
+  return workouts.some((w) => w.finishedAt != null && !w.healthUuid && start < w.finishedAt && w.startedAt < end);
 }
 export { isCountable };

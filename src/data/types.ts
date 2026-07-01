@@ -76,6 +76,7 @@ export interface Workout {
   hrSeries?: HrSample[]; // časová řada tepu během tréninku (pro graf)
   healthUuid?: string; // uuid HKWorkout z Apple Health (dedup importu)
   source?: 'health'; // původ záznamu (import z Apple Health / Kondice)
+  editEndAt?: number; // dočasné: při úpravě zachovává původní konec (drží trvání + okno tepu)
   exercises: LoggedExercise[];
 }
 
