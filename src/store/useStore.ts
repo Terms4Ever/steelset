@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { SEED_EXERCISES, STARTER_ROUTINES } from '@/data/exercises';
-import { Exercise, LoggedExercise, Routine, SetEntry, Settings, Unit, Workout } from '@/data/types';
+import { Exercise, HrSample, LoggedExercise, Routine, SetEntry, Settings, Unit, Workout } from '@/data/types';
 import { isCountable, lastPerformance } from '@/lib/calc';
 import { buildPrefilledExercise, prefillSets } from '@/lib/prefill';
 
@@ -60,7 +60,16 @@ interface Actions {
   discardWorkout: () => void;
   deleteWorkout: (id: string) => void;
   editWorkout: (id: string) => void;
-  setWorkoutHr: (id: string, avg?: number, max?: number) => void;
+  setWorkoutHr: (id: string, avg?: number, max?: number, series?: HrSample[]) => void;
+  importHealthWorkout: (hw: {
+    uuid: string;
+    name: string;
+    start: number;
+    end: number;
+    avg?: number;
+    max?: number;
+    series?: HrSample[];
+  }) => string | null;
 }
 
 const DEFAULT_SETTINGS: Settings = { unit: 'kg', restDefaultSec: 90, increment: 2.5, incrementLb: 5, healthEnabled: false, onboarded: false };
@@ -303,10 +312,32 @@ export const useStore = create<State & Actions>()(
           ),
         })),
 
-      setWorkoutHr: (id, avg, max) =>
+      setWorkoutHr: (id, avg, max, series) =>
         set((s) => ({
-          workouts: s.workouts.map((w) => (w.id === id ? { ...w, avgHr: avg, maxHr: max } : w)),
+          workouts: s.workouts.map((w) =>
+            w.id === id ? { ...w, avgHr: avg, maxHr: max, ...(series ? { hrSeries: series } : {}) } : w,
+          ),
         })),
+
+      importHealthWorkout: (hw) => {
+        const st = get();
+        // dedup: never import the same HealthKit workout twice
+        if (st.workouts.some((w) => w.healthUuid === hw.uuid)) return null;
+        const w: Workout = {
+          id: uid('w'),
+          name: hw.name,
+          startedAt: hw.start,
+          finishedAt: hw.end,
+          healthUuid: hw.uuid,
+          source: 'health',
+          avgHr: hw.avg,
+          maxHr: hw.max,
+          hrSeries: hw.series,
+          exercises: [],
+        };
+        set((s) => ({ workouts: [...s.workouts, w] }));
+        return w.id;
+      },
     }),
     {
       name: 'setly-store-v1',

@@ -49,6 +49,12 @@ export interface SetEntry {
   reps: number | null;
   rpe?: number | null;
   done: boolean;
+  doneAt?: number; // epoch ms kdy byla série dokončena (pro značky v grafu tepu)
+}
+
+export interface HrSample {
+  t: number; // epoch ms
+  bpm: number;
 }
 
 export interface LoggedExercise {
@@ -67,6 +73,9 @@ export interface Workout {
   manual?: boolean; // true = zpětný zápis (bez živého časovače)
   avgHr?: number; // průměrný tep z Apple Health (z hodinek)
   maxHr?: number; // maximální tep z Apple Health
+  hrSeries?: HrSample[]; // časová řada tepu během tréninku (pro graf)
+  healthUuid?: string; // uuid HKWorkout z Apple Health (dedup importu)
+  source?: 'health'; // původ záznamu (import z Apple Health / Kondice)
   exercises: LoggedExercise[];
 }
 

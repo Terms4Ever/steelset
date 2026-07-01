@@ -94,6 +94,24 @@ describe('store · full workout lifecycle', () => {
     expect(h[0].exercises[0].sets).toHaveLength(1);
   });
 
+  it('imports an Apple Health workout once and dedups by uuid', () => {
+    const start = Date.now() - 3600000;
+    const end = Date.now() - 1800000;
+    const id1 = s().importHealthWorkout({ uuid: 'HK-1', name: 'Silový trénink', start, end, avg: 130, max: 165, series: [{ t: start, bpm: 120 }, { t: end, bpm: 150 }] });
+    expect(id1).toBeTruthy();
+    // second import of same HealthKit uuid is ignored
+    const id2 = s().importHealthWorkout({ uuid: 'HK-1', name: 'Silový trénink', start: 1, end: 2 });
+    expect(id2).toBeNull();
+
+    const h = history(s());
+    expect(h).toHaveLength(1);
+    expect(h[0].source).toBe('health');
+    expect(h[0].healthUuid).toBe('HK-1');
+    expect(h[0].avgHr).toBe(130);
+    expect(h[0].hrSeries).toHaveLength(2);
+    expect(h[0].exercises).toHaveLength(0);
+  });
+
   it('adds and persists a custom exercise', () => {
     const id = s().addExercise({ name: 'Můj cvik', primary: 'Hrudník', equipment: 'Stroj', tracking: 'weight_reps' });
     expect(s().customExercises.find((e) => e.id === id)?.name).toBe('Můj cvik');

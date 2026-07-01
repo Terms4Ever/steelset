@@ -6,7 +6,7 @@ import { Pressable, View } from 'react-native';
 import { Card, PrimaryButton, Screen, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { weekStreak, workoutVolume } from '@/lib/calc';
-import { fmtHeaderDate, fmtWeight, relativeDay } from '@/lib/format';
+import { fmtClock, fmtHeaderDate, fmtWeight, relativeDay } from '@/lib/format';
 import { activeWorkout, history as historySel, useStore } from '@/store/useStore';
 
 export default function Dnesek() {
@@ -141,19 +141,30 @@ export default function Dnesek() {
           <Card style={{ padding: 0 }}>
             {finished.slice(0, 5).map((w, i) => {
               const setCount = w.exercises.reduce((n, le) => n + le.sets.length, 0);
+              const empty = w.exercises.length === 0;
+              const dur = w.finishedAt && !w.manual ? Math.round((w.finishedAt - w.startedAt) / 1000) : 0;
+              const sub = empty
+                ? [relativeDay(w.finishedAt!, now), dur >= 30 ? fmtClock(dur) : null, w.avgHr ? `⌀${w.avgHr} tep` : null]
+                    .filter(Boolean)
+                    .join(' · ')
+                : `${relativeDay(w.finishedAt!, now)} · ${w.exercises.length} cviků · ${setCount} sérií`;
               return (
                 <Pressable key={w.id} onPress={() => router.push(`/history/${w.id}`)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: space.lg, borderTopWidth: i === 0 ? 0 : 1, borderTopColor: palette.hairline }}>
                   <View style={{ flex: 1 }}>
                     <Txt size={type.body} weight="semibold">
                       {w.name}
                     </Txt>
-                    <Txt size={type.caption} weight="medium" color={palette.textMute}>
-                      {relativeDay(w.finishedAt!, now)} · {w.exercises.length} cviků · {setCount} sérií
+                    <Txt size={type.caption} weight="medium" num color={palette.textMute}>
+                      {sub}
                     </Txt>
                   </View>
-                  <Txt size={type.body} weight="bold" num color={palette.textDim}>
-                    {fmtWeight(workoutVolume(w), unit)}
-                  </Txt>
+                  {empty ? (
+                    w.source === 'health' ? <Ionicons name="heart" size={16} color={palette.red} /> : null
+                  ) : (
+                    <Txt size={type.body} weight="bold" num color={palette.textDim}>
+                      {fmtWeight(workoutVolume(w), unit)}
+                    </Txt>
+                  )}
                   <Ionicons name="chevron-forward" size={18} color={palette.textMute} />
                 </Pressable>
               );

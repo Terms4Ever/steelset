@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as AppleAuthentication from 'expo-apple-authentication';
+import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { Alert, Platform, Pressable, View } from 'react-native';
 
@@ -7,11 +8,12 @@ import { Card, Screen, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { workoutsToCsv } from '@/lib/csv';
 import { exportCsv } from '@/lib/export';
-import { healthSelfTest, requestHealth } from '@/lib/health';
+import { deleteMyHealthWorkouts, healthSelfTest, requestHealth } from '@/lib/health';
 import { fmtNum } from '@/lib/format';
 import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
 
 export default function Profil() {
+  const router = useRouter();
   const settings = useStore((s) => s.settings);
   const workouts = useStore((s) => s.workouts);
   const custom = useStore((s) => s.customExercises);
@@ -64,6 +66,24 @@ export default function Profil() {
   const onTestHealth = async () => {
     const res = await healthSelfTest();
     Alert.alert('Apple Health – test', res);
+  };
+
+  const onCleanupHealth = () => {
+    Alert.alert(
+      'Uklidit Apple Health?',
+      'Smaže tréninky, které do Apple Health zapsala starší verze Liftbooku (ty „Tradiční silový trénink"). Tvoje tréninky z hodinek zůstanou nedotčené.',
+      [
+        { text: 'Zrušit', style: 'cancel' },
+        {
+          text: 'Uklidit',
+          style: 'destructive',
+          onPress: async () => {
+            const n = await deleteMyHealthWorkouts();
+            Alert.alert('Hotovo', n > 0 ? `Smazáno ${n} záznamů z Apple Health.` : 'Nic k úklidu – Liftbook už do Health nezapisuje.');
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -140,6 +160,8 @@ export default function Profil() {
                   Připojeno
                 </Txt>
               </Row>
+              <RowButton icon="download-outline" label="Importovat trénink z Health" onPress={() => router.push('/health-import')} />
+              <RowButton icon="sparkles-outline" label="Uklidit tréninky v Health" onPress={onCleanupHealth} />
               <RowButton icon="pulse-outline" label="Test Apple Health (diagnostika)" last onPress={onTestHealth} />
             </>
           ) : (
