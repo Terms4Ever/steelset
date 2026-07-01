@@ -11,6 +11,7 @@ const TABS: Record<string, { label: string; icon: keyof typeof Ionicons.glyphMap
   index: { label: 'Dnešek', icon: 'today-outline' },
   plany: { label: 'Plány', icon: 'albums-outline' },
   pokrok: { label: 'Pokrok', icon: 'trending-up-outline' },
+  kalendar: { label: 'Kalendář', icon: 'calendar-outline' },
   profil: { label: 'Profil', icon: 'person-outline' },
 };
 
@@ -64,6 +65,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" />
       <Tabs.Screen name="plany" />
       <Tabs.Screen name="pokrok" />
+      <Tabs.Screen name="kalendar" />
       <Tabs.Screen name="profil" />
     </Tabs>
   );
