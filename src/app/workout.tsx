@@ -11,7 +11,7 @@ import { LoggedExercise, SetEntry, SetType } from '@/data/types';
 import { isPR, lastPerformance, MS } from '@/lib/calc';
 import { dayName, fmtClock, fmtDateShort, fmtNum, fmtWeight, fromDisplayWeight, toDisplayWeight, unitIncrement } from '@/lib/format';
 import { haptic } from '@/lib/haptic';
-import { heartRateFor, saveWorkout } from '@/lib/health';
+import { heartRateFor } from '@/lib/health';
 import { activeWorkout, exercisesById as exByIdSel, useStore } from '@/store/useStore';
 
 const SET_TAG_COLOR: Record<SetType, string> = {
@@ -174,7 +174,7 @@ export default function Workout() {
       return focusCell(ex, set, showW && !s.weight ? 'weight' : 'reps');
     }
     const wasPR = showW && isPR(workouts, exId, s.weight, s.reps);
-    updateSet(ex, set, { done: true });
+    updateSet(ex, set, { done: true, doneAt: Date.now() });
     if (!active.manual) setRest(restDefault);
     if (wasPR) {
       haptic.success();
@@ -193,13 +193,12 @@ export default function Workout() {
     const w = active;
     finishWorkout();
     router.replace('/');
-    // Apple Health: write the workout + pull heart rate the Watch recorded (live workouts only).
+    // Apple Health: pull the heart rate the Watch recorded (read-only; we never write workouts).
     if (w && !w.manual && healthEnabled) {
       const start = w.startedAt;
       const end = Date.now();
-      void saveWorkout(start, end);
       heartRateFor(start, end).then((hr) => {
-        if (hr.avg || hr.max) setWorkoutHr(w.id, hr.avg, hr.max);
+        if (hr.avg || hr.max || hr.series.length) setWorkoutHr(w.id, hr.avg, hr.max, hr.series.length ? hr.series : undefined);
       });
     }
   };

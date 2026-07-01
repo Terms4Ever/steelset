@@ -4,10 +4,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { HrChart } from '@/components/HrChart';
 import { PrimaryButton, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { exerciseVolume, workoutVolume } from '@/lib/calc';
-import { dayName, fmtDateShort, fmtWeight } from '@/lib/format';
+import { dayName, fmtClock, fmtDateShort, fmtWeight } from '@/lib/format';
 import { heartRateFor } from '@/lib/health';
 import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
 
@@ -34,13 +35,21 @@ export default function WorkoutDetail() {
     setHrLoading(true);
     const hr = await heartRateFor(w.startedAt, w.finishedAt);
     setHrLoading(false);
-    if (hr.avg || hr.max) setWorkoutHr(w.id, hr.avg, hr.max);
+    if (hr.avg || hr.max || hr.series.length) setWorkoutHr(w.id, hr.avg, hr.max, hr.series.length ? hr.series : undefined);
   };
-  // auto-pull once when opening (watch HR has usually synced by now)
+  // auto-pull once when opening a RECENT workout (Watch HR often syncs shortly after finishing).
+  // old workouts without HR are left alone — user can pull manually — so we don't re-query every open.
   useEffect(() => {
-    if (canPullHr && !w?.avgHr && !w?.maxHr) fetchHr();
+    const recent = !!w?.finishedAt && Date.now() - w.finishedAt < 2 * 86400000;
+    if (canPullHr && !w?.hrSeries && recent) fetchHr();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // completed-set timestamps → vertical markers on the HR chart
+  const setMarkers = useMemo(
+    () => (w ? w.exercises.flatMap((le) => le.sets.map((s) => s.doneAt).filter((t): t is number => typeof t === 'number')) : []),
+    [w],
+  );
 
   if (!w) {
     return (
@@ -54,6 +63,12 @@ export default function WorkoutDetail() {
   }
 
   const when = w.finishedAt ?? w.startedAt;
+  const durationSec = w.finishedAt && !w.manual ? Math.max(0, Math.round((w.finishedAt - w.startedAt) / 1000)) : 0;
+  const metaParts = [
+    `${dayName(when)} ${fmtDateShort(when)}`,
+    ...(w.exercises.length ? [`${w.exercises.length} cviků`, fmtWeight(workoutVolume(w), unit)] : []),
+    ...(durationSec >= 30 ? [fmtClock(durationSec)] : []),
+  ];
 
   const onEdit = () => {
     editWorkout(w.id);
@@ -92,8 +107,16 @@ export default function WorkoutDetail() {
           {w.name}
         </Txt>
         <Txt size={type.body} weight="medium" color={palette.textMute} style={{ marginTop: 2 }}>
-          {dayName(when)} {fmtDateShort(when)} · {w.exercises.length} cviků · {fmtWeight(workoutVolume(w), unit)}
+          {metaParts.join(' · ')}
         </Txt>
+        {w.source === 'health' && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 }}>
+            <Ionicons name="heart-circle-outline" size={15} color={palette.accent} />
+            <Txt size={type.caption} weight="semibold" color={palette.accent}>
+              Importováno z Apple Health
+            </Txt>
+          </View>
+        )}
         {(w.avgHr || w.maxHr) && (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
             <Ionicons name="heart" size={15} color={palette.red} />
@@ -114,6 +137,26 @@ export default function WorkoutDetail() {
               {hrLoading ? 'Načítám…' : w.avgHr || w.maxHr ? 'Načíst tep znovu' : 'Načíst tep z Health'}
             </Txt>
           </Pressable>
+        )}
+
+        {w.hrSeries && w.hrSeries.length >= 2 && (
+          <View style={{ marginTop: space.lg, backgroundColor: palette.surface, borderRadius: radius.md, padding: space.lg, borderWidth: 1, borderColor: palette.hairline }}>
+            <Txt size={type.caption} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5, marginBottom: 10 }}>
+              TEP BĚHEM TRÉNINKU
+            </Txt>
+            <HrChart series={w.hrSeries} start={w.startedAt} end={w.finishedAt ?? w.startedAt} markers={setMarkers} />
+            {setMarkers.length > 0 && (
+              <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ marginTop: 8 }}>
+                Svislé čáry = dokončené série
+              </Txt>
+            )}
+          </View>
+        )}
+
+        {w.exercises.length === 0 && (
+          <Txt size={type.body} weight="medium" color={palette.textMute} style={{ marginTop: space.xl }}>
+            Bez zapsaných sérií{w.source === 'health' ? ' · záznam z Apple Health' : ''}. Přes „Upravit trénink" můžeš doplnit cviky.
+          </Txt>
         )}
 
         <View style={{ marginTop: space.xl, gap: space.md }}>

@@ -61,8 +61,8 @@
       [
         "@kingstinct/react-native-healthkit",
         {
-          "NSHealthShareUsageDescription": "Liftbook čte tep z hodinek a váhu z Apple Health, aby je přiřadil k tvým tréninkům.",
-          "NSHealthUpdateUsageDescription": "Liftbook zapisuje dokončené tréninky do Apple Health."
+          "NSHealthShareUsageDescription": "Liftbook čte tep, tréninky a váhu z Apple Health, aby je přiřadil k tvým záznamům a mohl je importovat.",
+          "NSHealthUpdateUsageDescription": "Liftbook umožňuje odstranit tréninky, které do Apple Health zapsaly starší verze aplikace."
         }
       ]
     ],
