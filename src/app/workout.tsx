@@ -250,11 +250,7 @@ export default function Workout() {
             </Txt>
           )}
         </View>
-        <Pressable onPress={onFinish} style={{ backgroundColor: palette.accentDeep, paddingHorizontal: 14, paddingVertical: 7, borderRadius: radius.pill }}>
-          <Txt size={type.label} weight="bold" color={palette.accent}>
-            Hotovo
-          </Txt>
-        </Pressable>
+        <View style={{ width: 26 }} />
       </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: space.xl, paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
@@ -396,8 +392,11 @@ export default function Workout() {
           </Txt>
         </Pressable>
 
-        <Pressable onPress={onDiscard} style={{ marginTop: 14, paddingVertical: 12, alignItems: 'center' }}>
-          <Txt size={type.label} weight="semibold" color={palette.red}>
+        <Pressable
+          onPress={onDiscard}
+          style={{ marginTop: 12, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, borderRadius: radius.md, borderWidth: 1, borderColor: palette.red }}>
+          <Ionicons name="trash-outline" size={18} color={palette.red} />
+          <Txt size={type.body} weight="bold" color={palette.red}>
             Zahodit trénink
           </Txt>
         </Pressable>
