@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { HrChart } from '@/components/HrChart';
 import { PrimaryButton, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
-import { exerciseVolume, workoutVolume } from '@/lib/calc';
+import { exerciseVolume, perExerciseHr, workoutVolume } from '@/lib/calc';
 import { dayName, fmtClock, fmtDateShort, fmtWeight } from '@/lib/format';
 import { heartRateFor } from '@/lib/health';
 import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
@@ -61,6 +61,8 @@ export default function WorkoutDetail() {
     () => (w?.hrSeries ? w.hrSeries.filter((p) => p.t >= w.startedAt && p.t <= (w.finishedAt ?? w.startedAt)).length : 0),
     [w],
   );
+  // per-exercise average HR by index (segmented timeline; see calc.perExerciseHr)
+  const exHr = useMemo<(number | null)[]>(() => (w ? perExerciseHr(w) : []), [w]);
 
   if (!w) {
     return (
@@ -173,15 +175,25 @@ export default function WorkoutDetail() {
         <View style={{ marginTop: space.xl, gap: space.md }}>
           {w.exercises.map((le, i) => (
             <View key={i} style={{ backgroundColor: palette.surface, borderRadius: radius.md, padding: space.lg, borderWidth: 1, borderColor: palette.hairline }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
                 <Txt size={type.h2} weight="bold" style={{ flex: 1 }}>
                   {exById[le.exerciseId]?.name ?? 'Cvik'}
                 </Txt>
-                <Txt size={type.label} weight="semibold" num color={palette.textDim}>
-                  {fmtWeight(exerciseVolume(le), unit)}
-                </Txt>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Txt size={type.label} weight="semibold" num color={palette.textDim}>
+                    {fmtWeight(exerciseVolume(le), unit)}
+                  </Txt>
+                  {exHr[i] != null && (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 3 }}>
+                      <Ionicons name="heart" size={11} color={palette.red} />
+                      <Txt size={type.caption} weight="semibold" num color={palette.textMute}>
+                        ⌀ {exHr[i]} tep
+                      </Txt>
+                    </View>
+                  )}
+                </View>
               </View>
-              <View style={{ marginTop: 10, gap: 6 }}>
+              <View style={{ marginTop: 10, gap: 6, borderTopWidth: 1, borderTopColor: palette.hairline, paddingTop: 10 }}>
                 {le.sets.map((s, si) => (
                   <View key={si} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                     <Txt size={type.label} weight="bold" color={palette.textMute} style={{ width: 24 }}>

@@ -8,6 +8,7 @@ import {
   isPR,
   lastPerformance,
   muscleVolume,
+  perExerciseHr,
   strengthScore,
   weeklyVolume,
   weekStreak,
@@ -154,5 +155,30 @@ describe('strengthScore + trend', () => {
     const trend = e1rmTrend(ws, 'squat');
     expect(trend.map((p) => p.at)).toEqual([10_000, 20_000]);
     expect(trend[1].value).toBeGreaterThan(trend[0].value);
+  });
+
+  it('perExerciseHr segments HR by exercise timeline within the window', () => {
+    const w = {
+      id: 'x', name: 'w', startedAt: 0, finishedAt: 1000,
+      hrSeries: [{ t: 100, bpm: 140 }, { t: 200, bpm: 140 }, { t: 400, bpm: 120 }, { t: 600, bpm: 120 }, { t: 800, bpm: 100 }],
+      exercises: [
+        { exerciseId: 'a', sets: [{ type: 'R', weight: 100, reps: 5, done: true, doneAt: 300 }] },
+        { exerciseId: 'b', sets: [{ type: 'R', weight: 80, reps: 5, done: true, doneAt: 700 }] },
+      ],
+    } as any as Workout;
+    // a: window [0,300] → 140,140 → 140 ; b: window [300,700] → 120,120 → 120 (no neighbour bleed)
+    expect(perExerciseHr(w)).toEqual([140, 120]);
+  });
+
+  it('perExerciseHr is null for exercises with no completed set inside the window', () => {
+    const w = {
+      id: 'x', name: 'w', startedAt: 0, finishedAt: 1000,
+      hrSeries: [{ t: 100, bpm: 140 }],
+      exercises: [
+        { exerciseId: 'a', sets: [{ type: 'R', weight: 100, reps: 5, done: true, doneAt: 5000 }] }, // outside window
+        { exerciseId: 'b', sets: [{ type: 'R', weight: 80, reps: 5, done: false }] }, // not completed
+      ],
+    } as any as Workout;
+    expect(perExerciseHr(w)).toEqual([null, null]);
   });
 });
