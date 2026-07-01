@@ -146,6 +146,40 @@ export function strengthScore(workouts: Workout[]): number {
   return Math.round(total / 2);
 }
 
+/**
+ * Average heart rate per exercise (by index) for a finished workout. Segments the timeline: exercise i's
+ * window runs from the previous exercise's last completed set (or workout start) to this exercise's last
+ * completed set — so it never borrows a neighbour's HR. Only set timestamps inside the workout window
+ * count, so imported/edited sets (edit-time doneAt outside the window) are skipped. null = no HR for that
+ * exercise.
+ */
+export function perExerciseHr(w: Workout): (number | null)[] {
+  const series = w.hrSeries;
+  if (!series?.length) return w.exercises.map(() => null);
+  const winStart = w.startedAt;
+  const winEnd = w.finishedAt ?? w.startedAt;
+  const lastDone = w.exercises.map((le) => {
+    const ts = le.sets
+      .map((s) => s.doneAt)
+      .filter((t): t is number => typeof t === 'number' && t >= winStart && t <= winEnd);
+    return ts.length ? Math.max(...ts) : null;
+  });
+  const out: (number | null)[] = [];
+  let prevEnd = winStart;
+  for (let i = 0; i < w.exercises.length; i++) {
+    const end = lastDone[i];
+    if (end == null) {
+      out.push(null);
+      continue;
+    }
+    const lo = Math.max(winStart, prevEnd);
+    const pts = series.filter((p) => p.t >= lo && p.t <= end).map((p) => p.bpm);
+    out.push(pts.length ? Math.round(pts.reduce((a, b) => a + b, 0) / pts.length) : null);
+    prevEnd = end;
+  }
+  return out;
+}
+
 /** e1RM trend points (sorted by time) for charting one exercise. */
 export function e1rmTrend(workouts: Workout[], exerciseId: string): { at: number; value: number }[] {
   const pts: { at: number; value: number }[] = [];
