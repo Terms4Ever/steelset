@@ -155,7 +155,7 @@ export default function WorkoutDetail() {
 
         {w.exercises.length === 0 && (
           <Txt size={type.body} weight="medium" color={palette.textMute} style={{ marginTop: space.xl }}>
-            Bez zapsaných sérií{w.source === 'health' ? ' · záznam z Apple Health' : ''}. Přes „Upravit trénink" můžeš doplnit cviky.
+            Bez zapsaných sérií{w.source === 'health' ? ' · záznam z Apple Health' : ''}. Přes „Přidat série" doplníš cviky – tep zůstane.
           </Txt>
         )}
 
@@ -192,7 +192,7 @@ export default function WorkoutDetail() {
         </View>
 
         <View style={{ marginTop: space.xxl }}>
-          <PrimaryButton label="Upravit trénink" onPress={onEdit} />
+          <PrimaryButton label={w.exercises.length === 0 ? 'Přidat série' : 'Upravit trénink'} onPress={onEdit} />
         </View>
       </ScrollView>
     </SafeAreaView>

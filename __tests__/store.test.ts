@@ -3,7 +3,7 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 );
 
 import { bestE1rm } from '@/lib/calc';
-import { activeWorkout, history, useStore } from '@/store/useStore';
+import { activeWorkout, history, localCoversWindow, useStore } from '@/store/useStore';
 
 const s = () => useStore.getState();
 
@@ -110,6 +110,47 @@ describe('store · full workout lifecycle', () => {
     expect(h[0].avgHr).toBe(130);
     expect(h[0].hrSeries).toHaveLength(2);
     expect(h[0].exercises).toHaveLength(0);
+  });
+
+  it('editing an imported Health workout keeps it (no vanish) and preserves duration + HR', () => {
+    const start = Date.now() - 3600000;
+    const end = Date.now() - 1800000;
+    const id = s().importHealthWorkout({ uuid: 'HK-2', name: 'Silový trénink', start, end, avg: 130, max: 165, series: [{ t: start, bpm: 120 }, { t: end, bpm: 150 }] })!;
+    s().editWorkout(id);
+    expect(s().activeWorkoutId).toBe(id);
+    s().finishWorkout(); // finish WITHOUT adding sets — must not vanish
+    const h = history(s());
+    expect(h).toHaveLength(1);
+    expect(h[0].id).toBe(id);
+    expect(h[0].startedAt).toBe(start); // original window preserved (HR graph intact)
+    expect(h[0].finishedAt).toBe(end);
+    expect(h[0].avgHr).toBe(130);
+    expect(h[0].hrSeries).toHaveLength(2);
+    expect(h[0].editEndAt).toBeUndefined();
+  });
+
+  it('adds sets to an imported workout → one combined record (sets + heart rate)', () => {
+    const start = Date.now() - 3600000;
+    const end = Date.now() - 1800000;
+    const id = s().importHealthWorkout({ uuid: 'HK-3', name: 'Silový trénink', start, end, avg: 140, max: 170 })!;
+    s().editWorkout(id);
+    s().addExerciseToActive('squat');
+    s().updateSet(0, 0, { weight: 100, reps: 5, done: true });
+    s().finishWorkout();
+    const w = history(s())[0];
+    expect(w.exercises).toHaveLength(1);
+    expect(w.exercises[0].sets).toHaveLength(1);
+    expect(w.avgHr).toBe(140); // heart rate retained alongside the new sets
+    expect(w.finishedAt).toBe(end);
+  });
+
+  it('localCoversWindow: a live-logged workout hides an overlapping Health import', () => {
+    const live = [{ id: 'a', name: 'x', startedAt: 1000, finishedAt: 2000, exercises: [] }] as any;
+    expect(localCoversWindow(live, 1500, 2500)).toBe(true); // overlaps
+    expect(localCoversWindow(live, 2000, 3000)).toBe(false); // starts exactly at end → no overlap
+    expect(localCoversWindow(live, 3000, 4000)).toBe(false); // after
+    const imported = [{ id: 'b', name: 'x', startedAt: 1000, finishedAt: 2000, healthUuid: 'u', exercises: [] }] as any;
+    expect(localCoversWindow(imported, 1500, 2500)).toBe(false); // an import never "covers" another
   });
 
   it('remembers dismissed Health workouts without duplicates', () => {

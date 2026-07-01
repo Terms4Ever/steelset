@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AppState, Platform } from 'react-native';
 
 import { HealthWorkout, listHealthWorkouts } from '@/lib/health';
-import { useStore } from '@/store/useStore';
+import { localCoversWindow, useStore } from '@/store/useStore';
 
 /**
  * Scans Apple Health for workouts not yet imported or dismissed.
@@ -38,6 +38,9 @@ export function useHealthScan(): HealthWorkout[] {
     return () => sub.remove();
   }, [hydrated, scan]);
 
-  // reactive to imports/dismissals without re-querying Health
-  return useMemo(() => list.filter((hw) => !seen.has(hw.uuid)), [list, seen]);
+  // reactive to imports/dismissals without re-querying Health; skip sessions already logged live in Liftbook
+  return useMemo(
+    () => list.filter((hw) => !seen.has(hw.uuid) && !localCoversWindow(workouts, hw.start, hw.end)),
+    [list, seen, workouts],
+  );
 }
