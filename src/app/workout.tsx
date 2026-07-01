@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Alert, Pressable, ScrollView, View } from 'react-native';
 import Animated, { SlideInDown, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -191,6 +191,20 @@ export default function Workout() {
 
   const onFinish = () => {
     const w = active;
+    // don't silently discard: a live workout with no completed set stays put + asks the user
+    const hasDone = w.exercises.some((le) => le.sets.some((s) => s.done));
+    if (!w.manual && !hasDone) {
+      haptic.warning();
+      Alert.alert(
+        'Žádná hotová série',
+        'Označ aspoň jednu sérii zeleným ✓ (ťukni kolečko vpravo u série) a pak dej Hotovo. Nebo trénink zahoď.',
+        [
+          { text: 'Pokračovat v zápisu', style: 'cancel' },
+          { text: 'Zahodit trénink', style: 'destructive', onPress: () => { discardWorkout(); router.replace('/'); } },
+        ],
+      );
+      return;
+    }
     finishWorkout();
     router.replace('/');
     // Apple Health: pull the heart rate the Watch recorded (read-only; we never write workouts).
