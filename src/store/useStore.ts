@@ -25,6 +25,7 @@ interface State {
   activeWorkoutId: string | null;
   settings: Settings;
   appleUser: AppleUser | null;
+  dismissedHealth: string[]; // uuids HKWorkoutů, které uživatel odmítl importovat (aby se nenabízely znovu)
   _hydrated: boolean;
 }
 
@@ -61,6 +62,7 @@ interface Actions {
   deleteWorkout: (id: string) => void;
   editWorkout: (id: string) => void;
   setWorkoutHr: (id: string, avg?: number, max?: number, series?: HrSample[]) => void;
+  dismissHealthWorkouts: (uuids: string[]) => void;
   importHealthWorkout: (hw: {
     uuid: string;
     name: string;
@@ -89,6 +91,7 @@ export const useStore = create<State & Actions>()(
       activeWorkoutId: null,
       settings: DEFAULT_SETTINGS,
       appleUser: null,
+      dismissedHealth: [],
       _hydrated: false,
 
       setHydrated: (v) => set({ _hydrated: v }),
@@ -120,6 +123,7 @@ export const useStore = create<State & Actions>()(
           activeWorkoutId: null,
           settings: { ...DEFAULT_SETTINGS },
           appleUser: null,
+          dismissedHealth: [],
         }),
 
       addExercise: (e) => {
@@ -319,6 +323,9 @@ export const useStore = create<State & Actions>()(
           ),
         })),
 
+      dismissHealthWorkouts: (uuids) =>
+        set((s) => ({ dismissedHealth: Array.from(new Set([...s.dismissedHealth, ...uuids])) })),
+
       importHealthWorkout: (hw) => {
         const st = get();
         // dedup: never import the same HealthKit workout twice
@@ -350,6 +357,7 @@ export const useStore = create<State & Actions>()(
         activeWorkoutId: s.activeWorkoutId,
         settings: s.settings,
         appleUser: s.appleUser,
+        dismissedHealth: s.dismissedHealth,
       }),
       // deep-merge settings so newly added fields (e.g. incrementLb) keep their defaults for existing users
       merge: (persisted: any, current) => ({
