@@ -20,6 +20,6 @@ export async function exportCsv(csv: string, filename = 'setly-export.csv'): Pro
   const uri = (FileSystem.cacheDirectory ?? '') + filename;
   await FileSystem.writeAsStringAsync(uri, '﻿' + csv, { encoding: 'utf8' });
   if (await Sharing.isAvailableAsync()) {
-    await Sharing.shareAsync(uri, { mimeType: 'text/csv', dialogTitle: 'Export Liftbook' });
+    await Sharing.shareAsync(uri, { mimeType: 'text/csv', dialogTitle: 'Export Steelset' });
   }
 }

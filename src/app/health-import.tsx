@@ -24,7 +24,7 @@ export default function HealthImport() {
     () => new Set(workouts.map((w) => w.healthUuid).filter((x): x is string => !!x)),
     [workouts],
   );
-  // hide Health workouts already logged live in Liftbook (same session → one record, no duplicate)
+  // hide Health workouts already logged live in Steelset (same session → one record, no duplicate)
   const visible = useMemo(
     () => list.filter((hw) => !localCoversWindow(workouts, hw.start, hw.end)),
     [list, workouts],
@@ -88,7 +88,7 @@ export default function HealthImport() {
 
       <ScrollView contentContainerStyle={{ padding: space.xl, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
         <Txt size={type.body} weight="medium" color={palette.textMute} style={{ marginBottom: space.lg }}>
-          Tréninky z hodinek / Kondice za posledních 30 dní. Ťukni pro přidání do Liftbooku i s tepem.
+          Tréninky z hodinek / Kondice za posledních 30 dní. Ťukni pro přidání do Steelsetu i s tepem.
         </Txt>
 
         {healthEnabled && !loading && pending.length > 1 && (
@@ -120,7 +120,7 @@ export default function HealthImport() {
         ) : visible.length === 0 ? (
           <Txt size={type.body} weight="medium" color={palette.textMute}>
             {Platform.OS === 'ios'
-              ? 'Žádné nové tréninky. Buď žádné na hodinkách, nebo už je máš zapsané v Liftbooku.'
+              ? 'Žádné nové tréninky. Buď žádné na hodinkách, nebo už je máš zapsané v Steelsetu.'
               : 'Import je dostupný jen na iPhonu.'}
           </Txt>
         ) : (

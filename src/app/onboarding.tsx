@@ -27,7 +27,7 @@ export default function Onboarding() {
     <Screen>
       <View style={{ alignItems: 'center', marginTop: space.xl }}>
         <Image
-          source={require('../../assets/images/liftbook-wordmark.png')}
+          source={require('../../assets/images/steelset-wordmark.png')}
           style={{ width: 230, height: 80 }}
           contentFit="contain"
         />

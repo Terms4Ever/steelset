@@ -71,7 +71,7 @@ export default function Profil() {
   const onCleanupHealth = () => {
     Alert.alert(
       'Uklidit Apple Health?',
-      'Smaže tréninky, které do Apple Health zapsala starší verze Liftbooku (ty „Tradiční silový trénink"). Tvoje tréninky z hodinek zůstanou nedotčené.',
+      'Smaže tréninky, které do Apple Health zapsala starší verze Steelsetu (ty „Tradiční silový trénink"). Tvoje tréninky z hodinek zůstanou nedotčené.',
       [
         { text: 'Zrušit', style: 'cancel' },
         {
@@ -79,7 +79,7 @@ export default function Profil() {
           style: 'destructive',
           onPress: async () => {
             const n = await deleteMyHealthWorkouts();
-            Alert.alert('Hotovo', n > 0 ? `Smazáno ${n} záznamů z Apple Health.` : 'Nic k úklidu – Liftbook už do Health nezapisuje.');
+            Alert.alert('Hotovo', n > 0 ? `Smazáno ${n} záznamů z Apple Health.` : 'Nic k úklidu – Steelset už do Health nezapisuje.');
           },
         },
       ],
@@ -175,8 +175,8 @@ export default function Profil() {
         <RowButton icon="trash-outline" label="Smazat všechna data" danger last onPress={onWipe} />
       </Section>
 
-      <Section title="LIFTBOOK">
-        <Row icon="star-outline" label="Liftbook Pro" last>
+      <Section title="STEELSET">
+        <Row icon="star-outline" label="Steelset Pro" last>
           <Txt size={type.label} weight="semibold" color={palette.accent}>
             Lifetime
           </Txt>
@@ -184,7 +184,7 @@ export default function Profil() {
       </Section>
 
       <Txt size={type.caption} color={palette.textMute} style={{ textAlign: 'center', marginTop: space.xl }}>
-        Liftbook · v1.0.0 · data zůstávají v telefonu
+        Steelset · v1.0.0 · data zůstávají v telefonu
       </Txt>
     </Screen>
   );

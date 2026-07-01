@@ -38,7 +38,7 @@ export function useHealthScan(): HealthWorkout[] {
     return () => sub.remove();
   }, [hydrated, scan]);
 
-  // reactive to imports/dismissals without re-querying Health; skip sessions already logged live in Liftbook
+  // reactive to imports/dismissals without re-querying Health; skip sessions already logged live in Steelset
   return useMemo(
     () => list.filter((hw) => !seen.has(hw.uuid) && !localCoversWindow(workouts, hw.start, hw.end)),
     [list, seen, workouts],
