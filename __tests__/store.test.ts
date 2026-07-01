@@ -112,6 +112,12 @@ describe('store · full workout lifecycle', () => {
     expect(h[0].exercises).toHaveLength(0);
   });
 
+  it('remembers dismissed Health workouts without duplicates', () => {
+    s().dismissHealthWorkouts(['A', 'B']);
+    s().dismissHealthWorkouts(['B', 'C']);
+    expect([...s().dismissedHealth].sort()).toEqual(['A', 'B', 'C']);
+  });
+
   it('adds and persists a custom exercise', () => {
     const id = s().addExercise({ name: 'Můj cvik', primary: 'Hrudník', equipment: 'Stroj', tracking: 'weight_reps' });
     expect(s().customExercises.find((e) => e.id === id)?.name).toBe('Můj cvik');

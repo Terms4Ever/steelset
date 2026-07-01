@@ -35,9 +35,7 @@ export default function HealthImport() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const onImport = async (hw: HealthWorkout) => {
-    if (busy || importedUuids.has(hw.uuid)) return;
-    setBusy(hw.uuid);
+  const doImport = async (hw: HealthWorkout) => {
     const hr = await heartRateFor(hw.start, hw.end);
     importHealthWorkout({
       uuid: hw.uuid,
@@ -48,9 +46,25 @@ export default function HealthImport() {
       max: hr.max,
       series: hr.series.length ? hr.series : undefined,
     });
+  };
+
+  const onImport = async (hw: HealthWorkout) => {
+    if (busy || importedUuids.has(hw.uuid)) return;
+    setBusy(hw.uuid);
+    await doImport(hw);
     setBusy(null);
   };
 
+  const onImportAll = async () => {
+    if (busy) return;
+    setBusy('__all__');
+    for (const hw of list) {
+      if (!importedUuids.has(hw.uuid)) await doImport(hw); // importHealthWorkout dedups internally too
+    }
+    setBusy(null);
+  };
+
+  const pending = list.filter((hw) => !importedUuids.has(hw.uuid));
   const now = Date.now();
 
   return (
@@ -71,6 +85,24 @@ export default function HealthImport() {
         <Txt size={type.body} weight="medium" color={palette.textMute} style={{ marginBottom: space.lg }}>
           Tréninky z hodinek / Kondice za posledních 30 dní. Ťukni pro přidání do Liftbooku i s tepem.
         </Txt>
+
+        {healthEnabled && !loading && pending.length > 1 && (
+          <Pressable
+            onPress={onImportAll}
+            disabled={!!busy}
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: space.lg, paddingVertical: 13, borderRadius: radius.md, backgroundColor: palette.accent }}>
+            {busy === '__all__' ? (
+              <ActivityIndicator color={palette.bg} />
+            ) : (
+              <>
+                <Ionicons name="download" size={18} color={palette.bg} />
+                <Txt size={type.body} weight="bold" color={palette.bg}>
+                  Importovat vše ({pending.length})
+                </Txt>
+              </>
+            )}
+          </Pressable>
+        )}
 
         {!healthEnabled ? (
           <Txt size={type.body} weight="medium" color={palette.textMute}>

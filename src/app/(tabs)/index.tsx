@@ -7,6 +7,7 @@ import { Card, PrimaryButton, Screen, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { weekStreak, workoutVolume } from '@/lib/calc';
 import { fmtClock, fmtHeaderDate, fmtWeight, relativeDay } from '@/lib/format';
+import { useHealthScan } from '@/lib/useHealthScan';
 import { activeWorkout, history as historySel, useStore } from '@/store/useStore';
 
 export default function Dnesek() {
@@ -18,7 +19,9 @@ export default function Dnesek() {
   const activeId = useStore((s) => s.activeWorkoutId);
   const startWorkout = useStore((s) => s.startWorkout);
   const discardWorkout = useStore((s) => s.discardWorkout);
+  const dismissHealthWorkouts = useStore((s) => s.dismissHealthWorkouts);
   const unit = useStore((s) => s.settings.unit);
+  const newHealth = useHealthScan();
 
   const active = useMemo(() => activeWorkout({ workouts, activeWorkoutId: activeId }), [workouts, activeId]);
   const finished = useMemo(() => historySel({ workouts }), [workouts]);
@@ -68,6 +71,28 @@ export default function Dnesek() {
           </View>
         )}
       </View>
+
+      {/* Apple Health: new workouts detected (Strava-style) */}
+      {newHealth.length > 0 && (
+        <Pressable
+          onPress={() => router.push('/health-import')}
+          style={{ marginTop: space.lg, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: palette.accentDeep, borderRadius: radius.md, padding: space.lg, borderWidth: 1, borderColor: palette.accent }}>
+          <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: palette.accent, alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="heart" size={20} color={palette.bg} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Txt size={type.body} weight="bold">
+              {newHealth.length === 1 ? 'Nový trénink z Apple Health' : `${newHealth.length} nových tréninků z Apple Health`}
+            </Txt>
+            <Txt size={type.caption} weight="medium" color={palette.textMute}>
+              Ťukni pro import i s tepem
+            </Txt>
+          </View>
+          <Pressable onPress={() => dismissHealthWorkouts(newHealth.map((w) => w.uuid))} hitSlop={12}>
+            <Ionicons name="close" size={20} color={palette.textDim} />
+          </Pressable>
+        </Pressable>
+      )}
 
       {/* primary action - logging first */}
       <View style={{ marginTop: space.xl }}>
