@@ -74,7 +74,7 @@ interface Actions {
   }) => string | null;
 }
 
-const DEFAULT_SETTINGS: Settings = { unit: 'kg', restDefaultSec: 90, increment: 2.5, incrementLb: 5, healthEnabled: false, onboarded: false };
+const DEFAULT_SETTINGS: Settings = { unit: 'kg', restDefaultSec: 90, increment: 2.5, incrementLb: 5, healthEnabled: false, bodyweightKg: 80, onboarded: false };
 
 function patchActive(workouts: Workout[], activeId: string | null, fn: (w: Workout) => Workout): Workout[] {
   if (!activeId) return workouts;
@@ -182,15 +182,20 @@ export const useStore = create<State & Actions>()(
         set((s) => ({ workouts: patchActive(s.workouts, s.activeWorkoutId, (w) => ({ ...w, startedAt: ms })) })),
 
       addExerciseToActive: (exerciseId) =>
-        set((s) => ({
-          workouts: patchActive(s.workouts, s.activeWorkoutId, (w) => ({
-            ...w,
-            exercises: [
-              ...w.exercises,
-              { exerciseId, sets: prefillSets(lastPerformance(s.workouts, exerciseId), 3) },
-            ],
-          })),
-        })),
+        set((s) => {
+          // bodyweight exercises pre-fill the weight with the user's bodyweight so they don't retype it
+          const ex = allExercises(s).find((e) => e.id === exerciseId);
+          const bw = s.settings.bodyweightKg;
+          const usesBW = !!ex && (ex.tracking === 'weighted_bw' || ex.tracking === 'bodyweight_reps');
+          let sets = prefillSets(lastPerformance(s.workouts, exerciseId), 3);
+          if (usesBW && bw > 0) sets = sets.map((st) => ({ ...st, weight: st.weight ?? bw }));
+          return {
+            workouts: patchActive(s.workouts, s.activeWorkoutId, (w) => ({
+              ...w,
+              exercises: [...w.exercises, { exerciseId, sets }],
+            })),
+          };
+        }),
 
       addSet: (exIndex, type = 'R') =>
         set((s) => ({
@@ -320,8 +325,10 @@ export const useStore = create<State & Actions>()(
           activeWorkoutId: id,
           workouts: s.workouts.map((w) => {
             if (w.id !== id) return w;
-            // imported / HR workouts: preserve original start AND end (duration + heart-rate window) while adding sets
-            if (w.source === 'health' || w.healthUuid) {
+            // any workout carrying heart-rate data keeps its ORIGINAL start+end window (so the HR graph
+            // doesn't collapse to a single line when edited); others collapse to a single date as before
+            const hasHr = w.source === 'health' || !!w.healthUuid || w.avgHr != null || w.maxHr != null || !!w.hrSeries?.length;
+            if (hasHr) {
               return { ...w, manual: true, editEndAt: w.finishedAt ?? w.startedAt, finishedAt: undefined };
             }
             return { ...w, manual: true, startedAt: w.finishedAt ?? w.startedAt, finishedAt: undefined };

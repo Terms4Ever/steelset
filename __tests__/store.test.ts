@@ -159,6 +159,30 @@ describe('store · full workout lifecycle', () => {
     expect([...s().dismissedHealth].sort()).toEqual(['A', 'B', 'C']);
   });
 
+  it('pre-fills bodyweight for a bodyweight exercise (shyby) so weight is not empty', () => {
+    s().setSetting('bodyweightKg', 91);
+    s().startWorkout(null);
+    s().addExerciseToActive('pullup'); // weighted_bw
+    const a = activeWorkout(s())!;
+    expect(a.exercises[0].sets.length).toBeGreaterThan(0);
+    expect(a.exercises[0].sets.every((st) => st.weight === 91)).toBe(true);
+  });
+
+  it('editing a heart-rate workout preserves its window (editEndAt set, start unchanged)', () => {
+    s().startWorkout(null);
+    s().addExerciseToActive('squat');
+    s().updateSet(0, 0, { weight: 100, reps: 5, done: true });
+    s().finishWorkout();
+    const w0 = history(s())[0];
+    s().setWorkoutHr(w0.id, 130, 165, [{ t: w0.startedAt, bpm: 120 }, { t: w0.finishedAt!, bpm: 150 }]);
+    s().editWorkout(w0.id);
+    const a = activeWorkout(s())!;
+    expect(a.startedAt).toBe(w0.startedAt); // NOT collapsed to finishedAt
+    expect(a.editEndAt).toBe(w0.finishedAt); // original end stashed → HR graph window survives
+    s().finishWorkout();
+    expect(history(s())[0].hrSeries).toHaveLength(2);
+  });
+
   it('adds and persists a custom exercise', () => {
     const id = s().addExercise({ name: 'Můj cvik', primary: 'Hrudník', equipment: 'Stroj', tracking: 'weight_reps' });
     expect(s().customExercises.find((e) => e.id === id)?.name).toBe('Můj cvik');
