@@ -20,7 +20,10 @@ export function HrChart({
   markers?: number[];
   height?: number;
 }) {
-  if (series.length < 2) return null;
+  // only plot samples that actually fall inside the workout window; if they don't overlap (e.g. an edited
+  // workout whose date moved away from its historical HR), render nothing instead of a collapsed line.
+  const pts = series.filter((s) => s.t >= start && s.t <= end);
+  if (pts.length < 2 || end <= start) return null;
 
   const W = 320;
   const H = height;
@@ -29,7 +32,7 @@ export function HrChart({
   const padBot = 10;
   const span = Math.max(1, end - start);
 
-  const bpms = series.map((s) => s.bpm);
+  const bpms = pts.map((s) => s.bpm);
   let lo = Math.min(...bpms);
   let hi = Math.max(...bpms);
   if (hi - lo < 10) {
@@ -42,7 +45,7 @@ export function HrChart({
 
   const X = (t: number) => padX + (Math.min(Math.max(t, start), end) - start) / span * (W - padX * 2);
   const Y = (b: number) => padTop + (1 - (b - lo) / rng) * (H - padTop - padBot);
-  const poly = series.map((s) => `${X(s.t).toFixed(1)},${Y(s.bpm).toFixed(1)}`).join(' ');
+  const poly = pts.map((s) => `${X(s.t).toFixed(1)},${Y(s.bpm).toFixed(1)}`).join(' ');
   const inWin = markers.filter((m) => m >= start && m <= end);
   const avgY = Y(avg);
 
