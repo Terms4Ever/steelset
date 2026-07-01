@@ -176,6 +176,18 @@ describe('store · full workout lifecycle', () => {
     expect(a.exercises[0].sets.every((st) => st.weight === null)).toBe(true);
   });
 
+  it('unlinking a 3-member superset leaves no orphaned single-member group', () => {
+    s().startWorkout(null);
+    s().addExerciseToActive('squat');
+    s().addExerciseToActive('bench-barbell');
+    s().addExerciseToActive('ohp');
+    s().linkSuperset(0); // squat + bench
+    s().linkSuperset(1); // + ohp → all three linked
+    expect(activeWorkout(s())!.exercises.every((e) => !!e.supersetGroup)).toBe(true);
+    s().linkSuperset(1); // unlink bench+ohp → squat would be a superset-of-one
+    expect(activeWorkout(s())!.exercises[0].supersetGroup).toBeUndefined();
+  });
+
   it('removing a superset member drops the now-orphaned superset tag', () => {
     s().startWorkout(null);
     s().addExerciseToActive('squat');

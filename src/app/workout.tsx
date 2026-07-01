@@ -58,6 +58,7 @@ export default function Workout() {
     // 1s tick and by AppState 'active', so it stays correct after the app was backgrounded (single source).
     const check = () => {
       if (restEndRef.current != null && Date.now() >= restEndRef.current) {
+        restEndRef.current = null; // synchronous guard so a second check() (interval + AppState) can't double-fire
         haptic.medium();
         setRestEndAt(null);
       }

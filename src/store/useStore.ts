@@ -81,6 +81,17 @@ function patchActive(workouts: Workout[], activeId: string | null, fn: (w: Worko
   return workouts.map((w) => (w.id === activeId ? fn(w) : w));
 }
 
+/** Strip any superset tag that ends up with fewer than 2 members (no orphaned superset-of-one). */
+function normalizeSupersets(exercises: LoggedExercise[]): LoggedExercise[] {
+  const counts: Record<string, number> = {};
+  exercises.forEach((le) => {
+    if (le.supersetGroup) counts[le.supersetGroup] = (counts[le.supersetGroup] ?? 0) + 1;
+  });
+  return exercises.map((le) =>
+    le.supersetGroup && (counts[le.supersetGroup] ?? 0) < 2 ? (({ supersetGroup, ...rest }) => rest)(le) : le,
+  );
+}
+
 export const useStore = create<State & Actions>()(
   persist(
     (set, get) => ({
@@ -193,9 +204,10 @@ export const useStore = create<State & Actions>()(
           // they don't retype it. bodyweight_reps (kliky) keep the column HIDDEN → no phantom tonnage.
           const ex = allExercises(s).find((e) => e.id === exerciseId);
           const bw = s.settings.bodyweightKg;
-          const usesBW = !!ex && ex.tracking === 'weighted_bw';
           let sets = prefillSets(lastPerformance(s.workouts, exerciseId), 3);
-          if (usesBW && bw > 0) sets = sets.map((st) => ({ ...st, weight: st.weight ?? bw }));
+          if (ex?.tracking === 'weighted_bw' && bw > 0) sets = sets.map((st) => ({ ...st, weight: st.weight ?? bw }));
+          // bodyweight_reps has a HIDDEN weight column — force weight null (even if history inherited one)
+          else if (ex?.tracking === 'bodyweight_reps') sets = sets.map((st) => ({ ...st, weight: null }));
           return {
             workouts: patchActive(s.workouts, s.activeWorkoutId, (w) => ({
               ...w,
@@ -255,18 +267,10 @@ export const useStore = create<State & Actions>()(
 
       removeActiveExercise: (exIndex) =>
         set((s) => ({
-          workouts: patchActive(s.workouts, s.activeWorkoutId, (w) => {
-            let exercises = w.exercises.filter((_, i) => i !== exIndex);
-            // drop superset tags that now have fewer than 2 members (no orphaned superset-of-one)
-            const counts: Record<string, number> = {};
-            exercises.forEach((le) => {
-              if (le.supersetGroup) counts[le.supersetGroup] = (counts[le.supersetGroup] ?? 0) + 1;
-            });
-            exercises = exercises.map((le) =>
-              le.supersetGroup && (counts[le.supersetGroup] ?? 0) < 2 ? (({ supersetGroup, ...rest }) => rest)(le) : le,
-            );
-            return { ...w, exercises };
-          }),
+          workouts: patchActive(s.workouts, s.activeWorkoutId, (w) => ({
+            ...w,
+            exercises: normalizeSupersets(w.exercises.filter((_, i) => i !== exIndex)),
+          })),
         })),
 
       linkSuperset: (exIndex) =>
@@ -286,7 +290,8 @@ export const useStore = create<State & Actions>()(
               }
               return { ...le, supersetGroup: group };
             });
-            return { ...w, exercises };
+            // unlinking one pair of a 3+ member superset can leave a single-member group → strip it
+            return { ...w, exercises: normalizeSupersets(exercises) };
           }),
         })),
 
