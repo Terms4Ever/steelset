@@ -12,6 +12,7 @@ import { isPR, lastPerformance, MS } from '@/lib/calc';
 import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtNum, fmtWeight, fromDisplayWeight, toDisplayWeight, unitIncrement } from '@/lib/format';
 import { haptic } from '@/lib/haptic';
 import { heartRateFor } from '@/lib/health';
+import { liveActivity } from '@/lib/liveActivity';
 import { activeWorkout, exercisesById as exByIdSel, useStore } from '@/store/useStore';
 
 const SET_TAG_COLOR: Record<SetType, string> = {
@@ -88,6 +89,14 @@ export default function Workout() {
     const id = setTimeout(() => setPr(null), 2800);
     return () => clearTimeout(id);
   }, [pr]);
+  // Live Activity (Dynamic Island / lock screen): start for live workouts, keep sets + rest in sync
+  useEffect(() => {
+    if (!active || active.manual) return;
+    const done = active.exercises.reduce((n, le) => n + le.sets.filter((s) => s.done).length, 0);
+    const total = active.exercises.reduce((n, le) => n + le.sets.length, 0);
+    liveActivity.startFor(active.id, active.name, active.startedAt, done, total);
+    liveActivity.update(done, total, restEndAt);
+  }, [active, restEndAt]);
 
   if (!active) {
     return (
@@ -232,11 +241,12 @@ export default function Workout() {
         'Označ aspoň jednu sérii zeleným ✓ (ťukni kolečko vpravo u série) a pak dej Hotovo. Nebo trénink zahoď.',
         [
           { text: 'Pokračovat v zápisu', style: 'cancel' },
-          { text: 'Zahodit trénink', style: 'destructive', onPress: () => { discardWorkout(); router.replace('/'); } },
+          { text: 'Zahodit trénink', style: 'destructive', onPress: () => { liveActivity.end(); discardWorkout(); router.replace('/'); } },
         ],
       );
       return;
     }
+    liveActivity.end();
     finishWorkout();
     router.replace('/');
     // Apple Health: pull the heart rate the Watch recorded (read-only; we never write workouts).
@@ -249,6 +259,7 @@ export default function Workout() {
     }
   };
   const onDiscard = () => {
+    liveActivity.end();
     discardWorkout();
     router.replace('/');
   };

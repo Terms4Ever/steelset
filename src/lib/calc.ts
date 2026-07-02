@@ -155,27 +155,52 @@ export function strengthScore(workouts: Workout[]): number {
  */
 export function perExerciseHr(w: Workout): (number | null)[] {
   const series = w.hrSeries;
-  if (!series?.length) return w.exercises.map(() => null);
+  const n = w.exercises.length;
+  if (!series?.length || !n) return w.exercises.map(() => null);
   const winStart = w.startedAt;
   const winEnd = w.finishedAt ?? w.startedAt;
-  const lastDone = w.exercises.map((le) => {
+  if (winEnd <= winStart) return w.exercises.map(() => null);
+  // anchor = last completed set inside the window. Exercises without one (imported records, or sets
+  // (re)completed during a later edit whose doneAt falls outside the window) get their boundary
+  // interpolated evenly between the surrounding anchors, so every exercise still gets an HR estimate.
+  const anchors: (number | null)[] = w.exercises.map((le) => {
     const ts = le.sets
       .map((s) => s.doneAt)
       .filter((t): t is number => typeof t === 'number' && t >= winStart && t <= winEnd);
     return ts.length ? Math.max(...ts) : null;
   });
-  const out: (number | null)[] = [];
-  let prevEnd = winStart;
-  for (let i = 0; i < w.exercises.length; i++) {
-    const end = lastDone[i];
-    if (end == null) {
-      out.push(null);
+  const bounds: number[] = new Array(n);
+  let i = 0;
+  let prev = winStart;
+  while (i < n) {
+    if (anchors[i] != null) {
+      bounds[i] = Math.max(anchors[i]!, prev);
+      prev = bounds[i];
+      i++;
       continue;
     }
-    const lo = Math.max(winStart, prevEnd);
-    const pts = series.filter((p) => p.t >= lo && p.t <= end).map((p) => p.bpm);
+    let j = i;
+    while (j < n && anchors[j] == null) j++;
+    const right = j < n ? Math.max(anchors[j]!, prev) : winEnd;
+    const m = j - i;
+    const parts = m + (j < n ? 1 : 0); // the anchored neighbour keeps its own boundary
+    for (let k = 0; k < m; k++) bounds[i + k] = prev + ((k + 1) * (right - prev)) / Math.max(1, parts);
+    prev = bounds[j - 1];
+    i = j;
+  }
+  const out: (number | null)[] = [];
+  let lo = winStart;
+  for (let idx = 0; idx < n; idx++) {
+    const hi = bounds[idx];
+    const hasCompleted = w.exercises[idx].sets.some((s) => s.done);
+    if (!hasCompleted || hi <= lo) {
+      out.push(null);
+      lo = Math.max(lo, hi);
+      continue;
+    }
+    const pts = series.filter((p) => p.t >= lo && p.t <= hi).map((p) => p.bpm);
     out.push(pts.length ? Math.round(pts.reduce((a, b) => a + b, 0) / pts.length) : null);
-    prevEnd = end;
+    lo = hi;
   }
   return out;
 }

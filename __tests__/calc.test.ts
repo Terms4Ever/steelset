@@ -170,15 +170,28 @@ describe('strengthScore + trend', () => {
     expect(perExerciseHr(w)).toEqual([140, 120]);
   });
 
-  it('perExerciseHr is null for exercises with no completed set inside the window', () => {
+  it('perExerciseHr falls back to even slots when doneAt is outside the window (edited records)', () => {
+    const w = {
+      id: 'x', name: 'w', startedAt: 0, finishedAt: 1000,
+      hrSeries: [{ t: 100, bpm: 140 }, { t: 700, bpm: 100 }],
+      exercises: [
+        { exerciseId: 'a', sets: [{ type: 'R', weight: 100, reps: 5, done: true, doneAt: 5000 }] }, // edit-time doneAt, outside window
+        { exerciseId: 'b', sets: [{ type: 'R', weight: 80, reps: 5, done: true, doneAt: 6000 }] },
+      ],
+    } as any as Workout;
+    // no in-window anchors → window split evenly: a=[0,500] → 140, b=[500,1000] → 100
+    expect(perExerciseHr(w)).toEqual([140, 100]);
+  });
+
+  it('perExerciseHr is null for exercises with no completed set at all', () => {
     const w = {
       id: 'x', name: 'w', startedAt: 0, finishedAt: 1000,
       hrSeries: [{ t: 100, bpm: 140 }],
       exercises: [
-        { exerciseId: 'a', sets: [{ type: 'R', weight: 100, reps: 5, done: true, doneAt: 5000 }] }, // outside window
+        { exerciseId: 'a', sets: [{ type: 'R', weight: 100, reps: 5, done: true, doneAt: 300 }] },
         { exerciseId: 'b', sets: [{ type: 'R', weight: 80, reps: 5, done: false }] }, // not completed
       ],
     } as any as Workout;
-    expect(perExerciseHr(w)).toEqual([null, null]);
+    expect(perExerciseHr(w)).toEqual([140, null]);
   });
 });
