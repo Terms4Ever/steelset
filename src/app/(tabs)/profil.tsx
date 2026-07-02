@@ -65,7 +65,7 @@ export default function Profil() {
 
   const onTestHealth = async () => {
     const res = await healthSelfTest();
-    Alert.alert('Apple Health – test', res);
+    Alert.alert('Apple Health - test', res);
   };
 
   const onPullBodyweight = async () => {
@@ -85,7 +85,7 @@ export default function Profil() {
           style: 'destructive',
           onPress: async () => {
             const n = await deleteMyHealthWorkouts();
-            Alert.alert('Hotovo', n > 0 ? `Smazáno ${n} záznamů z Apple Health.` : 'Nic k úklidu – Steelset už do Health nezapisuje.');
+            Alert.alert('Hotovo', n > 0 ? `Smazáno ${n} záznamů z Apple Health.` : 'Nic k úklidu - Steelset už do Health nezapisuje.');
           },
         },
       ],

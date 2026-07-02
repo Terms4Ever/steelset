@@ -1,9 +1,9 @@
 # Steelset 🏋️
 
-Česká iOS appka na zapisování tréninků v gymu — série, opakování, váhy, pokrok,
+Česká iOS appka na zapisování tréninků v gymu - série, opakování, váhy, pokrok,
 Apple Health/Watch (tep, import tréninků), Live Activity, kalendář.
 
-> Interní názvy: EAS slug `setly`, bundle `cz.setly.app` — historické, neměnit.
+> Interní názvy: EAS slug `setly`, bundle `cz.setly.app` - historické, neměnit.
 > Kompletní kontext pro vývoj (i pro Claude Code) je v **[AGENTS.md](AGENTS.md)**.
 
 ## Setup na novém PC

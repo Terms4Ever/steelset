@@ -8,8 +8,8 @@ describe('fmtBwWeight (weighted bodyweight, stored as total)', () => {
     expect(fmtBwWeight(101, 91, 'kg')).toBe('BW +10 kg');
     expect(fmtBwWeight(93.5, 91, 'kg')).toBe('BW +2,5 kg');
   });
-  it('assisted shows BW −N', () => {
-    expect(fmtBwWeight(71, 91, 'kg')).toBe('BW −20 kg');
+  it('assisted shows BW -N', () => {
+    expect(fmtBwWeight(71, 91, 'kg')).toBe('BW -20 kg');
   });
 });
 

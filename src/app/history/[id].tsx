@@ -166,7 +166,7 @@ export default function WorkoutDetail() {
 
         {w.exercises.length === 0 && (
           <Txt size={type.body} weight="medium" color={palette.textMute} style={{ marginTop: space.xl }}>
-            Bez zapsaných sérií{w.source === 'health' ? ' · záznam z Apple Health' : ''}. Přes „Přidat série" doplníš cviky – tep zůstane.
+            Bez zapsaných sérií{w.source === 'health' ? ' · záznam z Apple Health' : ''}. Přes „Přidat série" doplníš cviky - tep zůstane.
           </Txt>
         )}
 
@@ -202,8 +202,8 @@ export default function WorkoutDetail() {
                         ? exById[le.exerciseId]?.tracking === 'weighted_bw'
                           ? fmtBwWeight(s.weight, w.bodyweightKg ?? 80, unit)
                           : fmtWeight(s.weight, unit)
-                        : '–'}{' '}
-                      × {s.reps ?? '–'}
+                        : '-'}{' '}
+                      × {s.reps ?? '-'}
                     </Txt>
                     {s.rpe != null && (
                       <Txt size={type.caption} weight="medium" color={palette.textMute}>
