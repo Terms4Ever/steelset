@@ -29,7 +29,7 @@ export function fmtWeight(kg: number, unit: Unit): string {
 export function fmtBwWeight(totalKg: number, bwKg: number, unit: Unit): string {
   const added = toDisplayWeight(totalKg - bwKg, unit);
   if (Math.abs(added) < 0.005) return 'BW';
-  return `BW ${added > 0 ? '+' : '−'}${fmtNum(Math.abs(added), 2)} ${unit}`;
+  return `BW ${added > 0 ? '+' : '-'}${fmtNum(Math.abs(added), 2)} ${unit}`;
 }
 
 /** Stepper increments in the user's display unit (separate setting per unit). */
