@@ -8,7 +8,7 @@ import { HrChart } from '@/components/HrChart';
 import { PrimaryButton, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { exerciseVolume, perExerciseHr, workoutVolume } from '@/lib/calc';
-import { dayName, fmtClock, fmtDateShort, fmtWeight } from '@/lib/format';
+import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtWeight } from '@/lib/format';
 import { heartRateFor } from '@/lib/health';
 import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
 
@@ -200,7 +200,12 @@ export default function WorkoutDetail() {
                       {TAG[s.type] || si + 1}
                     </Txt>
                     <Txt size={type.body} weight="semibold" num>
-                      {s.weight != null ? fmtWeight(s.weight, unit) : '–'} × {s.reps ?? '–'}
+                      {s.weight != null
+                        ? exById[le.exerciseId]?.tracking === 'weighted_bw'
+                          ? fmtBwWeight(s.weight, w.bodyweightKg ?? 80, unit)
+                          : fmtWeight(s.weight, unit)
+                        : '–'}{' '}
+                      × {s.reps ?? '–'}
                     </Txt>
                     {s.rpe != null && (
                       <Txt size={type.caption} weight="medium" color={palette.textMute}>

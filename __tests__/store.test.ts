@@ -159,6 +159,12 @@ describe('store · full workout lifecycle', () => {
     expect([...s().dismissedHealth].sort()).toEqual(['A', 'B', 'C']);
   });
 
+  it('stamps a bodyweight snapshot on every started workout', () => {
+    s().setSetting('bodyweightKg', 91);
+    s().startWorkout(null);
+    expect(activeWorkout(s())!.bodyweightKg).toBe(91);
+  });
+
   it('pre-fills bodyweight for a weighted-bodyweight exercise (shyby) so weight is not empty', () => {
     s().setSetting('bodyweightKg', 91);
     s().startWorkout(null);

@@ -9,7 +9,7 @@ import { Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { LoggedExercise, SetEntry, SetType } from '@/data/types';
 import { isPR, lastPerformance, MS } from '@/lib/calc';
-import { dayName, fmtClock, fmtDateShort, fmtNum, fmtWeight, fromDisplayWeight, toDisplayWeight, unitIncrement } from '@/lib/format';
+import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtNum, fmtWeight, fromDisplayWeight, toDisplayWeight, unitIncrement } from '@/lib/format';
 import { haptic } from '@/lib/haptic';
 import { heartRateFor } from '@/lib/health';
 import { activeWorkout, exercisesById as exByIdSel, useStore } from '@/store/useStore';
@@ -32,6 +32,7 @@ export default function Workout() {
   const incrementLb = useStore((s) => s.settings.incrementLb);
   const restDefault = useStore((s) => s.settings.restDefaultSec);
   const unit = useStore((s) => s.settings.unit);
+  const bodyweightSetting = useStore((s) => s.settings.bodyweightKg);
   const { updateSet, addSet, toggleSetDone, removeSet, removeActiveExercise, finishWorkout, discardWorkout, startWorkout, linkSuperset, setWorkoutDate, setWorkoutHr } = useStore();
   const healthEnabled = useStore((s) => s.settings.healthEnabled);
   const insets = useSafeAreaInsets();
@@ -42,6 +43,10 @@ export default function Workout() {
     const t = exById[exId]?.tracking;
     return t === undefined || t === 'weight_reps' || t === 'weighted_bw' || t === 'distance_time';
   };
+  // weighted-bodyweight (shyby/dipy): weight is stored as TOTAL kg, the user enters/sees only the ADDED
+  // part (+KG column) — negative = assisted. Bodyweight comes from the workout snapshot.
+  const isBw = (exId: string) => exById[exId]?.tracking === 'weighted_bw';
+  const bwKg = active?.bodyweightKg ?? bodyweightSetting;
 
   const [, setTick] = useState(0);
   const [focus, setFocus] = useState<Focus>(null);
@@ -119,18 +124,25 @@ export default function Workout() {
   const supTag = (le: LoggedExercise, i: number) =>
     le.supersetGroup ? `${groupLetter[le.supersetGroup]}${groups[le.supersetGroup].indexOf(i) + 1}` : null;
 
-  // weight is stored canonically in kg; displayed/entered in the user's unit
-  const toDisp = (v: number | null, field: 'weight' | 'reps') =>
-    v === null || v === undefined ? null : field === 'weight' ? toDisplayWeight(v, unit) : v;
+  // weight is stored canonically in kg (TOTAL for weighted-bodyweight); displayed/entered in the user's
+  // unit — and for weighted-bodyweight the user sees/enters only the ADDED part (negative = assisted).
+  const toDisp = (v: number | null, field: 'weight' | 'reps', exId: string) =>
+    v === null || v === undefined
+      ? null
+      : field !== 'weight'
+        ? v
+        : toDisplayWeight(isBw(exId) ? v - bwKg : v, unit);
+  const fromDisp = (raw: number, field: 'weight' | 'reps', exId: string) =>
+    field !== 'weight' ? raw : isBw(exId) ? bwKg + fromDisplayWeight(raw, unit) : fromDisplayWeight(raw, unit);
 
   const cellValue = (ex: number, set: number, field: 'weight' | 'reps'): string => {
     if (focus && focus.ex === ex && focus.set === set && focus.field === field) return draft;
-    const d = toDisp(active.exercises[ex].sets[set][field], field);
-    return d === null ? '' : fmtNum(d).replace(',', '.');
+    const d = toDisp(active.exercises[ex].sets[set][field], field, active.exercises[ex].exerciseId);
+    return d === null ? '' : fmtNum(d, 2).replace(',', '.');
   };
 
   const focusCell = (ex: number, set: number, field: 'weight' | 'reps') => {
-    const d = toDisp(active.exercises[ex].sets[set][field], field);
+    const d = toDisp(active.exercises[ex].sets[set][field], field, active.exercises[ex].exerciseId);
     setDraft(d === null ? '' : String(Math.round(d * 100) / 100));
     setFocus({ ex, set, field });
   };
@@ -138,13 +150,11 @@ export default function Workout() {
   const writeDraft = (next: string) => {
     setDraft(next);
     if (!focus) return;
-    const raw = next === '' || next === '.' ? null : Number(next.replace(',', '.'));
+    const raw = next === '' || next === '.' || next === '-' ? null : Number(next.replace(',', '.'));
     const val =
       raw === null || Number.isNaN(raw)
         ? null
-        : focus.field === 'weight'
-          ? fromDisplayWeight(raw, unit)
-          : raw;
+        : fromDisp(raw, focus.field, active.exercises[focus.ex].exerciseId);
     updateSet(focus.ex, focus.set, { [focus.field]: val });
   };
 
@@ -158,9 +168,12 @@ export default function Workout() {
   const step = (d: number) => {
     if (!focus) return;
     haptic.tap();
+    const bwFocused = focus.field === 'weight' && isBw(active.exercises[focus.ex].exerciseId);
+    // added weight may go negative down to -bodyweight (assisted); everything else floors at 0
+    const min = bwFocused ? -Math.round(toDisplayWeight(bwKg, unit) * 100) / 100 : 0;
     const cur = Number(draft.replace(',', '.')) || 0;
-    const v = Math.max(0, Math.round((cur + d) * 100) / 100);
-    writeDraft(focus.field === 'weight' ? String(v) : String(Math.round(v)));
+    const v = Math.max(min, Math.round((cur + d) * 100) / 100);
+    writeDraft(focus.field === 'weight' ? String(v) : String(Math.round(Math.max(0, v))));
   };
   const next = () => {
     if (!focus) return;
@@ -185,16 +198,19 @@ export default function Workout() {
     }
     const exId = active.exercises[ex].exerciseId;
     const showW = showsW(exId);
-    if ((showW && (!s.weight || !s.reps)) || (!showW && !s.reps)) {
+    const bwEx = isBw(exId);
+    // weighted-bodyweight: empty weight = plain BW (+0), so only reps are required there
+    if ((showW && !bwEx && (!s.weight || !s.reps)) || ((!showW || bwEx) && !s.reps)) {
       haptic.warning();
-      return focusCell(ex, set, showW && !s.weight ? 'weight' : 'reps');
+      return focusCell(ex, set, showW && !bwEx && !s.weight ? 'weight' : 'reps');
     }
-    const wasPR = showW && isPR(workouts, exId, s.weight, s.reps);
-    updateSet(ex, set, { done: true, doneAt: Date.now() });
+    const effWeight = s.weight ?? (bwEx ? bwKg : null);
+    const wasPR = showW && isPR(workouts, exId, effWeight, s.reps);
+    updateSet(ex, set, { done: true, doneAt: Date.now(), ...(bwEx && s.weight == null ? { weight: bwKg } : {}) });
     if (!active.manual) setRestEndAt(Date.now() + restDefault * 1000);
     if (wasPR) {
       haptic.success();
-      setPr(`Nový rekord! ${fmtWeight(s.weight!, unit)} × ${s.reps}`);
+      setPr(`Nový rekord! ${bwEx ? fmtBwWeight(effWeight!, bwKg, unit) : fmtWeight(effWeight!, unit)} × ${s.reps}`);
     } else {
       haptic.light();
     }
@@ -323,7 +339,7 @@ export default function Workout() {
                 </Txt>
                 {showW && (
                   <Txt size={type.caption} weight="semibold" color={palette.textMute} style={{ flex: 1, textAlign: 'center' }}>
-                    {unit.toUpperCase()}
+                    {isBw(le.exerciseId) ? `+${unit.toUpperCase()}` : unit.toUpperCase()}
                   </Txt>
                 )}
                 <Txt size={type.caption} weight="semibold" color={palette.textMute} style={{ flex: 1, textAlign: 'center' }}>
@@ -359,7 +375,7 @@ export default function Workout() {
                     </Pressable>
 
                     {showW && (
-                      <Cell focused={isFocus(focus, ex, si, 'weight')} value={cellValue(ex, si, 'weight')} ghost={p?.weight != null ? fmtNum(toDisplayWeight(p.weight, unit)).replace(',', '.') : ''} done={s.done} onPress={() => focusCell(ex, si, 'weight')} />
+                      <Cell focused={isFocus(focus, ex, si, 'weight')} value={cellValue(ex, si, 'weight')} ghost={p?.weight != null ? fmtNum(toDisplayWeight(isBw(le.exerciseId) ? p.weight - bwKg : p.weight, unit), 2).replace(',', '.') : ''} done={s.done} onPress={() => focusCell(ex, si, 'weight')} />
                     )}
                     <Cell focused={isFocus(focus, ex, si, 'reps')} value={cellValue(ex, si, 'reps')} ghost={p?.reps != null ? String(p.reps) : ''} done={s.done} onPress={() => focusCell(ex, si, 'reps')} />
 
