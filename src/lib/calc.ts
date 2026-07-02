@@ -81,6 +81,54 @@ export function muscleVolume(
   return out;
 }
 
+// ---- detailed muscle map ----------------------------------------------------------------------
+// The detailed map splits the coarse groups the exercises are tagged with:
+//   Záda → Trapézy / Horní záda / Spodní záda,  Nohy → Kvadricepsy / Hamstringy.
+// Per-exercise overrides below; anything unknown falls back to the group's default split.
+
+const DETAIL_DEFAULT: Record<string, string> = { Záda: 'Horní záda', Nohy: 'Kvadricepsy' };
+
+/** exerciseId → (coarse group → detailed muscle) overrides for the seed catalogue. */
+const DETAIL_OVERRIDES: Record<string, Record<string, string>> = {
+  deadlift: { Záda: 'Spodní záda', Nohy: 'Hamstringy' },
+  rdl: { Nohy: 'Hamstringy', Záda: 'Spodní záda' },
+  'leg-curl': { Nohy: 'Hamstringy' },
+  'hip-thrust': { Nohy: 'Hamstringy' },
+  'face-pull': { Záda: 'Trapézy' },
+  hyperextension: { Záda: 'Spodní záda' },
+  'good-morning': { Záda: 'Spodní záda', Nohy: 'Hamstringy' },
+  shrug: { Záda: 'Trapézy' },
+};
+
+export function detailedMuscle(exerciseId: string, coarse: string): string {
+  return DETAIL_OVERRIDES[exerciseId]?.[coarse] ?? DETAIL_DEFAULT[coarse] ?? coarse;
+}
+
+/** muscleVolume, but keyed by the detailed muscle names (splits back + legs). */
+export function muscleVolumeDetailed(
+  workouts: Workout[],
+  exercisesById: Record<string, Exercise>,
+  since = 0,
+): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const w of workouts) {
+    if (!w.finishedAt || w.finishedAt < since) continue;
+    for (const le of w.exercises) {
+      const ex = exercisesById[le.exerciseId];
+      if (!ex) continue;
+      const vol = exerciseVolume(le);
+      if (vol <= 0) continue;
+      const p = detailedMuscle(le.exerciseId, ex.primary);
+      out[p] = (out[p] ?? 0) + vol;
+      for (const m of ex.secondary ?? []) {
+        const d = detailedMuscle(le.exerciseId, m);
+        out[d] = (out[d] ?? 0) + vol * 0.5;
+      }
+    }
+  }
+  return out;
+}
+
 /** Number of completed working sets per muscle group in a window (for weekly set targets). */
 export function muscleSetCount(
   workouts: Workout[],
@@ -153,12 +201,30 @@ export function strengthScore(workouts: Workout[]): number {
  * count, so imported/edited sets (edit-time doneAt outside the window) are skipped. null = no HR for that
  * exercise.
  */
+/**
+ * Effective time window for a workout's heart-rate data. Normally [startedAt, finishedAt] — but records
+ * edited by older app versions could collapse that window (start === end) while the HR samples themselves
+ * survive; in that case fall back to the series' own span so the graph and per-exercise averages still work.
+ */
+export function hrWindow(w: Workout): { start: number; end: number } | null {
+  const s = w.hrSeries;
+  if (!s || s.length < 2) return null;
+  const start = w.startedAt;
+  const end = w.finishedAt ?? w.startedAt;
+  if (end > start && s.filter((p) => p.t >= start && p.t <= end).length >= 2) return { start, end };
+  const lo = Math.min(...s.map((p) => p.t));
+  const hi = Math.max(...s.map((p) => p.t));
+  return hi > lo ? { start: lo, end: hi } : null;
+}
+
 export function perExerciseHr(w: Workout): (number | null)[] {
   const series = w.hrSeries;
   const n = w.exercises.length;
   if (!series?.length || !n) return w.exercises.map(() => null);
-  const winStart = w.startedAt;
-  const winEnd = w.finishedAt ?? w.startedAt;
+  const win = hrWindow(w);
+  if (!win) return w.exercises.map(() => null);
+  const winStart = win.start;
+  const winEnd = win.end;
   if (winEnd <= winStart) return w.exercises.map(() => null);
   // anchor = last completed set inside the window. Exercises without one (imported records, or sets
   // (re)completed during a later edit whose doneAt falls outside the window) get their boundary

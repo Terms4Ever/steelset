@@ -15,9 +15,9 @@ function colorFor(intensity: number): string {
   return `#${h(ch(a.r, b.r))}${h(ch(a.g, b.g))}${h(ch(a.b, b.b))}`;
 }
 
-export function BodyMap({ volumes }: { volumes: Record<string, number> }) {
+export function BodyMap({ volumes, detailed = false }: { volumes: Record<string, number>; detailed?: boolean }) {
   const max = Math.max(1, ...Object.values(volumes));
-  const v = (m: MuscleGroup) => colorFor((volumes[m] ?? 0) / max);
+  const v = (m: MuscleGroup | string) => colorFor((volumes[m] ?? 0) / max);
 
   return (
     <View style={{ flexDirection: 'row', justifyContent: 'space-around', alignItems: 'flex-end' }}>
@@ -41,8 +41,8 @@ export function BodyMap({ volumes }: { volumes: Record<string, number> }) {
           {/* abs */}
           <Rect x={47} y={92} width={26} height={42} rx={8} fill={v('Břicho')} />
           {/* quads */}
-          <Ellipse cx={49} cy={176} rx={14} ry={34} fill={v('Nohy')} />
-          <Ellipse cx={71} cy={176} rx={14} ry={34} fill={v('Nohy')} />
+          <Ellipse cx={49} cy={176} rx={14} ry={34} fill={v(detailed ? 'Kvadricepsy' : 'Nohy')} />
+          <Ellipse cx={71} cy={176} rx={14} ry={34} fill={v(detailed ? 'Kvadricepsy' : 'Nohy')} />
           {/* shins */}
           <Ellipse cx={49} cy={232} rx={9} ry={24} fill={palette.surface3} />
           <Ellipse cx={71} cy={232} rx={9} ry={24} fill={palette.surface3} />
@@ -57,7 +57,16 @@ export function BodyMap({ volumes }: { volumes: Record<string, number> }) {
           <Ellipse cx={34} cy={56} rx={15} ry={11} fill={v('Ramena')} />
           <Ellipse cx={86} cy={56} rx={15} ry={11} fill={v('Ramena')} />
           {/* back / lats */}
-          <Rect x={42} y={64} width={36} height={46} rx={12} fill={v('Záda')} />
+          {detailed ? (
+            <>
+              {/* traps / upper back / lower back */}
+              <Rect x={42} y={62} width={36} height={12} rx={6} fill={v('Trapézy')} />
+              <Rect x={42} y={76} width={36} height={20} rx={8} fill={v('Horní záda')} />
+              <Rect x={42} y={98} width={36} height={12} rx={6} fill={v('Spodní záda')} />
+            </>
+          ) : (
+            <Rect x={42} y={64} width={36} height={46} rx={12} fill={v('Záda')} />
+          )}
           {/* triceps */}
           <Ellipse cx={22} cy={92} rx={9} ry={18} fill={v('Triceps')} />
           <Ellipse cx={98} cy={92} rx={9} ry={18} fill={v('Triceps')} />
@@ -65,8 +74,8 @@ export function BodyMap({ volumes }: { volumes: Record<string, number> }) {
           <Ellipse cx={49} cy={128} rx={13} ry={13} fill={v('Hýždě')} />
           <Ellipse cx={71} cy={128} rx={13} ry={13} fill={v('Hýždě')} />
           {/* hamstrings (Nohy) */}
-          <Ellipse cx={49} cy={176} rx={14} ry={32} fill={v('Nohy')} />
-          <Ellipse cx={71} cy={176} rx={14} ry={32} fill={v('Nohy')} />
+          <Ellipse cx={49} cy={176} rx={14} ry={32} fill={v(detailed ? 'Hamstringy' : 'Nohy')} />
+          <Ellipse cx={71} cy={176} rx={14} ry={32} fill={v(detailed ? 'Hamstringy' : 'Nohy')} />
           {/* calves */}
           <Ellipse cx={49} cy={232} rx={9} ry={24} fill={v('Lýtka')} />
           <Ellipse cx={71} cy={232} rx={9} ry={24} fill={v('Lýtka')} />

@@ -7,7 +7,7 @@ import { LineChart } from '@/components/LineChart';
 import { Card, Screen, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { Workout } from '@/data/types';
-import { bestE1rm, e1rm, e1rmTrend, isCountable, MS, muscleVolume, strengthScore, weeklyVolume } from '@/lib/calc';
+import { bestE1rm, e1rm, e1rmTrend, isCountable, MS, muscleVolume, muscleVolumeDetailed, strengthScore, weeklyVolume } from '@/lib/calc';
 import { workoutsToCsv } from '@/lib/csv';
 import { exportCsv } from '@/lib/export';
 import { fmtNum, fmtWeight, toDisplayWeight } from '@/lib/format';
@@ -40,6 +40,7 @@ export default function Pokrok() {
   const workouts = useStore((s) => s.workouts);
   const custom = useStore((s) => s.customExercises);
   const unit = useStore((s) => s.settings.unit);
+  const detailedMap = useStore((s) => s.settings.detailedMap);
   const exById = useMemo(() => exByIdSel({ customExercises: custom }), [custom]);
 
   const finished = useMemo(() => workouts.filter((w) => w.finishedAt), [workouts]);
@@ -50,7 +51,10 @@ export default function Pokrok() {
   const squat1rm = useMemo(() => bestE1rm(workouts, 'squat'), [workouts]);
   const prs30 = useMemo(() => prCountInWindow(workouts, now, 30 * MS.DAY), [workouts, now]);
 
-  const mvol = useMemo(() => muscleVolume(workouts, exById, now - 30 * MS.DAY), [workouts, exById, now]);
+  const mvol = useMemo(
+    () => (detailedMap ? muscleVolumeDetailed : muscleVolume)(workouts, exById, now - 30 * MS.DAY),
+    [workouts, exById, now, detailedMap],
+  );
   const heat = useMemo(() => {
     const entries = Object.entries(mvol).sort((a, b) => b[1] - a[1]).slice(0, 6);
     const max = entries[0]?.[1] ?? 1;
@@ -145,12 +149,12 @@ export default function Pokrok() {
             SVALOVÁ MAPA · 30 DNÍ
           </Txt>
           <Card>
-            <BodyMap volumes={mvol} />
+            <BodyMap volumes={mvol} detailed={detailedMap} />
             {heat.length > 0 && (
               <View style={{ gap: 11, marginTop: space.lg, borderTopWidth: 1, borderTopColor: palette.hairline, paddingTop: space.lg }}>
                 {heat.map((m) => (
                   <View key={m.name} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                    <Txt size={type.label} weight="medium" color={palette.textDim} style={{ width: 72 }}>
+                    <Txt size={type.label} weight="medium" color={palette.textDim} style={{ width: 88 }} numberOfLines={1}>
                       {m.name}
                     </Txt>
                     <View style={{ flex: 1, height: 8, borderRadius: 4, backgroundColor: palette.surface2 }}>

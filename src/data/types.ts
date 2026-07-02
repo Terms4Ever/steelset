@@ -105,6 +105,7 @@ export interface Settings {
   incrementLb: number; // přírůstek pro steppery v lb
   healthEnabled: boolean; // propojení s Apple Health
   bodyweightKg: number; // tělesná váha (pro cviky s vlastní vahou – shyby, kliky, dipy)
+  detailedMap: boolean; // svalová mapa: false = základní skupiny, true = detailní (horní/spodní záda…)
   onboarded: boolean;
 }
 
