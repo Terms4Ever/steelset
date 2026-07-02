@@ -22,6 +22,16 @@ export function fmtWeight(kg: number, unit: Unit): string {
   return `${fmtNum(toDisplayWeight(kg, unit))} ${unit}`;
 }
 
+/**
+ * Weighted-bodyweight display: weight is stored as TOTAL kg (bodyweight + added), the user sees the ADDED
+ * part — "BW" (no extra), "BW +10 kg" (plates), "BW −20 kg" (assisted).
+ */
+export function fmtBwWeight(totalKg: number, bwKg: number, unit: Unit): string {
+  const added = toDisplayWeight(totalKg - bwKg, unit);
+  if (Math.abs(added) < 0.005) return 'BW';
+  return `BW ${added > 0 ? '+' : '−'}${fmtNum(Math.abs(added), 2)} ${unit}`;
+}
+
 /** Stepper increments in the user's display unit (separate setting per unit). */
 export function unitIncrement(unit: Unit, kgIncrement: number, lbIncrement: number): { full: number; half: number } {
   const inc = unit === 'lb' ? lbIncrement : kgIncrement;

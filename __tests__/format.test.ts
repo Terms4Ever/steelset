@@ -1,4 +1,17 @@
-import { fmtClock, fmtNum, fmtWeight, fromDisplayWeight, relativeDay, toDisplayWeight } from '@/lib/format';
+import { fmtBwWeight, fmtClock, fmtNum, fmtWeight, fromDisplayWeight, relativeDay, toDisplayWeight } from '@/lib/format';
+
+describe('fmtBwWeight (weighted bodyweight, stored as total)', () => {
+  it('plain bodyweight shows BW', () => {
+    expect(fmtBwWeight(91, 91, 'kg')).toBe('BW');
+  });
+  it('added plates show BW +N', () => {
+    expect(fmtBwWeight(101, 91, 'kg')).toBe('BW +10 kg');
+    expect(fmtBwWeight(93.5, 91, 'kg')).toBe('BW +2,5 kg');
+  });
+  it('assisted shows BW −N', () => {
+    expect(fmtBwWeight(71, 91, 'kg')).toBe('BW −20 kg');
+  });
+});
 
 describe('fmtNum (Czech)', () => {
   it('uses comma decimals and trims trailing zeros', () => {

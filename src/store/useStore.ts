@@ -183,6 +183,7 @@ export const useStore = create<State & Actions>()(
           name,
           startedAt: Date.now(),
           manual: manual || undefined,
+          bodyweightKg: st.settings.bodyweightKg, // snapshot: +KG u vlastní váhy se počítá z váhy PŘI tréninku
           exercises,
         };
         set((s) => ({ workouts: [...s.workouts, w], activeWorkoutId: w.id }));
@@ -413,6 +414,10 @@ export const useStore = create<State & Actions>()(
               ? (({ editEndAt, ...rest }) => rest)(w)
               : w,
           );
+          // migration: older records have no bodyweight snapshot — stamp the current setting so the
+          // +KG display of weighted-bodyweight sets (stored as TOTAL kg) resolves deterministically
+          const bw = merged.settings?.bodyweightKg ?? 80;
+          merged.workouts = merged.workouts.map((w: any) => (w && w.bodyweightKg == null ? { ...w, bodyweightKg: bw } : w));
         }
         return merged;
       },
