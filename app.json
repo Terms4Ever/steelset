@@ -19,8 +19,10 @@
         "tinted": "./assets/images/steelset-icon-tinted.png"
       },
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSSupportsLiveActivities": true
+      },
+      "appleTeamId": "B5N5746R9W"
     },
     "android": {
       "package": "cz.setly.app",
@@ -58,6 +60,7 @@
           "iCloudContainerEnvironment": "Production"
         }
       ],
+      "@bacons/apple-targets",
       [
         "@kingstinct/react-native-healthkit",
         {

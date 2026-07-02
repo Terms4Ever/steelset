@@ -1,0 +1,6 @@
+{
+  "type": "widget",
+  "name": "SteelsetWidgets",
+  "deploymentTarget": "16.2",
+  "frameworks": ["SwiftUI", "WidgetKit", "ActivityKit"]
+}
