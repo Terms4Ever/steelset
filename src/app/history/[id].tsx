@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { HrChart } from '@/components/HrChart';
 import { PrimaryButton, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
-import { exerciseVolume, perExerciseHr, workoutVolume } from '@/lib/calc';
+import { exerciseVolume, hrWindow, perExerciseHr, workoutVolume } from '@/lib/calc';
 import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtWeight } from '@/lib/format';
 import { heartRateFor } from '@/lib/health';
 import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
@@ -45,21 +45,19 @@ export default function WorkoutDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  // completed-set timestamps → vertical markers on the HR chart. Only keep those that fall inside the
-  // workout window; a set (re)completed while editing gets an edit-time doneAt that would land outside.
+  // effective HR window — falls back to the series' own span for records whose window an older
+  // version collapsed during editing (so the graph still shows)
+  const hrWin = useMemo(() => (w ? hrWindow(w) : null), [w]);
+  // completed-set timestamps → vertical markers on the HR chart. Only keep those inside the window;
+  // a set (re)completed while editing gets an edit-time doneAt that would land outside.
   const setMarkers = useMemo(
     () =>
-      w
+      w && hrWin
         ? w.exercises
             .flatMap((le) => le.sets.map((s) => s.doneAt))
-            .filter((t): t is number => typeof t === 'number' && t >= w.startedAt && t <= (w.finishedAt ?? w.startedAt))
+            .filter((t): t is number => typeof t === 'number' && t >= hrWin.start && t <= hrWin.end)
         : [],
-    [w],
-  );
-  // HR samples that actually fall inside the workout window (the chart plots only these)
-  const hrInWindow = useMemo(
-    () => (w?.hrSeries ? w.hrSeries.filter((p) => p.t >= w.startedAt && p.t <= (w.finishedAt ?? w.startedAt)).length : 0),
-    [w],
+    [w, hrWin],
   );
   // per-exercise average HR by index (segmented timeline; see calc.perExerciseHr)
   const exHr = useMemo<(number | null)[]>(() => (w ? perExerciseHr(w) : []), [w]);
@@ -152,12 +150,12 @@ export default function WorkoutDetail() {
           </Pressable>
         )}
 
-        {w.hrSeries && hrInWindow >= 2 && (
+        {w.hrSeries && hrWin && (
           <View style={{ marginTop: space.lg, backgroundColor: palette.surface, borderRadius: radius.md, padding: space.lg, borderWidth: 1, borderColor: palette.hairline }}>
             <Txt size={type.caption} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5, marginBottom: 10 }}>
               TEP BĚHEM TRÉNINKU
             </Txt>
-            <HrChart series={w.hrSeries} start={w.startedAt} end={w.finishedAt ?? w.startedAt} markers={setMarkers} />
+            <HrChart series={w.hrSeries} start={hrWin.start} end={hrWin.end} markers={setMarkers} />
             {setMarkers.length > 0 && (
               <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ marginTop: 8 }}>
                 Svislé čáry = dokončené série

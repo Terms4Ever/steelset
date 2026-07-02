@@ -6,8 +6,10 @@ import {
   exerciseVolume,
   isCountable,
   isPR,
+  hrWindow,
   lastPerformance,
   muscleVolume,
+  muscleVolumeDetailed,
   perExerciseHr,
   strengthScore,
   weeklyVolume,
@@ -183,10 +185,41 @@ describe('strengthScore + trend', () => {
     expect(perExerciseHr(w)).toEqual([140, 100]);
   });
 
+  it('muscleVolumeDetailed splits back and legs by exercise', () => {
+    const exs = {
+      deadlift: { id: 'deadlift', name: 'MT', primary: 'Záda', secondary: ['Nohy'], equipment: 'Činka', tracking: 'weight_reps' },
+      pullup: { id: 'pullup', name: 'Shyby', primary: 'Záda', equipment: 'Vlastní váha', tracking: 'weighted_bw' },
+      squat: { id: 'squat', name: 'Dřep', primary: 'Nohy', equipment: 'Činka', tracking: 'weight_reps' },
+    } as any;
+    const ws = [
+      { id: 'w1', name: 't', startedAt: 0, finishedAt: 10, exercises: [
+        { exerciseId: 'deadlift', sets: [done(100, 10)] }, // 1000 → Spodní záda, +500 Hamstringy
+        { exerciseId: 'pullup', sets: [done(90, 10)] }, // 900 → Horní záda
+        { exerciseId: 'squat', sets: [done(80, 10)] }, // 800 → Kvadricepsy
+      ] },
+    ] as any as Workout[];
+    const v = muscleVolumeDetailed(ws, exs);
+    expect(v['Spodní záda']).toBe(1000);
+    expect(v['Horní záda']).toBe(900);
+    expect(v['Kvadricepsy']).toBe(800);
+    expect(v['Hamstringy']).toBe(500);
+    expect(v['Záda']).toBeUndefined();
+  });
+
+  it('hrWindow falls back to the series span when the workout window collapsed (old edits)', () => {
+    const w = {
+      id: 'x', name: 'w', startedAt: 5000, finishedAt: 5000, // collapsed by an older version's edit
+      hrSeries: [{ t: 1000, bpm: 140 }, { t: 2000, bpm: 120 }, { t: 3000, bpm: 100 }],
+      exercises: [{ exerciseId: 'a', sets: [{ type: 'R', weight: 100, reps: 5, done: true, doneAt: 9000 }] }],
+    } as any as Workout;
+    expect(hrWindow(w)).toEqual({ start: 1000, end: 3000 });
+    expect(perExerciseHr(w)).toEqual([120]); // whole span → avg(140,120,100)
+  });
+
   it('perExerciseHr is null for exercises with no completed set at all', () => {
     const w = {
       id: 'x', name: 'w', startedAt: 0, finishedAt: 1000,
-      hrSeries: [{ t: 100, bpm: 140 }],
+      hrSeries: [{ t: 100, bpm: 140 }, { t: 200, bpm: 140 }],
       exercises: [
         { exerciseId: 'a', sets: [{ type: 'R', weight: 100, reps: 5, done: true, doneAt: 300 }] },
         { exerciseId: 'b', sets: [{ type: 'R', weight: 80, reps: 5, done: false }] }, // not completed
