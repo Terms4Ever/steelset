@@ -45,7 +45,8 @@ akcent `#00E07A`, Inter, tabulární číslice. Vizuály vznikají v Claude Desi
 - `modules/live-activity/` - lokální expo modul (ActivityKit bridge, Swift)
 - `targets/widgets/` - widget extension (SwiftUI UI Live Activity; ActivityAttributes
   struct MUSÍ být 1:1 shodný s tím v modules/live-activity)
-- `src/components/` - BodyMap (svalová mapa, detailed prop), HrChart, LineChart, MiniWorkoutBar, ui
+- `src/app/muscle-map.tsx` - anatomická svalová mapa (období, ťuk na sval → sheet, alerty)
+- `src/components/` - MuscleMapChart (anatomický SVG, heat buckety, onPressMuscle), HrChart, LineChart, MiniWorkoutBar, ui
 
 ## Doménová pravidla (porušení = rozbitá uživatelská data)
 
@@ -111,11 +112,13 @@ syntetickými eventy - ověřovat přes DOM text (preview_eval) a screenshoty.
 
 ## Stav (červenec 2026)
 
-TestFlight build 19 (v1.0.0). Hotové: zápis tréninků, plány, pokrok (skóre/1RM/svalová
-mapa vč. detailní), kalendář, Apple Health (čtení tepu, import, auto-detekce banner,
-úklid), HR grafy + per-cvik tep, +KG u shybů, Live Activity (Dynamic Island + lock
-screen: název/čas/série/odpočet), Steelset rebrand, Sign in with Apple, iCloud záloha,
-CSV export, onboarding.
+TestFlight build 19 (v1.0.0). Hotové: zápis tréninků, plány, pokrok (skóre/1RM),
+anatomická svalová mapa (/muscle-map: 13 svalů, heat buckety, sheet s objemem/trendem/
+top cviky, alerty; stará pill-mapa smazána), úprava partií u cviku (store.exerciseMuscles
+overrides, sheet ve workout), kalendář, Apple Health (čtení tepu, import, auto-detekce
+banner, úklid), HR grafy + per-cvik tep, +KG u shybů, Live Activity (Dynamic Island +
+lock screen: název/čas/série/odpočet), Steelset rebrand, Sign in with Apple, iCloud
+záloha, CSV export, onboarding.
 
 Odložené/nápady: watchOS appka (živý tep - jediná cesta k real-time BPM), App Store
 listing (screenshoty, popis) před veřejným vydáním, RevenueCat/IAP pro "Steelset Pro".

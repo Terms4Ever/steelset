@@ -100,8 +100,28 @@ const DETAIL_OVERRIDES: Record<string, Record<string, string>> = {
   shrug: { Záda: 'Trapézy' },
 };
 
-export function detailedMuscle(exerciseId: string, coarse: string): string {
-  return DETAIL_OVERRIDES[exerciseId]?.[coarse] ?? DETAIL_DEFAULT[coarse] ?? coarse;
+/** Name-based fallback so CUSTOM exercises land on the right detailed muscle too. */
+function detailByName(name: string, coarse: string): string | null {
+  const n = name.toLowerCase();
+  if (coarse === 'Nohy') {
+    if (/(rdl|rumun|zakop|leg ?curl|hamstring|mrtv)/.test(n)) return 'Hamstringy';
+    return null;
+  }
+  if (coarse === 'Záda') {
+    if (/(shrug|trap[eé]z)/.test(n)) return 'Trapézy';
+    if (/(hyperextenz|spodn[ií]|vzp[řr]imova|good ?morning|mrtv)/.test(n)) return 'Spodní záda';
+    return null;
+  }
+  return null;
+}
+
+export function detailedMuscle(exerciseId: string, coarse: string, name?: string): string {
+  return (
+    DETAIL_OVERRIDES[exerciseId]?.[coarse] ??
+    (name ? detailByName(name, coarse) : null) ??
+    DETAIL_DEFAULT[coarse] ??
+    coarse
+  );
 }
 
 /** muscleVolume, but keyed by the detailed muscle names (splits back + legs). */
@@ -119,10 +139,10 @@ export function muscleVolumeDetailed(
       if (!ex) continue;
       const vol = exerciseVolume(le);
       if (vol <= 0) continue;
-      const p = detailedMuscle(le.exerciseId, ex.primary);
+      const p = detailedMuscle(le.exerciseId, ex.primary, ex.name);
       out[p] = (out[p] ?? 0) + vol;
       for (const m of ex.secondary ?? []) {
-        const d = detailedMuscle(le.exerciseId, m);
+        const d = detailedMuscle(le.exerciseId, m, ex.name);
         out[d] = (out[d] ?? 0) + vol * 0.5;
       }
     }
@@ -146,9 +166,9 @@ export function topExercisesForMuscle(
       if (!ex) continue;
       const vol = exerciseVolume(le);
       if (vol <= 0) continue;
-      if (detailedMuscle(le.exerciseId, ex.primary) === muscle) acc[le.exerciseId] = (acc[le.exerciseId] ?? 0) + vol;
+      if (detailedMuscle(le.exerciseId, ex.primary, ex.name) === muscle) acc[le.exerciseId] = (acc[le.exerciseId] ?? 0) + vol;
       for (const m of ex.secondary ?? [])
-        if (detailedMuscle(le.exerciseId, m) === muscle) acc[le.exerciseId] = (acc[le.exerciseId] ?? 0) + vol * 0.5;
+        if (detailedMuscle(le.exerciseId, m, ex.name) === muscle) acc[le.exerciseId] = (acc[le.exerciseId] ?? 0) + vol * 0.5;
     }
   }
   return Object.entries(acc)

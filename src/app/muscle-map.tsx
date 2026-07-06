@@ -4,11 +4,11 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { MuscleMapChart, MuscleMapLegend, MuscleRegion } from '@/components/MuscleMapChart';
+import { heatColor, MuscleMapChart, MuscleMapLegend, MuscleRegion } from '@/components/MuscleMapChart';
 import { Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { MS, muscleAlerts, muscleVolumeDetailed, topExercisesForMuscle } from '@/lib/calc';
-import { fmtNum, fmtWeight } from '@/lib/format';
+import { fmtNum, toDisplayWeight } from '@/lib/format';
 import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
 
 const PERIODS = [
@@ -19,7 +19,8 @@ const PERIODS = [
 
 export default function MuscleMap() {
   const router = useRouter();
-  const now = Date.now();
+  // frozen at mount so the window is stable and the memos below actually hold between renders
+  const [now] = useState(() => Date.now());
   const workouts = useStore((s) => s.workouts);
   const custom = useStore((s) => s.customExercises);
   const exerciseMuscles = useStore((s) => s.exerciseMuscles);
@@ -36,7 +37,9 @@ export default function MuscleMap() {
     [workouts, exById, since, days],
   );
   const alerts = useMemo(() => muscleAlerts(vol), [vol]);
-  const empty = useMemo(() => workouts.every((w) => !w.finishedAt), [workouts]);
+  const neverTrained = useMemo(() => workouts.every((w) => !w.finishedAt), [workouts]);
+  const windowTotal = useMemo(() => Object.values(vol).reduce((s, v) => s + v, 0), [vol]);
+  const empty = neverTrained || windowTotal === 0; // no data to show for THIS window
 
   const maxVol = Math.max(1, ...Object.values(vol));
   const topName = Object.entries(vol).sort((a, b) => b[1] - a[1])[0]?.[0];
@@ -87,30 +90,42 @@ export default function MuscleMap() {
           ))}
         </View>
 
-        {/* chart card */}
+        {/* chart card - muscles are tappable only when there is data in the window */}
         <View style={{ marginTop: space.lg, backgroundColor: palette.surface, borderRadius: radius.md, padding: space.lg, borderWidth: 1, borderColor: palette.hairline }}>
-          <MuscleMapChart volumes={empty ? {} : vol} onPressMuscle={(m) => setSel(m)} selected={sel} />
+          <MuscleMapChart volumes={empty ? {} : vol} onPressMuscle={empty ? undefined : (m) => setSel(m)} selected={sel} />
           <View style={{ marginTop: space.lg, borderTopWidth: 1, borderTopColor: palette.hairline, paddingTop: space.md }}>
             <MuscleMapLegend />
           </View>
         </View>
 
-        {/* empty state */}
+        {/* empty state - distinguishes "never trained" from "nothing in this window" */}
         {empty && (
           <View style={{ alignItems: 'center', marginTop: space.xl }}>
             <Txt size={type.h2} weight="bold">
-              Zatím žádná data
+              {neverTrained ? 'Zatím žádná data' : `Za posledních ${days} dní nic`}
             </Txt>
             <Txt size={type.body} weight="medium" color={palette.textMute} style={{ textAlign: 'center', marginTop: 6 }}>
-              Zapiš první trénink a mapa se rozsvítí podle toho, co trénuješ.
+              {neverTrained
+                ? 'Zapiš první trénink a mapa se rozsvítí podle toho, co trénuješ.'
+                : 'V tomhle období není žádný trénink - zkus delší období, nebo běž zapsat nový.'}
             </Txt>
-            <Pressable
-              onPress={() => router.replace('/')}
-              style={{ marginTop: space.lg, backgroundColor: palette.accent, paddingHorizontal: 22, paddingVertical: 13, borderRadius: radius.pill }}>
-              <Txt size={type.body} weight="bold" color={palette.bg}>
-                Zaloguj první trénink
-              </Txt>
-            </Pressable>
+            {neverTrained ? (
+              <Pressable
+                onPress={() => router.replace('/')}
+                style={{ marginTop: space.lg, backgroundColor: palette.accent, paddingHorizontal: 22, paddingVertical: 13, borderRadius: radius.pill }}>
+                <Txt size={type.body} weight="bold" color={palette.bg}>
+                  Zaloguj první trénink
+                </Txt>
+              </Pressable>
+            ) : (
+              <Pressable
+                onPress={() => setDays(90)}
+                style={{ marginTop: space.lg, backgroundColor: palette.surface2, paddingHorizontal: 22, paddingVertical: 13, borderRadius: radius.pill }}>
+                <Txt size={type.body} weight="bold" color={palette.accent}>
+                  Zobrazit 90 dní
+                </Txt>
+              </Pressable>
+            )}
           </View>
         )}
 
@@ -159,7 +174,7 @@ export default function MuscleMap() {
             <View style={{ width: 38, height: 4, borderRadius: 2, backgroundColor: palette.surface3, alignSelf: 'center', marginBottom: 14 }} />
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: palette.heatCold }} />
+                <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: heatColor(selVol, maxVol) }} />
                 <Txt size={type.h1} weight="bold">
                   {sel}
                 </Txt>
@@ -173,10 +188,10 @@ export default function MuscleMap() {
               <View>
                 <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 5 }}>
                   <Txt size={34} weight="bold" num>
-                    {fmtNum(selVol)}
+                    {fmtNum(toDisplayWeight(selVol, unit))}
                   </Txt>
                   <Txt size={type.body} weight="semibold" color={palette.textMute}>
-                    kg
+                    {unit}
                   </Txt>
                 </View>
                 <Txt size={type.caption} weight="medium" color={palette.textMute}>
@@ -231,7 +246,7 @@ export default function MuscleMap() {
                         <View style={{ width: `${Math.round((t.volume / selTopMax) * 100)}%`, height: 7, borderRadius: 4, backgroundColor: palette.heatCold }} />
                       </View>
                       <Txt size={type.label} weight="semibold" num color={palette.textDim} style={{ width: 54, textAlign: 'right' }}>
-                        {fmtNum(t.volume)}
+                        {fmtNum(toDisplayWeight(t.volume, unit))}
                       </Txt>
                     </View>
                   ))}
