@@ -7,13 +7,15 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
-import { LoggedExercise, SetEntry, SetType } from '@/data/types';
+import { LoggedExercise, MuscleGroup, SetEntry, SetType } from '@/data/types';
 import { isPR, lastPerformance, MS } from '@/lib/calc';
 import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtNum, fmtWeight, fromDisplayWeight, toDisplayWeight, unitIncrement } from '@/lib/format';
 import { haptic } from '@/lib/haptic';
 import { heartRateFor } from '@/lib/health';
 import { liveActivity } from '@/lib/liveActivity';
 import { activeWorkout, exercisesById as exByIdSel, useStore } from '@/store/useStore';
+
+const MUSCLE_GROUPS: MuscleGroup[] = ['Hrudník', 'Záda', 'Nohy', 'Ramena', 'Biceps', 'Triceps', 'Břicho', 'Hýždě', 'Lýtka', 'Předloktí'];
 
 const SET_TAG_COLOR: Record<SetType, string> = {
   W: palette.amber,
@@ -34,12 +36,13 @@ export default function Workout() {
   const restDefault = useStore((s) => s.settings.restDefaultSec);
   const unit = useStore((s) => s.settings.unit);
   const bodyweightSetting = useStore((s) => s.settings.bodyweightKg);
-  const { updateSet, addSet, toggleSetDone, removeSet, removeActiveExercise, finishWorkout, discardWorkout, startWorkout, linkSuperset, setWorkoutDate, setWorkoutHr } = useStore();
+  const { updateSet, addSet, toggleSetDone, removeSet, removeActiveExercise, finishWorkout, discardWorkout, startWorkout, linkSuperset, setWorkoutDate, setWorkoutHr, setExerciseMuscles } = useStore();
+  const exerciseMuscles = useStore((s) => s.exerciseMuscles);
   const healthEnabled = useStore((s) => s.settings.healthEnabled);
   const insets = useSafeAreaInsets();
 
   const active = useMemo(() => activeWorkout({ workouts, activeWorkoutId: activeId }), [workouts, activeId]);
-  const exById = useMemo(() => exByIdSel({ customExercises: custom }), [custom]);
+  const exById = useMemo(() => exByIdSel({ customExercises: custom, exerciseMuscles }), [custom, exerciseMuscles]);
   const showsW = (exId: string) => {
     const t = exById[exId]?.tracking;
     return t === undefined || t === 'weight_reps' || t === 'weighted_bw' || t === 'distance_time';
@@ -54,6 +57,8 @@ export default function Workout() {
   const [draft, setDraft] = useState('');
   const [restEndAt, setRestEndAt] = useState<number | null>(null);
   const [pr, setPr] = useState<string | null>(null);
+  // muscle-reassignment sheet: which exercise + draft selection
+  const [muscleEdit, setMuscleEdit] = useState<{ exId: string; primary: MuscleGroup; secondary: MuscleGroup[] } | null>(null);
   // rest is timestamp-based so it keeps counting real time across backgrounding
   const restLeft = restEndAt != null ? Math.max(0, Math.ceil((restEndAt - Date.now()) / 1000)) : null;
   const restEndRef = useRef<number | null>(null);
@@ -322,14 +327,26 @@ export default function Workout() {
                 marginLeft: grouped ? 2 : 0,
               }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <View style={{ flex: 1 }}>
+                <Pressable
+                  style={{ flex: 1 }}
+                  onPress={() =>
+                    exDef && setMuscleEdit({ exId: le.exerciseId, primary: exDef.primary, secondary: exDef.secondary ?? [] })
+                  }>
                   <Txt size={type.caption} weight="bold" color={palette.accent} style={{ letterSpacing: 1 }}>
                     {tag ? `SUPERSÉRIE ${tag}` : `CVIK ${ex + 1}/${active.exercises.length}`}
                   </Txt>
-                  <Txt size={type.h1} weight="bold" style={{ marginTop: 2 }}>
-                    {exDef?.name ?? 'Cvik'}
-                  </Txt>
-                </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                    <Txt size={type.h1} weight="bold">
+                      {exDef?.name ?? 'Cvik'}
+                    </Txt>
+                    <Ionicons name="pencil-outline" size={13} color={palette.textMute} />
+                  </View>
+                  {exDef && (
+                    <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ marginTop: 1 }} numberOfLines={1}>
+                      {[exDef.primary, ...(exDef.secondary ?? [])].join(' · ')}
+                    </Txt>
+                  )}
+                </Pressable>
                 <Pressable
                   hitSlop={6}
                   onPress={() =>
@@ -484,6 +501,80 @@ export default function Workout() {
         <Animated.View entering={SlideInDown.duration(180)}>
           <Keypad onKey={key} onStep={step} onNext={next} inc={focus.field === 'reps' ? { full: 5, half: 1 } : unitIncrement(unit, increment, incrementLb)} />
         </Animated.View>
+      )}
+
+      {/* muscle-reassignment sheet */}
+      {muscleEdit && (
+        <Pressable
+          onPress={() => setMuscleEdit(null)}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)' }}>
+          <Pressable
+            onPress={(e) => e.stopPropagation()}
+            style={{ position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: palette.surface, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: space.xl, paddingBottom: 34, borderWidth: 1, borderColor: palette.hairline }}>
+            <View style={{ width: 38, height: 4, borderRadius: 2, backgroundColor: palette.surface3, alignSelf: 'center', marginBottom: 12 }} />
+            <Txt size={type.h1} weight="bold">
+              Partie svalů
+            </Txt>
+            <Txt size={type.label} weight="medium" color={palette.textMute} style={{ marginTop: 2 }}>
+              {exById[muscleEdit.exId]?.name ?? 'Cvik'} - změna platí všude (i v historii a mapě)
+            </Txt>
+
+            <Txt size={type.caption} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5, marginTop: space.lg, marginBottom: 8 }}>
+              HLAVNÍ PARTIE
+            </Txt>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {MUSCLE_GROUPS.map((m) => {
+                const on = muscleEdit.primary === m;
+                return (
+                  <Pressable
+                    key={m}
+                    onPress={() => setMuscleEdit({ ...muscleEdit, primary: m, secondary: muscleEdit.secondary.filter((x) => x !== m) })}
+                    style={{ paddingHorizontal: 13, paddingVertical: 7, borderRadius: radius.pill, backgroundColor: on ? palette.accent : palette.surface2 }}>
+                    <Txt size={type.label} weight="bold" color={on ? palette.bg : palette.textDim}>
+                      {m}
+                    </Txt>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Txt size={type.caption} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5, marginTop: space.lg, marginBottom: 8 }}>
+              VEDLEJŠÍ (volitelné)
+            </Txt>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {MUSCLE_GROUPS.filter((m) => m !== muscleEdit.primary).map((m) => {
+                const on = muscleEdit.secondary.includes(m);
+                return (
+                  <Pressable
+                    key={m}
+                    onPress={() =>
+                      setMuscleEdit({
+                        ...muscleEdit,
+                        secondary: on ? muscleEdit.secondary.filter((x) => x !== m) : [...muscleEdit.secondary, m],
+                      })
+                    }
+                    style={{ paddingHorizontal: 13, paddingVertical: 7, borderRadius: radius.pill, backgroundColor: on ? palette.accentDeep : palette.surface2, borderWidth: 1, borderColor: on ? palette.accent : 'transparent' }}>
+                    <Txt size={type.label} weight="semibold" color={on ? palette.accent : palette.textDim}>
+                      {m}
+                    </Txt>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Pressable
+              onPress={() => {
+                setExerciseMuscles(muscleEdit.exId, muscleEdit.primary, muscleEdit.secondary);
+                haptic.light();
+                setMuscleEdit(null);
+              }}
+              style={({ pressed }) => ({ marginTop: space.xl, paddingVertical: 14, alignItems: 'center', borderRadius: radius.md, backgroundColor: palette.accent, opacity: pressed ? 0.85 : 1 })}>
+              <Txt size={type.body} weight="bold" color={palette.bg}>
+                Uložit partie
+              </Txt>
+            </Pressable>
+          </Pressable>
+        </Pressable>
       )}
     </View>
   );

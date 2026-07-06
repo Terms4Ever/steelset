@@ -8,10 +8,12 @@ import {
   isPR,
   hrWindow,
   lastPerformance,
+  muscleAlerts,
   muscleVolume,
   muscleVolumeDetailed,
   perExerciseHr,
   strengthScore,
+  topExercisesForMuscle,
   weeklyVolume,
   weekStreak,
   workoutVolume,
@@ -204,6 +206,31 @@ describe('strengthScore + trend', () => {
     expect(v['Kvadricepsy']).toBe(800);
     expect(v['Hamstringy']).toBe(500);
     expect(v['Záda']).toBeUndefined();
+  });
+
+  it('topExercisesForMuscle ranks by attributed volume (primary 1.0, secondary 0.5)', () => {
+    const exs = {
+      deadlift: { id: 'deadlift', name: 'MT', primary: 'Záda', secondary: ['Nohy'], equipment: 'Činka', tracking: 'weight_reps' },
+      rdl: { id: 'rdl', name: 'RDL', primary: 'Nohy', secondary: ['Hýždě'], equipment: 'Činka', tracking: 'weight_reps' },
+    } as any;
+    const ws = [
+      { id: 'w1', name: 't', startedAt: 0, finishedAt: 10, exercises: [
+        { exerciseId: 'deadlift', sets: [done(100, 10)] }, // Nohy→Hamstringy secondary → 500
+        { exerciseId: 'rdl', sets: [done(80, 10)] }, // Nohy→Hamstringy primary → 800
+      ] },
+    ] as any as Workout[];
+    const top = topExercisesForMuscle(ws, exs, 'Hamstringy');
+    expect(top.map((t) => t.exerciseId)).toEqual(['rdl', 'deadlift']);
+    expect(top[0].volume).toBe(800);
+    expect(top[1].volume).toBe(500);
+  });
+
+  it('muscleAlerts flags weak hamstrings and one dominant muscle', () => {
+    expect(muscleAlerts({ Kvadricepsy: 3000, Hamstringy: 900 })[0]?.kind).toBe('weak');
+    expect(muscleAlerts({ Kvadricepsy: 2000, Hamstringy: 1500 })).toEqual([]);
+    const dom = muscleAlerts({ Hrudník: 8000, Biceps: 1000, Záda: 1000 });
+    expect(dom.some((a) => a.kind === 'overload')).toBe(true);
+    expect(muscleAlerts({})).toEqual([]);
   });
 
   it('hrWindow falls back to the series span when the workout window collapsed (old edits)', () => {

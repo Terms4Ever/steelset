@@ -2,12 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMemo } from 'react';
 import { Pressable, View } from 'react-native';
 
-import { BodyMap } from '@/components/BodyMap';
+import { useRouter } from 'expo-router';
+
 import { LineChart } from '@/components/LineChart';
+import { MuscleMapChart, MuscleMapLegend } from '@/components/MuscleMapChart';
 import { Card, Screen, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { Workout } from '@/data/types';
-import { bestE1rm, e1rm, e1rmTrend, isCountable, MS, muscleVolume, muscleVolumeDetailed, strengthScore, weeklyVolume } from '@/lib/calc';
+import { bestE1rm, e1rm, e1rmTrend, isCountable, MS, muscleVolumeDetailed, strengthScore, weeklyVolume } from '@/lib/calc';
 import { workoutsToCsv } from '@/lib/csv';
 import { exportCsv } from '@/lib/export';
 import { fmtNum, fmtWeight, toDisplayWeight } from '@/lib/format';
@@ -36,12 +38,13 @@ function prCountInWindow(workouts: Workout[], now: number, windowMs: number) {
 }
 
 export default function Pokrok() {
+  const router = useRouter();
   const now = Date.now();
   const workouts = useStore((s) => s.workouts);
   const custom = useStore((s) => s.customExercises);
+  const exerciseMuscles = useStore((s) => s.exerciseMuscles);
   const unit = useStore((s) => s.settings.unit);
-  const detailedMap = useStore((s) => s.settings.detailedMap);
-  const exById = useMemo(() => exByIdSel({ customExercises: custom }), [custom]);
+  const exById = useMemo(() => exByIdSel({ customExercises: custom, exerciseMuscles }), [custom, exerciseMuscles]);
 
   const finished = useMemo(() => workouts.filter((w) => w.finishedAt), [workouts]);
   const score = useMemo(() => strengthScore(workouts), [workouts]);
@@ -51,10 +54,7 @@ export default function Pokrok() {
   const squat1rm = useMemo(() => bestE1rm(workouts, 'squat'), [workouts]);
   const prs30 = useMemo(() => prCountInWindow(workouts, now, 30 * MS.DAY), [workouts, now]);
 
-  const mvol = useMemo(
-    () => (detailedMap ? muscleVolumeDetailed : muscleVolume)(workouts, exById, now - 30 * MS.DAY),
-    [workouts, exById, now, detailedMap],
-  );
+  const mvol = useMemo(() => muscleVolumeDetailed(workouts, exById, now - 30 * MS.DAY), [workouts, exById, now]);
   const heat = useMemo(() => {
     const entries = Object.entries(mvol).sort((a, b) => b[1] - a[1]).slice(0, 6);
     const max = entries[0]?.[1] ?? 1;
@@ -148,8 +148,18 @@ export default function Pokrok() {
           <Txt size={type.label} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5, marginTop: space.xl, marginBottom: 10 }}>
             SVALOVÁ MAPA · 30 DNÍ
           </Txt>
+          <Pressable onPress={() => router.push('/muscle-map')}>
           <Card>
-            <BodyMap volumes={mvol} detailed={detailedMap} />
+            <MuscleMapChart volumes={mvol} height={300} />
+            <View style={{ marginTop: space.md, borderTopWidth: 1, borderTopColor: palette.hairline, paddingTop: space.md }}>
+              <MuscleMapLegend />
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, marginTop: space.md }}>
+              <Txt size={type.label} weight="semibold" color={palette.accent}>
+                Otevřít detail mapy
+              </Txt>
+              <Ionicons name="chevron-forward" size={14} color={palette.accent} />
+            </View>
             {heat.length > 0 && (
               <View style={{ gap: 11, marginTop: space.lg, borderTopWidth: 1, borderTopColor: palette.hairline, paddingTop: space.lg }}>
                 {heat.map((m) => (
@@ -165,6 +175,7 @@ export default function Pokrok() {
               </View>
             )}
           </Card>
+          </Pressable>
         </>
       )}
     </Screen>

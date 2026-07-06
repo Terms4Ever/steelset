@@ -109,10 +109,11 @@ export function muscleVolumeDetailed(
   workouts: Workout[],
   exercisesById: Record<string, Exercise>,
   since = 0,
+  until = Infinity,
 ): Record<string, number> {
   const out: Record<string, number> = {};
   for (const w of workouts) {
-    if (!w.finishedAt || w.finishedAt < since) continue;
+    if (!w.finishedAt || w.finishedAt < since || w.finishedAt > until) continue;
     for (const le of w.exercises) {
       const ex = exercisesById[le.exerciseId];
       if (!ex) continue;
@@ -124,6 +125,60 @@ export function muscleVolumeDetailed(
         const d = detailedMuscle(le.exerciseId, m);
         out[d] = (out[d] ?? 0) + vol * 0.5;
       }
+    }
+  }
+  return out;
+}
+
+/** Top exercises contributing to one detailed muscle in a window (primary 1.0, secondary 0.5). */
+export function topExercisesForMuscle(
+  workouts: Workout[],
+  exercisesById: Record<string, Exercise>,
+  muscle: string,
+  since = 0,
+  until = Infinity,
+): { exerciseId: string; volume: number }[] {
+  const acc: Record<string, number> = {};
+  for (const w of workouts) {
+    if (!w.finishedAt || w.finishedAt < since || w.finishedAt > until) continue;
+    for (const le of w.exercises) {
+      const ex = exercisesById[le.exerciseId];
+      if (!ex) continue;
+      const vol = exerciseVolume(le);
+      if (vol <= 0) continue;
+      if (detailedMuscle(le.exerciseId, ex.primary) === muscle) acc[le.exerciseId] = (acc[le.exerciseId] ?? 0) + vol;
+      for (const m of ex.secondary ?? [])
+        if (detailedMuscle(le.exerciseId, m) === muscle) acc[le.exerciseId] = (acc[le.exerciseId] ?? 0) + vol * 0.5;
+    }
+  }
+  return Object.entries(acc)
+    .map(([exerciseId, volume]) => ({ exerciseId, volume }))
+    .sort((a, b) => b.volume - a.volume);
+}
+
+/** Smart banners for the muscle map. Deterministic + conservative. */
+export function muscleAlerts(vol: Record<string, number>): { kind: 'weak' | 'overload'; text: string }[] {
+  const out: { kind: 'weak' | 'overload'; text: string }[] = [];
+  const q = vol['Kvadricepsy'] ?? 0;
+  const h = vol['Hamstringy'] ?? 0;
+  if (q > 0 && h > 0 && q / h >= 3) {
+    out.push({
+      kind: 'weak',
+      text: `Hamstringy máš ${Math.round(q / h)}× slabší než kvadricepsy - přidej RDL nebo leg curl.`,
+    });
+  } else if (q > 500 && h === 0) {
+    out.push({ kind: 'weak', text: 'Hamstringy netrénuješ vůbec - přidej RDL nebo leg curl.' });
+  }
+  const entries = Object.entries(vol).filter(([, v]) => v > 0);
+  const total = entries.reduce((s, [, v]) => s + v, 0);
+  if (entries.length >= 3 && total > 0) {
+    const [topName, topVol] = entries.sort((a, b) => b[1] - a[1])[0];
+    const share = topVol / total;
+    if (share >= 0.4) {
+      out.push({
+        kind: 'overload',
+        text: `${topName} dělá ${Math.round(share * 100)} % celkového objemu - rozlož zátěž nebo přidej den volna.`,
+      });
     }
   }
   return out;

@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { SEED_EXERCISES, STARTER_ROUTINES } from '@/data/exercises';
-import { Exercise, HrSample, LoggedExercise, Routine, SetEntry, Settings, Unit, Workout } from '@/data/types';
+import { Exercise, HrSample, LoggedExercise, MuscleGroup, Routine, SetEntry, Settings, Unit, Workout } from '@/data/types';
 import { isCountable, lastPerformance } from '@/lib/calc';
 import { buildPrefilledExercise, prefillSets } from '@/lib/prefill';
 
@@ -19,6 +19,8 @@ export interface AppleUser {
 
 interface State {
   customExercises: Exercise[];
+  /** Per-exercise muscle reassignment (works for seed i custom exercises), applied in selectors. */
+  exerciseMuscles: Record<string, { primary: MuscleGroup; secondary: MuscleGroup[] }>;
   favoriteExercises: string[];
   routines: Routine[];
   workouts: Workout[];
@@ -42,6 +44,7 @@ interface Actions {
   addExercise: (e: Omit<Exercise, 'id' | 'custom'>) => string;
   updateExercise: (id: string, patch: Partial<Exercise>) => void;
   deleteExercise: (id: string) => void;
+  setExerciseMuscles: (id: string, primary: MuscleGroup, secondary: MuscleGroup[]) => void;
   toggleFavorite: (id: string) => void;
   // routines
   addRoutine: (r: Omit<Routine, 'id'>) => string;
@@ -74,7 +77,7 @@ interface Actions {
   }) => string | null;
 }
 
-const DEFAULT_SETTINGS: Settings = { unit: 'kg', restDefaultSec: 90, increment: 2.5, incrementLb: 5, healthEnabled: false, bodyweightKg: 80, detailedMap: false, onboarded: false };
+const DEFAULT_SETTINGS: Settings = { unit: 'kg', restDefaultSec: 90, increment: 2.5, incrementLb: 5, healthEnabled: false, bodyweightKg: 80, onboarded: false };
 
 function patchActive(workouts: Workout[], activeId: string | null, fn: (w: Workout) => Workout): Workout[] {
   if (!activeId) return workouts;
@@ -96,6 +99,7 @@ export const useStore = create<State & Actions>()(
   persist(
     (set, get) => ({
       customExercises: [],
+      exerciseMuscles: {},
       favoriteExercises: [],
       routines: [],
       workouts: [],
@@ -128,6 +132,7 @@ export const useStore = create<State & Actions>()(
       wipeAll: () =>
         set({
           customExercises: [],
+          exerciseMuscles: {},
           favoriteExercises: [],
           routines: [],
           workouts: [],
@@ -148,6 +153,15 @@ export const useStore = create<State & Actions>()(
         })),
       deleteExercise: (id) =>
         set((s) => ({ customExercises: s.customExercises.filter((e) => e.id !== id) })),
+
+      // reassign which muscles an exercise hits (applies everywhere via selectors, incl. history)
+      setExerciseMuscles: (id, primary, secondary) =>
+        set((s) => ({
+          exerciseMuscles: {
+            ...s.exerciseMuscles,
+            [id]: { primary, secondary: secondary.filter((m) => m !== primary) },
+          },
+        })),
 
       toggleFavorite: (id) =>
         set((s) => ({
@@ -391,6 +405,7 @@ export const useStore = create<State & Actions>()(
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (s) => ({
         customExercises: s.customExercises,
+        exerciseMuscles: s.exerciseMuscles,
         favoriteExercises: s.favoriteExercises,
         routines: s.routines,
         workouts: s.workouts,
@@ -427,10 +442,14 @@ export const useStore = create<State & Actions>()(
 );
 
 // ---- selectors ----
-export function allExercises(s: Pick<State, 'customExercises'>): Exercise[] {
-  return [...SEED_EXERCISES, ...s.customExercises];
+export function allExercises(s: Pick<State, 'customExercises'> & Partial<Pick<State, 'exerciseMuscles'>>): Exercise[] {
+  const overrides = s.exerciseMuscles ?? {};
+  return [...SEED_EXERCISES, ...s.customExercises].map((e) => {
+    const o = overrides[e.id];
+    return o ? { ...e, primary: o.primary, secondary: o.secondary.length ? o.secondary : undefined } : e;
+  });
 }
-export function exercisesById(s: Pick<State, 'customExercises'>): Record<string, Exercise> {
+export function exercisesById(s: Pick<State, 'customExercises'> & Partial<Pick<State, 'exerciseMuscles'>>): Record<string, Exercise> {
   return Object.fromEntries(allExercises(s).map((e) => [e.id, e]));
 }
 export function activeWorkout(s: Pick<State, 'workouts' | 'activeWorkoutId'>): Workout | null {

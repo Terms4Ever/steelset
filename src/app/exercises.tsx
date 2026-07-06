@@ -16,6 +16,7 @@ export default function Exercises() {
   const router = useRouter();
   const params = useLocalSearchParams<{ target?: string; routineId?: string }>();
   const custom = useStore((s) => s.customExercises);
+  const exerciseMuscles = useStore((s) => s.exerciseMuscles);
   const favs = useStore((s) => s.favoriteExercises);
   const toggleFavorite = useStore((s) => s.toggleFavorite);
   const routines = useStore((s) => s.routines);
@@ -23,7 +24,7 @@ export default function Exercises() {
   const updateRoutine = useStore((s) => s.updateRoutine);
   const [q, setQ] = useState('');
 
-  const all = useMemo(() => allExSel({ customExercises: custom }), [custom]);
+  const all = useMemo(() => allExSel({ customExercises: custom, exerciseMuscles }), [custom, exerciseMuscles]);
   const filtered = useMemo(() => {
     const nq = norm(q.trim());
     if (!nq) return all;
