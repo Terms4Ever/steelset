@@ -225,6 +225,18 @@ describe('strengthScore + trend', () => {
     expect(top[1].volume).toBe(500);
   });
 
+  it('detailedMuscle maps custom exercises by name keywords', () => {
+    const { detailedMuscle } = require('@/lib/calc');
+    expect(detailedMuscle('custom_1', 'Nohy', 'Rumunský mrtvý tah s jednoručkami')).toBe('Hamstringy');
+    expect(detailedMuscle('custom_2', 'Nohy', 'Zakopávání na stroji')).toBe('Hamstringy');
+    expect(detailedMuscle('custom_3', 'Nohy', 'Dřep na multipressu')).toBe('Kvadricepsy');
+    expect(detailedMuscle('custom_4', 'Záda', 'Shrugs s jednoručkami')).toBe('Trapézy');
+    expect(detailedMuscle('custom_5', 'Záda', 'Hyperextenze')).toBe('Spodní záda');
+    expect(detailedMuscle('custom_6', 'Záda', 'Přítahy na hrazdě')).toBe('Horní záda');
+    // seed overrides still win over name heuristics
+    expect(detailedMuscle('deadlift', 'Záda', 'Mrtvý tah')).toBe('Spodní záda');
+  });
+
   it('muscleAlerts flags weak hamstrings and one dominant muscle', () => {
     expect(muscleAlerts({ Kvadricepsy: 3000, Hamstringy: 900 })[0]?.kind).toBe('weak');
     expect(muscleAlerts({ Kvadricepsy: 2000, Hamstringy: 1500 })).toEqual([]);
