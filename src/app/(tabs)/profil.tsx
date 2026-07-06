@@ -168,15 +168,8 @@ export default function Profil() {
             <Stepper value={settings.increment} step={1.25} min={0.5} suffix=" kg" onChange={(v) => setSetting('increment', v)} />
           )}
         </Row>
-        <Row icon="timer-outline" label="Výchozí odpočinek">
+        <Row icon="timer-outline" label="Výchozí odpočinek" last>
           <Stepper value={settings.restDefaultSec} step={15} min={15} suffix=" s" onChange={(v) => setSetting('restDefaultSec', v)} />
-        </Row>
-        <Row icon="body-outline" label="Svalová mapa" last>
-          <Toggle
-            options={['základní', 'detailní']}
-            value={settings.detailedMap ? 'detailní' : 'základní'}
-            onChange={(v) => setSetting('detailedMap', v === 'detailní')}
-          />
         </Row>
       </Section>
 

@@ -221,6 +221,20 @@ describe('store · full workout lifecycle', () => {
     expect(history(s())[0].hrSeries).toHaveLength(2);
   });
 
+  it('reassigning exercise muscles applies through selectors (seed exercise, history included)', () => {
+    const { exercisesById } = require('@/store/useStore');
+    // pullup default: Záda / Biceps → change to Ramena / Triceps
+    s().setExerciseMuscles('pullup', 'Ramena', ['Triceps']);
+    const byId = exercisesById({ customExercises: s().customExercises, exerciseMuscles: s().exerciseMuscles });
+    expect(byId['pullup'].primary).toBe('Ramena');
+    expect(byId['pullup'].secondary).toEqual(['Triceps']);
+    // primary can never stay in secondary
+    s().setExerciseMuscles('pullup', 'Triceps', ['Triceps', 'Záda']);
+    const byId2 = exercisesById({ customExercises: s().customExercises, exerciseMuscles: s().exerciseMuscles });
+    expect(byId2['pullup'].primary).toBe('Triceps');
+    expect(byId2['pullup'].secondary).toEqual(['Záda']);
+  });
+
   it('adds and persists a custom exercise', () => {
     const id = s().addExercise({ name: 'Můj cvik', primary: 'Hrudník', equipment: 'Stroj', tracking: 'weight_reps' });
     expect(s().customExercises.find((e) => e.id === id)?.name).toBe('Můj cvik');
