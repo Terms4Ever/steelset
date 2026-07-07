@@ -49,7 +49,7 @@ export default function Pokrok() {
   const finished = useMemo(() => workouts.filter((w) => w.finishedAt), [workouts]);
   const score = useMemo(() => strengthScore(workouts), [workouts]);
   const delta = useMemo(() => score - scoreAsOf(workouts, now - 30 * MS.DAY), [workouts, score, now]);
-  const weekVol = useMemo(() => weeklyVolume(workouts, now), [workouts, now]);
+  const weekVol = useMemo(() => weeklyVolume(workouts, now, exById), [workouts, now, exById]);
   const weekCount = useMemo(() => finished.filter((w) => w.finishedAt! >= now - MS.WEEK).length, [finished, now]);
   const squat1rm = useMemo(() => bestE1rm(workouts, 'squat'), [workouts]);
   const prs30 = useMemo(() => prCountInWindow(workouts, now, 30 * MS.DAY), [workouts, now]);

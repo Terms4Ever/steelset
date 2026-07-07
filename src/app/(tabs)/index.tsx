@@ -5,10 +5,10 @@ import { Pressable, View } from 'react-native';
 
 import { Card, PrimaryButton, Screen, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
-import { weekStreak, workoutVolume } from '@/lib/calc';
+import { weekStreak, workoutVolumeEx } from '@/lib/calc';
 import { fmtClock, fmtHeaderDate, fmtWeight, relativeDay } from '@/lib/format';
 import { useHealthScan } from '@/lib/useHealthScan';
-import { activeWorkout, history as historySel, useStore } from '@/store/useStore';
+import { activeWorkout, exercisesById as exByIdSel, history as historySel, useStore } from '@/store/useStore';
 
 export default function Dnesek() {
   const router = useRouter();
@@ -21,6 +21,9 @@ export default function Dnesek() {
   const discardWorkout = useStore((s) => s.discardWorkout);
   const dismissHealthWorkouts = useStore((s) => s.dismissHealthWorkouts);
   const unit = useStore((s) => s.settings.unit);
+  const custom = useStore((s) => s.customExercises);
+  const exerciseMuscles = useStore((s) => s.exerciseMuscles);
+  const exById = useMemo(() => exByIdSel({ customExercises: custom, exerciseMuscles }), [custom, exerciseMuscles]);
   const newHealth = useHealthScan();
 
   const active = useMemo(() => activeWorkout({ workouts, activeWorkoutId: activeId }), [workouts, activeId]);
@@ -187,7 +190,7 @@ export default function Dnesek() {
                     w.source === 'health' ? <Ionicons name="heart" size={16} color={palette.red} /> : null
                   ) : (
                     <Txt size={type.body} weight="bold" num color={palette.textDim}>
-                      {fmtWeight(workoutVolume(w), unit)}
+                      {fmtWeight(workoutVolumeEx(w, exById), unit)}
                     </Txt>
                   )}
                   <Ionicons name="chevron-forward" size={18} color={palette.textMute} />

@@ -6,10 +6,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PrimaryButton, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
-import { Equipment, MuscleGroup, TrackingType } from '@/data/types';
+import { Equipment, MUSCLE_GROUP_OPTIONS, MuscleGroup, TrackingType } from '@/data/types';
 import { useStore } from '@/store/useStore';
 
-const MUSCLES: MuscleGroup[] = ['Hrudník', 'Záda', 'Nohy', 'Ramena', 'Biceps', 'Triceps', 'Břicho', 'Hýždě', 'Lýtka', 'Předloktí'];
+const MUSCLES: MuscleGroup[] = MUSCLE_GROUP_OPTIONS;
 const EQUIPMENT: Equipment[] = ['Činka', 'Jednoručky', 'Kladka', 'Stroj', 'Vlastní váha', 'Kettlebell', 'Guma'];
 const TRACKING: { value: TrackingType; label: string }[] = [
   { value: 'weight_reps', label: 'Váha × opak.' },
