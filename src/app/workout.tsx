@@ -7,15 +7,13 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import { Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
-import { LoggedExercise, MuscleGroup, SetEntry, SetType } from '@/data/types';
+import { LoggedExercise, MUSCLE_GROUP_OPTIONS, MuscleGroup, SetEntry, SetType } from '@/data/types';
 import { isPR, lastPerformance, MS } from '@/lib/calc';
 import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtNum, fmtWeight, fromDisplayWeight, toDisplayWeight, unitIncrement } from '@/lib/format';
 import { haptic } from '@/lib/haptic';
 import { heartRateFor } from '@/lib/health';
 import { liveActivity } from '@/lib/liveActivity';
 import { activeWorkout, exercisesById as exByIdSel, useStore } from '@/store/useStore';
-
-const MUSCLE_GROUPS: MuscleGroup[] = ['Hrudník', 'Záda', 'Nohy', 'Ramena', 'Biceps', 'Triceps', 'Břicho', 'Hýždě', 'Lýtka', 'Předloktí'];
 
 const SET_TAG_COLOR: Record<SetType, string> = {
   W: palette.amber,
@@ -57,8 +55,8 @@ export default function Workout() {
   const [draft, setDraft] = useState('');
   const [restEndAt, setRestEndAt] = useState<number | null>(null);
   const [pr, setPr] = useState<string | null>(null);
-  // muscle-reassignment sheet: which exercise + draft selection
-  const [muscleEdit, setMuscleEdit] = useState<{ exId: string; primary: MuscleGroup; secondary: MuscleGroup[] } | null>(null);
+  // exercise-settings sheet: muscles + unilateral flag draft
+  const [muscleEdit, setMuscleEdit] = useState<{ exId: string; primary: MuscleGroup; secondary: MuscleGroup[]; unilateral: boolean } | null>(null);
   // rest is timestamp-based so it keeps counting real time across backgrounding
   const restLeft = restEndAt != null ? Math.max(0, Math.ceil((restEndAt - Date.now()) / 1000)) : null;
   const restEndRef = useRef<number | null>(null);
@@ -148,6 +146,7 @@ export default function Workout() {
         : toDisplayWeight(isBw(exId) ? v - bwKg : v, unit);
   const fromDisp = (raw: number, field: 'weight' | 'reps', exId: string) =>
     field !== 'weight' ? raw : isBw(exId) ? bwKg + fromDisplayWeight(raw, unit) : fromDisplayWeight(raw, unit);
+
 
   const cellValue = (ex: number, set: number, field: 'weight' | 'reps'): string => {
     if (focus && focus.ex === ex && focus.set === set && focus.field === field) return draft;
@@ -330,7 +329,13 @@ export default function Workout() {
                 <Pressable
                   style={{ flex: 1 }}
                   onPress={() =>
-                    exDef && setMuscleEdit({ exId: le.exerciseId, primary: exDef.primary, secondary: exDef.secondary ?? [] })
+                    exDef &&
+                    setMuscleEdit({
+                      exId: le.exerciseId,
+                      primary: exDef.primary,
+                      secondary: exDef.secondary ?? [],
+                      unilateral: !!exDef.unilateral,
+                    })
                   }>
                   <Txt size={type.caption} weight="bold" color={palette.accent} style={{ letterSpacing: 1 }}>
                     {tag ? `SUPERSÉRIE ${tag}` : `CVIK ${ex + 1}/${active.exercises.length}`}
@@ -344,6 +349,7 @@ export default function Workout() {
                   {exDef && (
                     <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ marginTop: 1 }} numberOfLines={1}>
                       {[exDef.primary, ...(exDef.secondary ?? [])].join(' · ')}
+                      {exDef.unilateral ? ' · 1-str.' : ''}
                     </Txt>
                   )}
                 </Pressable>
@@ -378,6 +384,9 @@ export default function Workout() {
 
               {le.sets.map((s, si) => {
                 const p = prev?.[si];
+                // per-set delta vs the same set last session, shown once the set is done (+5 kg / +2 opak.)
+                const dW = s.done && p?.weight != null && s.weight != null ? toDisplayWeight(s.weight - p.weight, unit) : null;
+                const dR = s.done && p?.reps != null && s.reps != null ? s.reps - p.reps : null;
                 return (
                   <View
                     key={si}
@@ -403,9 +412,9 @@ export default function Workout() {
                     </Pressable>
 
                     {showW && (
-                      <Cell focused={isFocus(focus, ex, si, 'weight')} value={cellValue(ex, si, 'weight')} ghost={p?.weight != null ? fmtNum(toDisplayWeight(isBw(le.exerciseId) ? p.weight - bwKg : p.weight, unit), 2).replace(',', '.') : ''} done={s.done} onPress={() => focusCell(ex, si, 'weight')} />
+                      <Cell focused={isFocus(focus, ex, si, 'weight')} value={cellValue(ex, si, 'weight')} ghost={p?.weight != null ? fmtNum(toDisplayWeight(isBw(le.exerciseId) ? p.weight - bwKg : p.weight, unit), 2).replace(',', '.') : ''} done={s.done} delta={dW} onPress={() => focusCell(ex, si, 'weight')} />
                     )}
-                    <Cell focused={isFocus(focus, ex, si, 'reps')} value={cellValue(ex, si, 'reps')} ghost={p?.reps != null ? String(p.reps) : ''} done={s.done} onPress={() => focusCell(ex, si, 'reps')} />
+                    <Cell focused={isFocus(focus, ex, si, 'reps')} value={cellValue(ex, si, 'reps')} ghost={p?.reps != null ? String(p.reps) : ''} done={s.done} delta={dR} deltaInt onPress={() => focusCell(ex, si, 'reps')} />
 
                     <Pressable onLongPress={() => removeSet(ex, si)} onPress={() => commit(ex, si)} style={{ width: 48, alignItems: 'center' }}>
                       <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: s.done ? palette.accent : 'transparent', borderWidth: s.done ? 0 : 2, borderColor: palette.surface3, alignItems: 'center', justifyContent: 'center' }}>
@@ -513,7 +522,7 @@ export default function Workout() {
             style={{ position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: palette.surface, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: space.xl, paddingBottom: 34, borderWidth: 1, borderColor: palette.hairline }}>
             <View style={{ width: 38, height: 4, borderRadius: 2, backgroundColor: palette.surface3, alignSelf: 'center', marginBottom: 12 }} />
             <Txt size={type.h1} weight="bold">
-              Partie svalů
+              Nastavení cviku
             </Txt>
             <Txt size={type.label} weight="medium" color={palette.textMute} style={{ marginTop: 2 }}>
               {exById[muscleEdit.exId]?.name ?? 'Cvik'} - změna platí všude (i v historii a mapě)
@@ -523,7 +532,7 @@ export default function Workout() {
               HLAVNÍ PARTIE
             </Txt>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              {MUSCLE_GROUPS.map((m) => {
+              {MUSCLE_GROUP_OPTIONS.map((m) => {
                 const on = muscleEdit.primary === m;
                 return (
                   <Pressable
@@ -542,7 +551,7 @@ export default function Workout() {
               VEDLEJŠÍ (volitelné)
             </Txt>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              {MUSCLE_GROUPS.filter((m) => m !== muscleEdit.primary).map((m) => {
+              {MUSCLE_GROUP_OPTIONS.filter((m) => m !== muscleEdit.primary).map((m) => {
                 const on = muscleEdit.secondary.includes(m);
                 return (
                   <Pressable
@@ -563,14 +572,40 @@ export default function Workout() {
             </View>
 
             <Pressable
+              onPress={() => setMuscleEdit({ ...muscleEdit, unilateral: !muscleEdit.unilateral })}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: space.lg, backgroundColor: palette.surface2, borderRadius: radius.md, padding: space.lg }}>
+              <View
+                style={{
+                  width: 24,
+                  height: 24,
+                  borderRadius: 7,
+                  backgroundColor: muscleEdit.unilateral ? palette.accent : 'transparent',
+                  borderWidth: muscleEdit.unilateral ? 0 : 2,
+                  borderColor: palette.surface3,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                {muscleEdit.unilateral && <Ionicons name="checkmark" size={16} color={palette.bg} />}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Txt size={type.body} weight="semibold">
+                  Jednostranný cvik
+                </Txt>
+                <Txt size={type.caption} weight="medium" color={palette.textMute}>
+                  Cvičíš každou stranu zvlášť - objem se počítá 2×
+                </Txt>
+              </View>
+            </Pressable>
+
+            <Pressable
               onPress={() => {
-                setExerciseMuscles(muscleEdit.exId, muscleEdit.primary, muscleEdit.secondary);
+                setExerciseMuscles(muscleEdit.exId, muscleEdit.primary, muscleEdit.secondary, muscleEdit.unilateral);
                 haptic.light();
                 setMuscleEdit(null);
               }}
-              style={({ pressed }) => ({ marginTop: space.xl, paddingVertical: 14, alignItems: 'center', borderRadius: radius.md, backgroundColor: palette.accent, opacity: pressed ? 0.85 : 1 })}>
+              style={({ pressed }) => ({ marginTop: space.lg, paddingVertical: 14, alignItems: 'center', borderRadius: radius.md, backgroundColor: palette.accent, opacity: pressed ? 0.85 : 1 })}>
               <Txt size={type.body} weight="bold" color={palette.bg}>
-                Uložit partie
+                Uložit nastavení cviku
               </Txt>
             </Pressable>
           </Pressable>
@@ -594,13 +629,37 @@ function cycleType(updateSet: any, ex: number, si: number, s: SetEntry) {
   updateSet(ex, si, { type: nextType });
 }
 
-function Cell({ focused, value, ghost, done, onPress }: { focused: boolean; value: string; ghost: string; done: boolean; onPress: () => void }) {
+function Cell({
+  focused,
+  value,
+  ghost,
+  done,
+  onPress,
+  delta,
+  deltaInt,
+}: {
+  focused: boolean;
+  value: string;
+  ghost: string;
+  done: boolean;
+  onPress: () => void;
+  delta?: number | null;
+  deltaInt?: boolean;
+}) {
+  // vs-last-session delta shown under the number once the set is done (+5 / -2,5)
+  const showDelta = done && delta != null && Math.abs(delta) > 0.004;
   return (
     <Pressable onPress={onPress} style={{ flex: 1, alignItems: 'center' }}>
       <View style={{ minWidth: 64, paddingVertical: 6, borderRadius: 10, alignItems: 'center', backgroundColor: focused ? palette.surface3 : 'transparent', borderWidth: focused ? 1 : 0, borderColor: palette.accent }}>
         <Txt size={20} weight="bold" num color={value ? (done ? palette.accent : palette.text) : palette.textGhost}>
           {value || ghost || '-'}
         </Txt>
+        {showDelta && (
+          <Txt size={10} weight="bold" num color={delta! > 0 ? palette.accent : palette.red} style={{ marginTop: -1 }}>
+            {delta! > 0 ? '+' : ''}
+            {deltaInt ? String(Math.round(delta!)) : fmtNum(delta!, 2)}
+          </Txt>
+        )}
       </View>
     </Pressable>
   );

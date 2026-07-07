@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { HrChart } from '@/components/HrChart';
 import { PrimaryButton, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
-import { exerciseVolume, hrWindow, perExerciseHr, workoutVolume } from '@/lib/calc';
+import { exerciseVolumeFor, hrWindow, perExerciseHr, workoutVolumeEx } from '@/lib/calc';
 import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtWeight } from '@/lib/format';
 import { heartRateFor } from '@/lib/health';
 import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
@@ -19,6 +19,7 @@ export default function WorkoutDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const workouts = useStore((s) => s.workouts);
   const custom = useStore((s) => s.customExercises);
+  const exerciseMuscles = useStore((s) => s.exerciseMuscles);
   const unit = useStore((s) => s.settings.unit);
   const deleteWorkout = useStore((s) => s.deleteWorkout);
   const editWorkout = useStore((s) => s.editWorkout);
@@ -26,7 +27,7 @@ export default function WorkoutDetail() {
   const healthEnabled = useStore((s) => s.settings.healthEnabled);
 
   const w = workouts.find((x) => x.id === id);
-  const exById = useMemo(() => exByIdSel({ customExercises: custom }), [custom]);
+  const exById = useMemo(() => exByIdSel({ customExercises: custom, exerciseMuscles }), [custom, exerciseMuscles]);
   const [hrLoading, setHrLoading] = useState(false);
 
   const canPullHr = !!w && !w.manual && healthEnabled && !!w.finishedAt;
@@ -77,7 +78,7 @@ export default function WorkoutDetail() {
   const durationSec = w.finishedAt && !w.manual ? Math.max(0, Math.round((w.finishedAt - w.startedAt) / 1000)) : 0;
   const metaParts = [
     `${dayName(when)} ${fmtDateShort(when)}`,
-    ...(w.exercises.length ? [`${w.exercises.length} cviků`, fmtWeight(workoutVolume(w), unit)] : []),
+    ...(w.exercises.length ? [`${w.exercises.length} cviků`, fmtWeight(workoutVolumeEx(w, exById), unit)] : []),
     ...(durationSec >= 30 ? [fmtClock(durationSec)] : []),
   ];
 
@@ -179,7 +180,7 @@ export default function WorkoutDetail() {
                 </Txt>
                 <View style={{ alignItems: 'flex-end' }}>
                   <Txt size={type.label} weight="semibold" num color={palette.textDim}>
-                    {fmtWeight(exerciseVolume(le), unit)}
+                    {fmtWeight(exerciseVolumeFor(le, exById[le.exerciseId], w), unit)}
                   </Txt>
                   {exHr[i] != null && (
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 3 }}>

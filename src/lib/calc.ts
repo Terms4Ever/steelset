@@ -25,6 +25,27 @@ export function workoutVolume(w: Workout): number {
   return w.exercises.reduce((sum, le) => sum + exerciseVolume(le), 0);
 }
 
+/**
+ * Exercise-aware volume: bodyweight-reps sets (weight null, hidden column) count as
+ * bodyweight × reps using the workout's snapshot, and unilateral exercises count 2×
+ * (one arm/leg at a time = both sides trained). This is the volume the muscle map,
+ * heat lists and volume displays should use whenever the exercise catalogue is at hand.
+ */
+export function exerciseVolumeFor(le: LoggedExercise, ex: Exercise | undefined, w: Workout): number {
+  const mult = ex?.unilateral ? 2 : 1;
+  const bw = w.bodyweightKg ?? 80;
+  return le.sets.reduce((sum, s) => {
+    if (!s.done || !s.reps || s.reps <= 0) return sum;
+    const weight = s.weight != null && s.weight > 0 ? s.weight : ex?.tracking === 'bodyweight_reps' ? bw : null;
+    return weight ? sum + weight * s.reps * mult : sum;
+  }, 0);
+}
+
+/** workoutVolume using the exercise-aware model above. */
+export function workoutVolumeEx(w: Workout, exercisesById: Record<string, Exercise>): number {
+  return w.exercises.reduce((sum, le) => sum + exerciseVolumeFor(le, exercisesById[le.exerciseId], w), 0);
+}
+
 /** Best estimated 1RM for an exercise across finished workouts (optionally before a cutoff). */
 export function bestE1rm(workouts: Workout[], exerciseId: string, before = Infinity): number {
   let best = 0;
@@ -72,7 +93,7 @@ export function muscleVolume(
     for (const le of w.exercises) {
       const ex = exercisesById[le.exerciseId];
       if (!ex) continue;
-      const vol = exerciseVolume(le);
+      const vol = exerciseVolumeFor(le, ex, w);
       if (vol <= 0) continue;
       out[ex.primary] = (out[ex.primary] ?? 0) + vol;
       for (const m of ex.secondary ?? []) out[m] = (out[m] ?? 0) + vol * 0.5;
@@ -137,7 +158,7 @@ export function muscleVolumeDetailed(
     for (const le of w.exercises) {
       const ex = exercisesById[le.exerciseId];
       if (!ex) continue;
-      const vol = exerciseVolume(le);
+      const vol = exerciseVolumeFor(le, ex, w);
       if (vol <= 0) continue;
       const p = detailedMuscle(le.exerciseId, ex.primary, ex.name);
       out[p] = (out[p] ?? 0) + vol;
@@ -164,7 +185,7 @@ export function topExercisesForMuscle(
     for (const le of w.exercises) {
       const ex = exercisesById[le.exerciseId];
       if (!ex) continue;
-      const vol = exerciseVolume(le);
+      const vol = exerciseVolumeFor(le, ex, w);
       if (vol <= 0) continue;
       if (detailedMuscle(le.exerciseId, ex.primary, ex.name) === muscle) acc[le.exerciseId] = (acc[le.exerciseId] ?? 0) + vol;
       for (const m of ex.secondary ?? [])
@@ -253,8 +274,11 @@ export function workoutsInWindow(workouts: Workout[], now: number, windowMs: num
   return workouts.filter((w) => w.finishedAt && w.finishedAt >= now - windowMs && w.finishedAt <= now);
 }
 
-export function weeklyVolume(workouts: Workout[], now: number): number {
-  return workoutsInWindow(workouts, now, MS_WEEK).reduce((s, w) => s + workoutVolume(w), 0);
+export function weeklyVolume(workouts: Workout[], now: number, exercisesById?: Record<string, Exercise>): number {
+  return workoutsInWindow(workouts, now, MS_WEEK).reduce(
+    (s, w) => s + (exercisesById ? workoutVolumeEx(w, exercisesById) : workoutVolume(w)),
+    0,
+  );
 }
 
 /**

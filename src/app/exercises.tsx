@@ -77,7 +77,7 @@ export default function Exercises() {
         </View>
       </View>
 
-      <ScrollView style={{ flex: 1, marginTop: 12 }} contentContainerStyle={{ paddingHorizontal: space.xl, paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <ScrollView style={{ flex: 1, marginTop: 12 }} contentContainerStyle={{ paddingHorizontal: space.xl, paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
         <Pressable onPress={create} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: palette.hairline }}>
           <View style={{ width: 38, height: 38, borderRadius: 10, backgroundColor: palette.accentDeep, alignItems: 'center', justifyContent: 'center' }}>
             <Ionicons name="add" size={22} color={palette.accent} />

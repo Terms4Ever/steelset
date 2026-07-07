@@ -5,16 +5,37 @@ import {
   Inter_700Bold,
   useFonts,
 } from '@expo-google-fonts/inter';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { View } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { MiniWorkoutBar } from '@/components/MiniWorkoutBar';
 import { palette } from '@/constants/theme';
 import { scheduleBackup, syncFromCloud } from '@/lib/sync';
 import { useStore } from '@/store/useStore';
+
+/**
+ * Floating "workout in progress" bar on screens OUTSIDE the tabs (exercise picker, muscle map,
+ * history detail…) so the user can always get back to a running workout. The tab screens render
+ * their own copy above the tab bar; the workout screen itself doesn't need one.
+ */
+function FloatingWorkoutBar() {
+  const pathname = usePathname();
+  const insets = useSafeAreaInsets();
+  const workouts = useStore((s) => s.workouts);
+  const activeId = useStore((s) => s.activeWorkoutId);
+  const hasActive = !!activeId && workouts.some((w) => w.id === activeId);
+  const HIDDEN = ['/workout', '/onboarding', '/', '/plany', '/pokrok', '/kalendar', '/profil'];
+  if (!hasActive || HIDDEN.includes(pathname)) return null;
+  return (
+    <View style={{ position: 'absolute', left: 0, right: 0, bottom: Math.max(insets.bottom, 10) }}>
+      <MiniWorkoutBar />
+    </View>
+  );
+}
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -75,6 +96,7 @@ export default function RootLayout() {
         <Stack.Screen name="routine/[id]" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="history/[id]" options={{ animation: 'slide_from_right' }} />
       </Stack>
+      <FloatingWorkoutBar />
     </SafeAreaProvider>
   );
 }

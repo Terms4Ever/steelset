@@ -20,7 +20,32 @@ export type MuscleGroup =
   | 'Břicho'
   | 'Hýždě'
   | 'Lýtka'
-  | 'Předloktí';
+  | 'Předloktí'
+  // detailní partie (pokrývají celou svalovou mapu; Záda/Nohy zůstávají jako obecné)
+  | 'Trapézy'
+  | 'Horní záda'
+  | 'Spodní záda'
+  | 'Kvadricepsy'
+  | 'Hamstringy';
+
+/** Nabídka partií pro výběr u cviku (obecné + detailní). */
+export const MUSCLE_GROUP_OPTIONS: MuscleGroup[] = [
+  'Hrudník',
+  'Horní záda',
+  'Spodní záda',
+  'Trapézy',
+  'Ramena',
+  'Biceps',
+  'Triceps',
+  'Předloktí',
+  'Břicho',
+  'Kvadricepsy',
+  'Hamstringy',
+  'Hýždě',
+  'Lýtka',
+  'Záda',
+  'Nohy',
+];
 
 export type Equipment =
   | 'Činka'
@@ -39,6 +64,7 @@ export interface Exercise {
   equipment: Equipment;
   tracking: TrackingType;
   custom?: boolean;
+  unilateral?: boolean; // jednostranný cvik (jedna ruka/noha) - objem se počítá 2×
   defaultBar?: number; // hmotnost tyče pro plate kalkulačku
   note?: string;
 }

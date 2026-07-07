@@ -225,6 +225,37 @@ describe('strengthScore + trend', () => {
     expect(top[1].volume).toBe(500);
   });
 
+  it('exerciseVolumeFor counts bodyweight reps as bodyweight × reps (fixes abs never lighting up)', () => {
+    const { exerciseVolumeFor, workoutVolumeEx } = require('@/lib/calc');
+    const ex = { id: 'hanging-leg-raise', name: 'Zvedání nohou ve visu', primary: 'Břicho', equipment: 'Vlastní váha', tracking: 'bodyweight_reps' } as any;
+    const w = { id: 'w', name: 't', startedAt: 0, finishedAt: 10, bodyweightKg: 91, exercises: [
+      { exerciseId: 'hanging-leg-raise', sets: [
+        { type: 'R', weight: null, reps: 12, done: true },
+        { type: 'R', weight: null, reps: 12, done: true },
+        { type: 'R', weight: null, reps: 12, done: false }, // not done → 0
+      ] },
+    ] } as any;
+    expect(exerciseVolumeFor(w.exercises[0], ex, w)).toBe(91 * 12 * 2);
+    expect(workoutVolumeEx(w, { 'hanging-leg-raise': ex })).toBe(91 * 12 * 2);
+  });
+
+  it('exerciseVolumeFor doubles volume for unilateral exercises', () => {
+    const { exerciseVolumeFor } = require('@/lib/calc');
+    const ex = { id: 'db-row', name: 'Veslování jednoručkou', primary: 'Záda', equipment: 'Jednoručky', tracking: 'weight_reps', unilateral: true } as any;
+    const w = { id: 'w', name: 't', startedAt: 0, finishedAt: 10, bodyweightKg: 91, exercises: [
+      { exerciseId: 'db-row', sets: [{ type: 'R', weight: 30, reps: 10, done: true }] },
+    ] } as any;
+    expect(exerciseVolumeFor(w.exercises[0], ex, w)).toBe(30 * 10 * 2);
+  });
+
+  it('muscleVolumeDetailed lights up abs from bodyweight-only exercises', () => {
+    const exs = { hlr: { id: 'hlr', name: 'Zvedání nohou ve visu', primary: 'Břicho', equipment: 'Vlastní váha', tracking: 'bodyweight_reps' } } as any;
+    const ws = [{ id: 'w1', name: 't', startedAt: 0, finishedAt: 10, bodyweightKg: 90, exercises: [
+      { exerciseId: 'hlr', sets: [{ type: 'R', weight: null, reps: 10, done: true }] },
+    ] }] as any as Workout[];
+    expect(muscleVolumeDetailed(ws, exs)['Břicho']).toBe(900);
+  });
+
   it('detailedMuscle maps custom exercises by name keywords', () => {
     const { detailedMuscle } = require('@/lib/calc');
     expect(detailedMuscle('custom_1', 'Nohy', 'Rumunský mrtvý tah s jednoručkami')).toBe('Hamstringy');

@@ -5,10 +5,10 @@ import { Pressable, View } from 'react-native';
 
 import { Card, Screen, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
-import { weekStreak, workoutVolume } from '@/lib/calc';
+import { weekStreak, workoutVolumeEx } from '@/lib/calc';
 import { fmtWeight, relativeDay } from '@/lib/format';
 import { Workout } from '@/data/types';
-import { history as historySel, useStore } from '@/store/useStore';
+import { exercisesById as exByIdSel, history as historySel, useStore } from '@/store/useStore';
 
 const WD = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
 const MONTHS = ['Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen', 'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec'];
@@ -24,6 +24,9 @@ export default function Kalendar() {
   const today = new Date(now);
   const workouts = useStore((s) => s.workouts);
   const unit = useStore((s) => s.settings.unit);
+  const custom = useStore((s) => s.customExercises);
+  const exerciseMuscles = useStore((s) => s.exerciseMuscles);
+  const exById = useMemo(() => exByIdSel({ customExercises: custom, exerciseMuscles }), [custom, exerciseMuscles]);
 
   const finished = useMemo(() => historySel({ workouts }), [workouts]);
   const streak = useMemo(() => weekStreak(workouts, now), [workouts, now]);
@@ -38,11 +41,11 @@ export default function Kalendar() {
     finished.forEach((w) => {
       const k = dayKey(w.finishedAt!);
       (byDay[k] ||= []).push(w);
-      volByDay[k] = (volByDay[k] ?? 0) + workoutVolume(w);
+      volByDay[k] = (volByDay[k] ?? 0) + workoutVolumeEx(w, exById);
     });
     const maxDayVol = Math.max(1, ...Object.values(volByDay));
     return { byDay, volByDay, maxDayVol };
-  }, [finished]);
+  }, [finished, exById]);
 
   // month grid cells (week starts Monday)
   const cells = useMemo(() => {
@@ -66,7 +69,7 @@ export default function Kalendar() {
     }),
     [finished, view],
   );
-  const monthVol = monthWs.reduce((s, w) => s + workoutVolume(w), 0);
+  const monthVol = monthWs.reduce((s, w) => s + workoutVolumeEx(w, exById), 0);
 
   const isThisMonth = view.y === today.getFullYear() && view.m === today.getMonth();
   const todayKey = dayKey(now);
@@ -197,7 +200,7 @@ export default function Kalendar() {
                         </Txt>
                       </View>
                       <Txt size={type.body} weight="bold" num color={palette.textDim}>
-                        {fmtWeight(workoutVolume(w), unit)}
+                        {fmtWeight(workoutVolumeEx(w, exById), unit)}
                       </Txt>
                       <Ionicons name="chevron-forward" size={18} color={palette.textMute} />
                     </Card>

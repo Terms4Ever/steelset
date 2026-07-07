@@ -19,8 +19,8 @@ export interface AppleUser {
 
 interface State {
   customExercises: Exercise[];
-  /** Per-exercise muscle reassignment (works for seed i custom exercises), applied in selectors. */
-  exerciseMuscles: Record<string, { primary: MuscleGroup; secondary: MuscleGroup[] }>;
+  /** Per-exercise overrides (muscles + unilateral flag; works for seed i custom exercises), applied in selectors. */
+  exerciseMuscles: Record<string, { primary: MuscleGroup; secondary: MuscleGroup[]; unilateral?: boolean }>;
   favoriteExercises: string[];
   routines: Routine[];
   workouts: Workout[];
@@ -44,7 +44,7 @@ interface Actions {
   addExercise: (e: Omit<Exercise, 'id' | 'custom'>) => string;
   updateExercise: (id: string, patch: Partial<Exercise>) => void;
   deleteExercise: (id: string) => void;
-  setExerciseMuscles: (id: string, primary: MuscleGroup, secondary: MuscleGroup[]) => void;
+  setExerciseMuscles: (id: string, primary: MuscleGroup, secondary: MuscleGroup[], unilateral?: boolean) => void;
   toggleFavorite: (id: string) => void;
   // routines
   addRoutine: (r: Omit<Routine, 'id'>) => string;
@@ -154,12 +154,12 @@ export const useStore = create<State & Actions>()(
       deleteExercise: (id) =>
         set((s) => ({ customExercises: s.customExercises.filter((e) => e.id !== id) })),
 
-      // reassign which muscles an exercise hits (applies everywhere via selectors, incl. history)
-      setExerciseMuscles: (id, primary, secondary) =>
+      // reassign which muscles an exercise hits + unilateral flag (applies everywhere via selectors, incl. history)
+      setExerciseMuscles: (id, primary, secondary, unilateral) =>
         set((s) => ({
           exerciseMuscles: {
             ...s.exerciseMuscles,
-            [id]: { primary, secondary: secondary.filter((m) => m !== primary) },
+            [id]: { primary, secondary: secondary.filter((m) => m !== primary), ...(unilateral != null ? { unilateral } : {}) },
           },
         })),
 
@@ -446,7 +446,14 @@ export function allExercises(s: Pick<State, 'customExercises'> & Partial<Pick<St
   const overrides = s.exerciseMuscles ?? {};
   return [...SEED_EXERCISES, ...s.customExercises].map((e) => {
     const o = overrides[e.id];
-    return o ? { ...e, primary: o.primary, secondary: o.secondary.length ? o.secondary : undefined } : e;
+    return o
+      ? {
+          ...e,
+          primary: o.primary,
+          secondary: o.secondary.length ? o.secondary : undefined,
+          unilateral: o.unilateral ?? e.unilateral,
+        }
+      : e;
   });
 }
 export function exercisesById(s: Pick<State, 'customExercises'> & Partial<Pick<State, 'exerciseMuscles'>>): Record<string, Exercise> {
