@@ -61,14 +61,18 @@ export function bestE1rm(workouts: Workout[], exerciseId: string, before = Infin
   return best;
 }
 
-/** The most recent finished sets logged for an exercise - used to pre-fill "minule". */
+/**
+ * The most recent finished sets logged for an exercise - used to pre-fill "minule" and per-set deltas.
+ * Includes WEIGHTLESS done sets (bodyweight/time/reps exercises store weight null), so their reps
+ * ghosts and "+2 opak." deltas work too.
+ */
 export function lastPerformance(workouts: Workout[], exerciseId: string): SetEntry[] | null {
   const finished = workouts
     .filter((w) => w.finishedAt && w.exercises.some((le) => le.exerciseId === exerciseId))
     .sort((a, b) => b.finishedAt! - a.finishedAt!);
   if (!finished.length) return null;
   const le = finished[0].exercises.find((x) => x.exerciseId === exerciseId)!;
-  return le.sets.filter(isCountable);
+  return le.sets.filter((s) => s.done && !!s.reps && s.reps > 0);
 }
 
 /**

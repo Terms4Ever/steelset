@@ -256,6 +256,18 @@ describe('strengthScore + trend', () => {
     expect(muscleVolumeDetailed(ws, exs)['Břicho']).toBe(900);
   });
 
+  it('lastPerformance includes weightless done sets (bodyweight reps ghosts + deltas)', () => {
+    const ws = [{ id: 'w1', name: 't', startedAt: 0, finishedAt: 10, exercises: [
+      { exerciseId: 'pushup', sets: [
+        { type: 'R', weight: null, reps: 12, done: true },
+        { type: 'R', weight: null, reps: 10, done: false }, // not done → excluded
+      ] },
+    ] }] as any as Workout[];
+    const prev = lastPerformance(ws, 'pushup');
+    expect(prev).toHaveLength(1);
+    expect(prev![0].reps).toBe(12);
+  });
+
   it('detailedMuscle maps custom exercises by name keywords', () => {
     const { detailedMuscle } = require('@/lib/calc');
     expect(detailedMuscle('custom_1', 'Nohy', 'Rumunský mrtvý tah s jednoručkami')).toBe('Hamstringy');
