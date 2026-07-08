@@ -5,11 +5,11 @@ import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { LineChart } from '@/components/LineChart';
-import { MuscleMapChart, MuscleMapLegend } from '@/components/MuscleMapChart';
+import { heatColor, MuscleMapChart, MuscleMapLegend } from '@/components/MuscleMapChart';
 import { Card, Screen, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { Workout } from '@/data/types';
-import { bestE1rm, e1rm, e1rmTrend, isCountable, MS, muscleVolumeDetailed, strengthScore, weeklyVolume } from '@/lib/calc';
+import { bestE1rm, e1rm, e1rmTrend, fmtSets, isCountable, MS, muscleSetsDetailed, perWeek, strengthScore, weeklyVolume } from '@/lib/calc';
 import { workoutsToCsv } from '@/lib/csv';
 import { exportCsv } from '@/lib/export';
 import { fmtNum, fmtWeight, toDisplayWeight } from '@/lib/format';
@@ -54,12 +54,13 @@ export default function Pokrok() {
   const squat1rm = useMemo(() => bestE1rm(workouts, 'squat'), [workouts]);
   const prs30 = useMemo(() => prCountInWindow(workouts, now, 30 * MS.DAY), [workouts, now]);
 
-  const mvol = useMemo(() => muscleVolumeDetailed(workouts, exById, now - 30 * MS.DAY), [workouts, exById, now]);
+  // weekly hard sets per muscle (same absolute model as /muscle-map)
+  const msets = useMemo(() => perWeek(muscleSetsDetailed(workouts, exById, now - 30 * MS.DAY), 30), [workouts, exById, now]);
   const heat = useMemo(() => {
-    const entries = Object.entries(mvol).sort((a, b) => b[1] - a[1]).slice(0, 6);
-    const max = entries[0]?.[1] ?? 1;
-    return entries.map(([name, vol]) => ({ name, pct: Math.round((vol / max) * 100) }));
-  }, [mvol]);
+    const entries = Object.entries(msets).sort((a, b) => b[1] - a[1]).slice(0, 6);
+    const max = Math.max(1, entries[0]?.[1] ?? 1);
+    return entries.map(([name, sets]) => ({ name, sets, pct: Math.round((sets / max) * 100) }));
+  }, [msets]);
 
   const trendExId = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -69,7 +70,7 @@ export default function Pokrok() {
   }, [finished]);
   const trend = useMemo(() => (trendExId ? e1rmTrend(workouts, trendExId) : []), [workouts, trendExId]);
 
-  const heatColor = (pct: number) => (pct >= 66 ? palette.accent : pct >= 33 ? palette.amber : palette.heatCold);
+
 
   const onExport = async () => {
     await exportCsv(workoutsToCsv(workouts, exById));
@@ -146,11 +147,11 @@ export default function Pokrok() {
           )}
 
           <Txt size={type.label} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5, marginTop: space.xl, marginBottom: 10 }}>
-            SVALOVÁ MAPA · 30 DNÍ
+            SVALOVÁ MAPA · SÉRIE TÝDNĚ
           </Txt>
           <Pressable onPress={() => router.push('/muscle-map')}>
           <Card>
-            <MuscleMapChart volumes={mvol} height={300} />
+            <MuscleMapChart volumes={msets} height={300} />
             <View style={{ marginTop: space.md, borderTopWidth: 1, borderTopColor: palette.hairline, paddingTop: space.md }}>
               <MuscleMapLegend />
             </View>
@@ -168,8 +169,11 @@ export default function Pokrok() {
                       {m.name}
                     </Txt>
                     <View style={{ flex: 1, height: 8, borderRadius: 4, backgroundColor: palette.surface2 }}>
-                      <View style={{ width: `${m.pct}%`, height: 8, borderRadius: 4, backgroundColor: heatColor(m.pct) }} />
+                      <View style={{ width: `${m.pct}%`, height: 8, borderRadius: 4, backgroundColor: heatColor(m.sets) }} />
                     </View>
+                    <Txt size={type.caption} weight="semibold" num color={palette.textMute} style={{ width: 34, textAlign: 'right' }}>
+                      {fmtSets(m.sets)}×
+                    </Txt>
                   </View>
                 ))}
               </View>

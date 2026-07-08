@@ -64,7 +64,7 @@ interface Actions {
   discardWorkout: () => void;
   deleteWorkout: (id: string) => void;
   editWorkout: (id: string) => void;
-  setWorkoutHr: (id: string, avg?: number, max?: number, series?: HrSample[]) => void;
+  setWorkoutHr: (id: string, avg?: number, max?: number, series?: HrSample[], kcal?: number) => void;
   dismissHealthWorkouts: (uuids: string[]) => void;
   importHealthWorkout: (hw: {
     uuid: string;
@@ -73,6 +73,7 @@ interface Actions {
     end: number;
     avg?: number;
     max?: number;
+    kcal?: number;
     series?: HrSample[];
   }) => string | null;
 }
@@ -370,10 +371,12 @@ export const useStore = create<State & Actions>()(
           }),
         })),
 
-      setWorkoutHr: (id, avg, max, series) =>
+      setWorkoutHr: (id, avg, max, series, kcal) =>
         set((s) => ({
           workouts: s.workouts.map((w) =>
-            w.id === id ? { ...w, avgHr: avg, maxHr: max, ...(series ? { hrSeries: series } : {}) } : w,
+            w.id === id
+              ? { ...w, avgHr: avg, maxHr: max, ...(series ? { hrSeries: series } : {}), ...(kcal ? { kcal } : {}) }
+              : w,
           ),
         })),
 
@@ -393,6 +396,7 @@ export const useStore = create<State & Actions>()(
           source: 'health',
           avgHr: hw.avg,
           maxHr: hw.max,
+          kcal: hw.kcal,
           hrSeries: hw.series,
           exercises: [],
         };

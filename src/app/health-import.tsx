@@ -49,6 +49,8 @@ export default function HealthImport() {
       end: hw.end,
       avg: hr.avg,
       max: hr.max,
+      // prefer the Watch's own workout total; fall back to summed active-energy samples
+      kcal: hw.energyKcal ?? hr.kcal,
       series: hr.series.length ? hr.series : undefined,
     });
   };

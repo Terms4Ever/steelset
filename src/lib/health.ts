@@ -7,8 +7,9 @@ import type { HrSample } from '@/data/types';
 
 const HR = 'HKQuantityTypeIdentifierHeartRate';
 const BODYMASS = 'HKQuantityTypeIdentifierBodyMass';
+const ACTIVE_ENERGY = 'HKQuantityTypeIdentifierActiveEnergyBurned';
 const WORKOUT = 'HKWorkoutTypeIdentifier';
-const READ = [HR, BODYMASS, WORKOUT];
+const READ = [HR, BODYMASS, ACTIVE_ENERGY, WORKOUT];
 // Steelset does NOT write workouts to Apple Health (that clutters the Fitness/Kondice app).
 // Workout write permission is requested only so the user can clean up test entries a previous
 // version saved — see deleteMyHealthWorkouts().
@@ -124,10 +125,30 @@ export function hrStats(series: HrSample[]): { avg?: number; max?: number } {
   };
 }
 
-/** Convenience: HR series + avg/max for a window in one call. */
-export async function heartRateFor(startMs: number, endMs: number): Promise<{ avg?: number; max?: number; series: HrSample[] }> {
-  const series = await heartRateSeries(startMs, endMs);
-  return { ...hrStats(series), series };
+/** Active energy (kcal) burned in a window — summed from the Watch's samples. */
+export async function activeEnergyKcal(startMs: number, endMs: number): Promise<number | undefined> {
+  const m = hk();
+  if (!m?.queryQuantitySamples || endMs <= startMs) return undefined;
+  try {
+    const samples = await m.queryQuantitySamples(ACTIVE_ENERGY, {
+      unit: 'kcal',
+      limit: 0,
+      filter: { date: { startDate: new Date(startMs), endDate: new Date(endMs) } },
+    });
+    const total = (samples ?? []).reduce((sum: number, s: any) => (typeof s?.quantity === 'number' ? sum + s.quantity : sum), 0);
+    return total > 0 ? Math.round(total) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Convenience: HR series + avg/max + burned kcal for a window in one call. */
+export async function heartRateFor(
+  startMs: number,
+  endMs: number,
+): Promise<{ avg?: number; max?: number; series: HrSample[]; kcal?: number }> {
+  const [series, kcal] = await Promise.all([heartRateSeries(startMs, endMs), activeEnergyKcal(startMs, endMs)]);
+  return { ...hrStats(series), series, kcal };
 }
 
 /** Recent Apple Health / Kondice workouts (Watch etc.) available to import. */
