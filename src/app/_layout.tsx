@@ -28,7 +28,9 @@ function FloatingWorkoutBar() {
   const workouts = useStore((s) => s.workouts);
   const activeId = useStore((s) => s.activeWorkoutId);
   const hasActive = !!activeId && workouts.some((w) => w.id === activeId);
-  const HIDDEN = ['/workout', '/onboarding', '/', '/plany', '/pokrok', '/kalendar', '/profil'];
+  // tabs render their own bar; workout is the target itself; the exercise picker/new-exercise modals
+  // are part of the workout flow (and iOS native modals cover overlays anyway)
+  const HIDDEN = ['/workout', '/onboarding', '/', '/plany', '/pokrok', '/kalendar', '/profil', '/exercises', '/exercise-new'];
   if (!hasActive || HIDDEN.includes(pathname)) return null;
   return (
     <View style={{ position: 'absolute', left: 0, right: 0, bottom: Math.max(insets.bottom, 10) }}>
