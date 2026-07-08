@@ -258,7 +258,7 @@ export default function Workout() {
       const start = w.startedAt;
       const end = Date.now();
       heartRateFor(start, end).then((hr) => {
-        if (hr.avg || hr.max || hr.series.length) setWorkoutHr(w.id, hr.avg, hr.max, hr.series.length ? hr.series : undefined);
+        if (hr.avg || hr.max || hr.kcal || hr.series.length) setWorkoutHr(w.id, hr.avg, hr.max, hr.series.length ? hr.series : undefined, hr.kcal);
       });
     }
   };

@@ -36,7 +36,7 @@ export default function WorkoutDetail() {
     setHrLoading(true);
     const hr = await heartRateFor(w.startedAt, w.finishedAt);
     setHrLoading(false);
-    if (hr.avg || hr.max || hr.series.length) setWorkoutHr(w.id, hr.avg, hr.max, hr.series.length ? hr.series : undefined);
+    if (hr.avg || hr.max || hr.kcal || hr.series.length) setWorkoutHr(w.id, hr.avg, hr.max, hr.series.length ? hr.series : undefined, hr.kcal);
   };
   // auto-pull once when opening a RECENT workout (Watch HR often syncs shortly after finishing).
   // old workouts without HR are left alone — user can pull manually — so we don't re-query every open.
@@ -129,14 +129,26 @@ export default function WorkoutDetail() {
             </Txt>
           </View>
         )}
-        {(w.avgHr || w.maxHr) && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
-            <Ionicons name="heart" size={15} color={palette.red} />
-            <Txt size={type.label} weight="semibold" num>
-              {w.avgHr ? `⌀ ${w.avgHr}` : ''}
-              {w.avgHr && w.maxHr ? ' · ' : ''}
-              {w.maxHr ? `max ${w.maxHr}` : ''} tep/min
-            </Txt>
+        {(w.avgHr || w.maxHr || w.kcal) && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 8, flexWrap: 'wrap' }}>
+            {(w.avgHr || w.maxHr) && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="heart" size={15} color={palette.red} />
+                <Txt size={type.label} weight="semibold" num>
+                  {w.avgHr ? `⌀ ${w.avgHr}` : ''}
+                  {w.avgHr && w.maxHr ? ' · ' : ''}
+                  {w.maxHr ? `max ${w.maxHr}` : ''} tep/min
+                </Txt>
+              </View>
+            )}
+            {!!w.kcal && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Ionicons name="flame" size={15} color={palette.amber} />
+                <Txt size={type.label} weight="semibold" num>
+                  {w.kcal} kcal
+                </Txt>
+              </View>
+            )}
           </View>
         )}
         {canPullHr && (

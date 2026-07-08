@@ -7,7 +7,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { heatColor, MuscleMapChart, MuscleMapLegend, MuscleRegion } from '@/components/MuscleMapChart';
 import { Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
-import { MS, muscleAlerts, muscleVolumeDetailed, topExercisesForMuscle } from '@/lib/calc';
+import {
+  fmtSets,
+  MS,
+  muscleAlerts,
+  muscleSetsDetailed,
+  muscleVolumeDetailed,
+  perWeek,
+  setZone,
+  SET_ZONES,
+  topExerciseSetsForMuscle,
+} from '@/lib/calc';
 import { fmtNum, toDisplayWeight } from '@/lib/format';
 import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
 
@@ -31,27 +41,37 @@ export default function MuscleMap() {
 
   const exById = useMemo(() => exByIdSel({ customExercises: custom, exerciseMuscles }), [custom, exerciseMuscles]);
   const since = now - days * MS.DAY;
-  const vol = useMemo(() => muscleVolumeDetailed(workouts, exById, since), [workouts, exById, since]);
-  const prevVol = useMemo(
-    () => muscleVolumeDetailed(workouts, exById, since - days * MS.DAY, since),
+  // primary metric = weekly hard sets (absolute zones); tonnage stays as secondary info in the sheet
+  const setsTotal = useMemo(() => muscleSetsDetailed(workouts, exById, since), [workouts, exById, since]);
+  const sets = useMemo(() => perWeek(setsTotal, days), [setsTotal, days]);
+  const prevSets = useMemo(
+    () => perWeek(muscleSetsDetailed(workouts, exById, since - days * MS.DAY, since), days),
     [workouts, exById, since, days],
   );
-  const alerts = useMemo(() => muscleAlerts(vol), [vol]);
+  const vol = useMemo(() => muscleVolumeDetailed(workouts, exById, since), [workouts, exById, since]);
+  const alerts = useMemo(() => muscleAlerts(sets), [sets]);
   const neverTrained = useMemo(() => workouts.every((w) => !w.finishedAt), [workouts]);
-  const windowTotal = useMemo(() => Object.values(vol).reduce((s, v) => s + v, 0), [vol]);
+  const windowTotal = useMemo(() => Object.values(setsTotal).reduce((s, v) => s + v, 0), [setsTotal]);
   const empty = neverTrained || windowTotal === 0; // no data to show for THIS window
 
-  const maxVol = Math.max(1, ...Object.values(vol));
-  const topName = Object.entries(vol).sort((a, b) => b[1] - a[1])[0]?.[0];
-
+  const selSets = sel ? (sets[sel] ?? 0) : 0;
+  const selSetsTotal = sel ? (setsTotal[sel] ?? 0) : 0;
   const selVol = sel ? (vol[sel] ?? 0) : 0;
-  const selPrev = sel ? (prevVol[sel] ?? 0) : 0;
-  const trendPct = sel && selPrev > 0 ? Math.round(((selVol - selPrev) / selPrev) * 100) : null;
+  const selPrev = sel ? (prevSets[sel] ?? 0) : 0;
+  const trendPct = sel && selPrev > 0 ? Math.round(((selSets - selPrev) / selPrev) * 100) : null;
+  const zone = setZone(selSets);
+  const ZONE_LABEL: Record<string, string> = {
+    none: 'netrénuješ',
+    low: 'udržovací',
+    optimum: 'optimum růstu',
+    high: 'hodně',
+    overload: 'riziko přetížení',
+  };
   const selTop = useMemo(
-    () => (sel ? topExercisesForMuscle(workouts, exById, sel, since).slice(0, 3) : []),
+    () => (sel ? topExerciseSetsForMuscle(workouts, exById, sel, since).slice(0, 3) : []),
     [sel, workouts, exById, since],
   );
-  const selTopMax = Math.max(1, ...selTop.map((t) => t.volume));
+  const selTopMax = Math.max(1, ...selTop.map((t) => t.sets));
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }} edges={['top']}>
@@ -92,7 +112,7 @@ export default function MuscleMap() {
 
         {/* chart card - muscles are tappable only when there is data in the window */}
         <View style={{ marginTop: space.lg, backgroundColor: palette.surface, borderRadius: radius.md, padding: space.lg, borderWidth: 1, borderColor: palette.hairline }}>
-          <MuscleMapChart volumes={empty ? {} : vol} onPressMuscle={empty ? undefined : (m) => setSel(m)} selected={sel} />
+          <MuscleMapChart volumes={empty ? {} : sets} onPressMuscle={empty ? undefined : (m) => setSel(m)} selected={sel} />
           <View style={{ marginTop: space.lg, borderTopWidth: 1, borderTopColor: palette.hairline, paddingTop: space.md }}>
             <MuscleMapLegend />
           </View>
@@ -174,7 +194,7 @@ export default function MuscleMap() {
             <View style={{ width: 38, height: 4, borderRadius: 2, backgroundColor: palette.surface3, alignSelf: 'center', marginBottom: 14 }} />
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: heatColor(selVol, maxVol) }} />
+                <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: heatColor(selSets) }} />
                 <Txt size={type.h1} weight="bold">
                   {sel}
                 </Txt>
@@ -187,23 +207,24 @@ export default function MuscleMap() {
             <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 10 }}>
               <View>
                 <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 5 }}>
-                  <Txt size={34} weight="bold" num>
-                    {fmtNum(toDisplayWeight(selVol, unit))}
+                  <Txt size={34} weight="bold" num color={heatColor(selSets)}>
+                    {fmtSets(selSets)}
                   </Txt>
                   <Txt size={type.body} weight="semibold" color={palette.textMute}>
-                    {unit}
+                    sérií / týden
                   </Txt>
                 </View>
                 <Txt size={type.caption} weight="medium" color={palette.textMute}>
-                  objem za {days} dní
+                  {ZONE_LABEL[zone]} · doporučeno {SET_ZONES.maintain}-{SET_ZONES.optimumMax - 1}
                 </Txt>
               </View>
               <View style={{ alignItems: 'flex-end' }}>
-                <Txt size={type.h1} weight="bold" num color={palette.accent}>
-                  {Math.round((selVol / maxVol) * 100)} %
+                <Txt size={type.h2} weight="bold" num>
+                  {fmtSets(selSetsTotal)}
                 </Txt>
                 <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ textAlign: 'right' }}>
-                  vs. nejtrénovanější{topName ? `\n(${topName})` : ''}
+                  sérií za {days} dní
+                  {selVol > 0 ? `\n${fmtNum(toDisplayWeight(selVol, unit))} ${unit} objem` : ''}
                 </Txt>
               </View>
             </View>
@@ -234,7 +255,7 @@ export default function MuscleMap() {
             {selTop.length > 0 && (
               <>
                 <Txt size={type.caption} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5, marginTop: space.lg, marginBottom: 8 }}>
-                  NEJVÍC ZASÁHLY
+                  NEJVÍC SÉRIÍ
                 </Txt>
                 <View style={{ gap: 9 }}>
                   {selTop.map((t) => (
@@ -243,10 +264,10 @@ export default function MuscleMap() {
                         {exById[t.exerciseId]?.name ?? 'Cvik'}
                       </Txt>
                       <View style={{ width: 90, height: 7, borderRadius: 4, backgroundColor: palette.surface2 }}>
-                        <View style={{ width: `${Math.round((t.volume / selTopMax) * 100)}%`, height: 7, borderRadius: 4, backgroundColor: palette.heatCold }} />
+                        <View style={{ width: `${Math.round((t.sets / selTopMax) * 100)}%`, height: 7, borderRadius: 4, backgroundColor: palette.heatCold }} />
                       </View>
                       <Txt size={type.label} weight="semibold" num color={palette.textDim} style={{ width: 54, textAlign: 'right' }}>
-                        {fmtNum(toDisplayWeight(t.volume, unit))}
+                        {fmtSets(t.sets)}×
                       </Txt>
                     </View>
                   ))}

@@ -175,6 +175,79 @@ export function muscleVolumeDetailed(
   return out;
 }
 
+// ---- hard sets (the Hevy/Strong volume model) ---------------------------------------------------
+// A "hard set" = a completed WORKING set (warm-ups excluded). The muscle map grades muscles by hard
+// sets per WEEK on an absolute scale, because tonnage (kg) rewards heavy high-rep machine work and
+// under-counts brutal low-rep bodyweight work (4 pull-ups near failure > 12 easy reverse flyes).
+
+/** Completed working sets of one logged exercise (type 'W' = warm-up, excluded). */
+export function hardSets(le: LoggedExercise): number {
+  return le.sets.filter((s) => s.done && s.type !== 'W' && !!s.reps && s.reps > 0).length;
+}
+
+/**
+ * Weighted hard sets per detailed muscle in a window: primary muscle 1.0, each secondary 0.5,
+ * unilateral exercises count double (both sides trained).
+ */
+export function muscleSetsDetailed(
+  workouts: Workout[],
+  exercisesById: Record<string, Exercise>,
+  since = 0,
+  until = Infinity,
+): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const w of workouts) {
+    if (!w.finishedAt || w.finishedAt < since || w.finishedAt > until) continue;
+    for (const le of w.exercises) {
+      const ex = exercisesById[le.exerciseId];
+      if (!ex) continue;
+      const sets = hardSets(le) * (ex.unilateral ? 2 : 1);
+      if (sets <= 0) continue;
+      const p = detailedMuscle(le.exerciseId, ex.primary, ex.name);
+      out[p] = (out[p] ?? 0) + sets;
+      for (const m of ex.secondary ?? []) {
+        const d = detailedMuscle(le.exerciseId, m, ex.name);
+        out[d] = (out[d] ?? 0) + sets * 0.5;
+      }
+    }
+  }
+  return out;
+}
+
+/** Scale a window's totals to a per-week rate (30-day window -> divide by ~4.3). */
+export function perWeek(totals: Record<string, number>, windowDays: number): Record<string, number> {
+  const weeks = Math.max(1, windowDays) / 7;
+  const out: Record<string, number> = {};
+  for (const [k, v] of Object.entries(totals)) out[k] = Math.round((v / weeks) * 10) / 10;
+  return out;
+}
+
+/** Hard sets per exercise for one detailed muscle in a window (primary 1.0, secondary 0.5). */
+export function topExerciseSetsForMuscle(
+  workouts: Workout[],
+  exercisesById: Record<string, Exercise>,
+  muscle: string,
+  since = 0,
+  until = Infinity,
+): { exerciseId: string; sets: number }[] {
+  const acc: Record<string, number> = {};
+  for (const w of workouts) {
+    if (!w.finishedAt || w.finishedAt < since || w.finishedAt > until) continue;
+    for (const le of w.exercises) {
+      const ex = exercisesById[le.exerciseId];
+      if (!ex) continue;
+      const sets = hardSets(le) * (ex.unilateral ? 2 : 1);
+      if (sets <= 0) continue;
+      if (detailedMuscle(le.exerciseId, ex.primary, ex.name) === muscle) acc[le.exerciseId] = (acc[le.exerciseId] ?? 0) + sets;
+      for (const m of ex.secondary ?? [])
+        if (detailedMuscle(le.exerciseId, m, ex.name) === muscle) acc[le.exerciseId] = (acc[le.exerciseId] ?? 0) + sets * 0.5;
+    }
+  }
+  return Object.entries(acc)
+    .map(([exerciseId, sets]) => ({ exerciseId, sets }))
+    .sort((a, b) => b.sets - a.sets);
+}
+
 /** Top exercises contributing to one detailed muscle in a window (primary 1.0, secondary 0.5). */
 export function topExercisesForMuscle(
   workouts: Workout[],
@@ -201,32 +274,61 @@ export function topExercisesForMuscle(
     .sort((a, b) => b.volume - a.volume);
 }
 
-/** Smart banners for the muscle map. Deterministic + conservative. */
-export function muscleAlerts(vol: Record<string, number>): { kind: 'weak' | 'overload'; text: string }[] {
+// Absolute weekly hard-set zones (mainstream hypertrophy guidance, same idea as Hevy/Strong):
+//   0 nic · 1-4 udržovací · 5-19 optimum růstu · 20-25 hodně · 25+ riziko přetížení
+export const SET_ZONES = { maintain: 5, optimumMax: 20, highMax: 25 } as const;
+
+export type SetZone = 'none' | 'low' | 'optimum' | 'high' | 'overload';
+
+export function setZone(setsPerWeek: number): SetZone {
+  if (!setsPerWeek || setsPerWeek <= 0) return 'none';
+  if (setsPerWeek < SET_ZONES.maintain) return 'low';
+  if (setsPerWeek < SET_ZONES.optimumMax) return 'optimum';
+  if (setsPerWeek <= SET_ZONES.highMax) return 'high';
+  return 'overload';
+}
+
+/** Smart banners for the muscle map, based on weekly hard sets. Deterministic + conservative. */
+export function muscleAlerts(setsPerWeek: Record<string, number>): { kind: 'weak' | 'overload'; text: string }[] {
   const out: { kind: 'weak' | 'overload'; text: string }[] = [];
-  const q = vol['Kvadricepsy'] ?? 0;
-  const h = vol['Hamstringy'] ?? 0;
-  if (q > 0 && h > 0 && q / h >= 3) {
+  const q = setsPerWeek['Kvadricepsy'] ?? 0;
+  const h = setsPerWeek['Hamstringy'] ?? 0;
+  if (q >= SET_ZONES.maintain && h === 0) {
+    out.push({ kind: 'weak', text: 'Hamstringy netrénuješ vůbec - přidej RDL nebo leg curl.' });
+  } else if (q > 0 && h > 0 && q / h >= 2.5) {
     out.push({
       kind: 'weak',
-      text: `Hamstringy máš ${Math.round(q / h)}× slabší než kvadricepsy - přidej RDL nebo leg curl.`,
+      text: `Kvadricepsy máš ${Math.round((q / h) * 10) / 10}× víc sérií než hamstringy - přidej RDL nebo leg curl.`,
     });
-  } else if (q > 500 && h === 0) {
-    out.push({ kind: 'weak', text: 'Hamstringy netrénuješ vůbec - přidej RDL nebo leg curl.' });
   }
-  const entries = Object.entries(vol).filter(([, v]) => v > 0);
-  const total = entries.reduce((s, [, v]) => s + v, 0);
-  if (entries.length >= 3 && total > 0) {
-    const [topName, topVol] = entries.sort((a, b) => b[1] - a[1])[0];
-    const share = topVol / total;
-    if (share >= 0.4) {
-      out.push({
-        kind: 'overload',
-        text: `${topName} dělá ${Math.round(share * 100)} % celkového objemu - rozlož zátěž nebo přidej den volna.`,
-      });
+  // muscles above the high zone (per week)
+  const over = Object.entries(setsPerWeek)
+    .filter(([, v]) => v > SET_ZONES.highMax)
+    .sort((a, b) => b[1] - a[1]);
+  if (over.length) {
+    const [name, v] = over[0];
+    out.push({
+      kind: 'overload',
+      text: `${name}: ${fmtSets(v)} sérií týdně - nad doporučených ${SET_ZONES.highMax}. Uber sérií nebo přidej den volna.`,
+    });
+  }
+  // trained muscles stuck in the maintenance zone while something else runs hot
+  const trained = Object.entries(setsPerWeek).filter(([, v]) => v > 0);
+  if (!out.some((a) => a.kind === 'weak') && trained.length >= 3) {
+    const top = Math.max(...trained.map(([, v]) => v));
+    const starved = trained.filter(([, v]) => v < SET_ZONES.maintain).sort((a, b) => a[1] - b[1]);
+    if (top >= SET_ZONES.maintain && starved.length) {
+      const [name, v] = starved[0];
+      out.push({ kind: 'weak', text: `${name}: jen ${fmtSets(v)} sérií týdně - pod ${SET_ZONES.maintain} to sotva udržuje.` });
     }
   }
   return out;
+}
+
+/** 1 -> "1", 1.5 -> "1,5" (Czech, half-set precision). */
+export function fmtSets(n: number): string {
+  const r = Math.round(n * 10) / 10;
+  return (Number.isInteger(r) ? String(r) : r.toFixed(1)).replace('.', ',');
 }
 
 /** Number of completed working sets per muscle group in a window (for weekly set targets). */

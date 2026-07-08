@@ -99,6 +99,7 @@ export interface Workout {
   manual?: boolean; // true = zpětný zápis (bez živého časovače)
   avgHr?: number; // průměrný tep z Apple Health (z hodinek)
   maxHr?: number; // maximální tep z Apple Health
+  kcal?: number; // aktivní kalorie z Apple Health (z hodinek)
   bodyweightKg?: number; // snapshot tělesné váhy při tréninku (pro +KG u cviků s vlastní vahou)
   hrSeries?: HrSample[]; // časová řada tepu během tréninku (pro graf)
   healthUuid?: string; // uuid HKWorkout z Apple Health (dedup importu)

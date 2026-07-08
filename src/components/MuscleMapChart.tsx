@@ -3,11 +3,12 @@ import Svg, { Circle, Ellipse, G, Path, Rect } from 'react-native-svg';
 
 import { Txt } from '@/components/ui';
 import { palette, type } from '@/constants/theme';
+import { setZone, SET_ZONES } from '@/lib/calc';
 
 /**
  * Anatomical muscle chart - muscular male physique, front + back side by side (anatomy-poster style).
- * Weight is heat-bucketed relative to the most-trained muscle:
- *   0 gray · <25 % blue · <70 % green (optimum) · <90 % amber (high) · >=90 % red (overload).
+ * Muscles are colored by WEEKLY HARD SETS on an absolute scale (see heatColor), so a muscle you
+ * actually train lights up green regardless of how heavy your other muscles' exercises are.
  * Every muscle is pressable (onPressMuscle) and highlights when `selected`.
  */
 
@@ -28,13 +29,23 @@ export const MUSCLE_REGIONS = [
 ] as const;
 export type MuscleRegion = (typeof MUSCLE_REGIONS)[number];
 
-export function heatColor(vol: number, max: number): string {
-  if (!vol || vol <= 0) return '#2C313A';
-  const p = vol / Math.max(1, max);
-  if (p < 0.25) return palette.heatCold; // #7FA3D6
-  if (p < 0.7) return palette.accent; // #00E07A
-  if (p < 0.9) return palette.amber; // #FFB020
-  return palette.red; // #FF5247
+/**
+ * Absolute heat by weekly hard sets (Hevy/Strong volume model), NOT relative to your biggest muscle:
+ *   0 gray · <5 blue (udržovací) · 5-19 green (optimum) · 20-25 amber (hodně) · >25 red (přetížení)
+ */
+export function heatColor(setsPerWeek: number): string {
+  switch (setZone(setsPerWeek)) {
+    case 'none':
+      return '#2C313A';
+    case 'low':
+      return palette.heatCold; // #7FA3D6
+    case 'optimum':
+      return palette.accent; // #00E07A
+    case 'high':
+      return palette.amber; // #FFB020
+    default:
+      return palette.red; // #FF5247
+  }
 }
 
 const BASE = '#171A1F';
@@ -42,6 +53,7 @@ const BASE_STROKE = '#262B33';
 const GAP = '#0A0B0D';
 
 type Props = {
+  /** weekly hard sets per muscle (see calc.muscleSetsDetailed + calc.perWeek) */
   volumes: Record<string, number>;
   onPressMuscle?: (m: MuscleRegion) => void;
   selected?: MuscleRegion | null;
@@ -49,8 +61,7 @@ type Props = {
 };
 
 export function MuscleMapChart({ volumes, onPressMuscle, selected, height = 320 }: Props) {
-  const max = Math.max(1, ...MUSCLE_REGIONS.map((m) => volumes[m] ?? 0));
-  const fill = (m: MuscleRegion) => heatColor(volumes[m] ?? 0, max);
+  const fill = (m: MuscleRegion) => heatColor(volumes[m] ?? 0);
   const stroke = (m: MuscleRegion) => (selected === m ? palette.text : GAP);
   const sw = (m: MuscleRegion) => (selected === m ? 2.5 : 1.4);
   // react-native-svg maps onPress -> onClick on web (see its web prepare()), so onPress works everywhere
@@ -203,25 +214,30 @@ export function MuscleMapChart({ volumes, onPressMuscle, selected, height = 320 
   );
 }
 
-/** Legend row matching heatColor buckets. */
+/** Legend row matching heatColor zones (weekly hard sets). */
 export function MuscleMapLegend() {
   const items = [
-    { c: '#2C313A', l: '0 %' },
-    { c: palette.heatCold, l: '< 25 %' },
-    { c: palette.accent, l: 'optimum' },
-    { c: palette.amber, l: 'vysoké' },
-    { c: palette.red, l: 'přetížení' },
+    { c: '#2C313A', l: '0' },
+    { c: palette.heatCold, l: `<${SET_ZONES.maintain}` },
+    { c: palette.accent, l: `${SET_ZONES.maintain}-${SET_ZONES.optimumMax - 1} optimum` },
+    { c: palette.amber, l: `${SET_ZONES.optimumMax}-${SET_ZONES.highMax}` },
+    { c: palette.red, l: `${SET_ZONES.highMax}+ přetížení` },
   ];
   return (
-    <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
-      {items.map((i) => (
-        <View key={i.l} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: i.c }} />
-          <Txt size={type.caption} weight="medium" color={palette.textMute}>
-            {i.l}
-          </Txt>
-        </View>
-      ))}
+    <View>
+      <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
+        {items.map((i) => (
+          <View key={i.l} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: i.c }} />
+            <Txt size={type.caption} weight="medium" color={palette.textMute}>
+              {i.l}
+            </Txt>
+          </View>
+        ))}
+      </View>
+      <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ textAlign: 'center', marginTop: 5 }}>
+        tvrdé série týdně
+      </Txt>
     </View>
   );
 }

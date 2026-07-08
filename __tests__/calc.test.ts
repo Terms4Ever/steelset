@@ -280,12 +280,58 @@ describe('strengthScore + trend', () => {
     expect(detailedMuscle('deadlift', 'Záda', 'Mrtvý tah')).toBe('Spodní záda');
   });
 
-  it('muscleAlerts flags weak hamstrings and one dominant muscle', () => {
-    expect(muscleAlerts({ Kvadricepsy: 3000, Hamstringy: 900 })[0]?.kind).toBe('weak');
-    expect(muscleAlerts({ Kvadricepsy: 2000, Hamstringy: 1500 })).toEqual([]);
-    const dom = muscleAlerts({ Hrudník: 8000, Biceps: 1000, Záda: 1000 });
-    expect(dom.some((a) => a.kind === 'overload')).toBe(true);
+  it('muscleAlerts works on weekly hard sets (absolute zones)', () => {
+    expect(muscleAlerts({ Kvadricepsy: 12, Hamstringy: 4 })[0]?.kind).toBe('weak');
+    expect(muscleAlerts({ Kvadricepsy: 12, Hamstringy: 10, Hrudník: 10 })).toEqual([]);
+    expect(muscleAlerts({ Hrudník: 30, Biceps: 10, 'Horní záda': 12 }).some((a) => a.kind === 'overload')).toBe(true);
+    expect(muscleAlerts({ 'Horní záda': 12, Hrudník: 10, Břicho: 2 }).some((a) => a.kind === 'weak')).toBe(true);
     expect(muscleAlerts({})).toEqual([]);
+  });
+
+  it('setZone maps weekly sets to absolute zones', () => {
+    const { setZone } = require('@/lib/calc');
+    expect(setZone(0)).toBe('none');
+    expect(setZone(4.5)).toBe('low');
+    expect(setZone(5)).toBe('optimum');
+    expect(setZone(19.9)).toBe('optimum');
+    expect(setZone(20)).toBe('high');
+    expect(setZone(25)).toBe('high');
+    expect(setZone(25.1)).toBe('overload');
+  });
+
+  it('muscleSetsDetailed counts hard sets (no warm-ups), halves secondary, doubles unilateral', () => {
+    const { muscleSetsDetailed, perWeek } = require('@/lib/calc');
+    const exs = {
+      pullup: { id: 'pullup', name: 'Shyby', primary: 'Záda', secondary: ['Biceps'], equipment: 'Vlastní váha', tracking: 'weighted_bw' },
+      row: { id: 'row', name: 'Veslování jednoručkou', primary: 'Záda', equipment: 'Jednoručky', tracking: 'weight_reps', unilateral: true },
+    } as any;
+    const ws = [{ id: 'w1', name: 't', startedAt: 0, finishedAt: 10, bodyweightKg: 91, exercises: [
+      { exerciseId: 'pullup', sets: [
+        { type: 'W', weight: 91, reps: 5, done: true }, // warm-up → ignored
+        { type: 'R', weight: 91, reps: 5, done: true },
+        { type: 'R', weight: 91, reps: 4, done: true },
+        { type: 'R', weight: 91, reps: 4, done: false }, // not done → ignored
+      ] },
+      { exerciseId: 'row', sets: [{ type: 'R', weight: 30, reps: 10, done: true }] }, // unilateral → 2
+    ] }] as any as Workout[];
+    const sets = muscleSetsDetailed(ws, exs);
+    expect(sets['Horní záda']).toBe(4); // pullup 2 + row 1×2
+    expect(sets['Biceps']).toBe(1); // pullup secondary 2 × 0.5
+    expect(perWeek({ 'Horní záda': 8 }, 28)['Horní záda']).toBe(2);
+  });
+
+  it('topExerciseSetsForMuscle: pull-ups equal a high-tonnage machine when sets are equal', () => {
+    const { topExerciseSetsForMuscle } = require('@/lib/calc');
+    const exs = {
+      pullup: { id: 'pullup', name: 'Shyby', primary: 'Záda', equipment: 'Vlastní váha', tracking: 'weighted_bw' },
+      reardelt: { id: 'reardelt', name: 'Rear deltoid', primary: 'Záda', equipment: 'Stroj', tracking: 'weight_reps' },
+    } as any;
+    const ws = [{ id: 'w1', name: 't', startedAt: 0, finishedAt: 10, bodyweightKg: 91, exercises: [
+      { exerciseId: 'pullup', sets: Array.from({ length: 4 }, () => ({ type: 'R', weight: 91, reps: 5, done: true })) },
+      { exerciseId: 'reardelt', sets: Array.from({ length: 4 }, () => ({ type: 'R', weight: 63, reps: 12, done: true })) },
+    ] }] as any as Workout[];
+    const top = topExerciseSetsForMuscle(ws, exs, 'Horní záda');
+    expect(top.map((t) => t.sets)).toEqual([4, 4]); // tonnage differs 3×, hard sets are equal
   });
 
   it('hrWindow falls back to the series span when the workout window collapsed (old edits)', () => {
