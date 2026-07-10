@@ -44,14 +44,27 @@ export default function ExerciseNew() {
 
   const [name, setName] = useState(params.name ?? '');
   const [primary, setPrimary] = useState<MuscleGroup | null>(null);
+  const [secondary, setSecondary] = useState<MuscleGroup[]>([]);
+  const [unilateral, setUnilateral] = useState(false);
   const [equipment, setEquipment] = useState<Equipment>('Činka');
   const [tracking, setTracking] = useState<TrackingType>('weight_reps');
 
   const valid = name.trim().length > 0 && primary !== null;
 
+  const toggleSecondary = (m: MuscleGroup) =>
+    setSecondary((cur) => (cur.includes(m) ? cur.filter((x) => x !== m) : [...cur, m]));
+
   const save = () => {
     if (!valid) return;
-    addExercise({ name: name.trim(), primary: primary!, equipment, tracking, defaultBar: equipment === 'Činka' ? 20 : undefined });
+    addExercise({
+      name: name.trim(),
+      primary: primary!,
+      secondary: secondary.filter((m) => m !== primary).length ? secondary.filter((m) => m !== primary) : undefined,
+      unilateral: unilateral || undefined,
+      equipment,
+      tracking,
+      defaultBar: equipment === 'Činka' ? 20 : undefined,
+    });
     router.back();
   };
 
@@ -79,9 +92,67 @@ export default function ExerciseNew() {
         <Label>Primární sval *</Label>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {MUSCLES.map((m) => (
-            <Chip key={m} label={m} on={primary === m} onPress={() => setPrimary(m)} />
+            <Chip
+              key={m}
+              label={m}
+              on={primary === m}
+              onPress={() => {
+                setPrimary(m);
+                setSecondary((cur) => cur.filter((x) => x !== m));
+              }}
+            />
           ))}
         </View>
+
+        <Label>Vedlejší svaly (volitelné)</Label>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {MUSCLES.filter((m) => m !== primary).map((m) => {
+            const on = secondary.includes(m);
+            return (
+              <Pressable
+                key={m}
+                onPress={() => toggleSecondary(m)}
+                style={{
+                  paddingHorizontal: 14,
+                  paddingVertical: 8,
+                  borderRadius: radius.pill,
+                  backgroundColor: on ? palette.accentDeep : palette.surface2,
+                  borderWidth: 1,
+                  borderColor: on ? palette.accent : 'transparent',
+                }}>
+                <Txt size={type.label} weight="semibold" color={on ? palette.accent : palette.textDim}>
+                  {m}
+                </Txt>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <Pressable
+          onPress={() => setUnilateral((v) => !v)}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: space.xl, backgroundColor: palette.surface2, borderRadius: radius.md, padding: space.lg }}>
+          <View
+            style={{
+              width: 24,
+              height: 24,
+              borderRadius: 7,
+              backgroundColor: unilateral ? palette.accent : 'transparent',
+              borderWidth: unilateral ? 0 : 2,
+              borderColor: palette.surface3,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            {unilateral && <Ionicons name="checkmark" size={16} color={palette.bg} />}
+          </View>
+          <View style={{ flex: 1 }}>
+            <Txt size={type.body} weight="semibold">
+              Jednostranný cvik
+            </Txt>
+            <Txt size={type.caption} weight="medium" color={palette.textMute}>
+              Cvičíš každou stranu zvlášť - objem a série se počítají 2×
+            </Txt>
+          </View>
+        </Pressable>
 
         <Label>Vybavení</Label>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
