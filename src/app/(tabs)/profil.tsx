@@ -16,6 +16,7 @@ export default function Profil() {
   const router = useRouter();
   const settings = useStore((s) => s.settings);
   const workouts = useStore((s) => s.workouts);
+  const trashedCount = useStore((s) => s.trashedWorkouts.length);
   const custom = useStore((s) => s.customExercises);
   const setUnit = useStore((s) => s.setUnit);
   const setSetting = useStore((s) => s.setSetting);
@@ -194,6 +195,11 @@ export default function Profil() {
 
       <Section title="DATA">
         <RowButton icon="download-outline" label="Export dat (CSV)" onPress={onExport} />
+        <RowButton
+          icon="arrow-undo-outline"
+          label={trashedCount > 0 ? `Koš (${trashedCount})` : 'Koš'}
+          onPress={() => router.push('/trash')}
+        />
         <RowButton icon="trash-outline" label="Smazat všechna data" danger last onPress={onWipe} />
       </Section>
 

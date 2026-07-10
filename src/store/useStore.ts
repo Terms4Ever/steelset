@@ -24,6 +24,7 @@ interface State {
   favoriteExercises: string[];
   routines: Routine[];
   workouts: Workout[];
+  trashedWorkouts: TrashedWorkout[];
   activeWorkoutId: string | null;
   settings: Settings;
   appleUser: AppleUser | null;
@@ -63,6 +64,8 @@ interface Actions {
   finishWorkout: () => void;
   discardWorkout: () => void;
   deleteWorkout: (id: string) => void;
+  restoreTrashedWorkout: (id: string) => void;
+  deleteTrashedForever: (id: string) => void;
   editWorkout: (id: string) => void;
   setWorkoutHr: (id: string, avg?: number, max?: number, series?: HrSample[], kcal?: number) => void;
   dismissHealthWorkouts: (uuids: string[]) => void;
@@ -85,6 +88,23 @@ function patchActive(workouts: Workout[], activeId: string | null, fn: (w: Worko
   return workouts.map((w) => (w.id === activeId ? fn(w) : w));
 }
 
+// ---- trash (7-day undo for discarded/deleted workouts) ----
+export type TrashedWorkout = Workout & { trashedAt: number };
+const TRASH_TTL_MS = 7 * 86_400_000;
+
+function toTrash(w: Workout): TrashedWorkout {
+  const { editEndAt, ...rest } = w; // editEndAt is transient edit state - never keep it in trash
+  return { ...rest, trashedAt: Date.now() };
+}
+/** Only workouts with something worth recovering go to trash (no empty shells). */
+function worthTrashing(w: Workout): boolean {
+  return w.exercises.length > 0 || !!w.healthUuid || w.avgHr != null || !!w.hrSeries?.length;
+}
+function pruneTrash(list: TrashedWorkout[]): TrashedWorkout[] {
+  const cutoff = Date.now() - TRASH_TTL_MS;
+  return list.filter((t) => t.trashedAt >= cutoff);
+}
+
 /** Strip any superset tag that ends up with fewer than 2 members (no orphaned superset-of-one). */
 function normalizeSupersets(exercises: LoggedExercise[]): LoggedExercise[] {
   const counts: Record<string, number> = {};
@@ -104,6 +124,7 @@ export const useStore = create<State & Actions>()(
       favoriteExercises: [],
       routines: [],
       workouts: [],
+      trashedWorkouts: [],
       activeWorkoutId: null,
       settings: DEFAULT_SETTINGS,
       appleUser: null,
@@ -137,6 +158,7 @@ export const useStore = create<State & Actions>()(
           favoriteExercises: [],
           routines: [],
           workouts: [],
+          trashedWorkouts: [],
           activeWorkoutId: null,
           settings: { ...DEFAULT_SETTINGS },
           appleUser: null,
@@ -343,17 +365,44 @@ export const useStore = create<State & Actions>()(
           return { workouts, activeWorkoutId: null };
         }),
 
+      // discard/delete NEVER destroys data immediately - the workout goes to a 7-day trash
+      // (mis-taps happen; the user once discarded a whole session instead of saving it)
       discardWorkout: () =>
-        set((s) => ({
-          workouts: s.workouts.filter((w) => w.id !== s.activeWorkoutId),
-          activeWorkoutId: null,
-        })),
+        set((s) => {
+          const w = s.workouts.find((x) => x.id === s.activeWorkoutId);
+          return {
+            workouts: s.workouts.filter((x) => x.id !== s.activeWorkoutId),
+            activeWorkoutId: null,
+            trashedWorkouts: w && worthTrashing(w) ? pruneTrash([...s.trashedWorkouts, toTrash(w)]) : pruneTrash(s.trashedWorkouts),
+          };
+        }),
 
       deleteWorkout: (id) =>
-        set((s) => ({
-          workouts: s.workouts.filter((w) => w.id !== id),
-          activeWorkoutId: s.activeWorkoutId === id ? null : s.activeWorkoutId,
-        })),
+        set((s) => {
+          const w = s.workouts.find((x) => x.id === id);
+          return {
+            workouts: s.workouts.filter((x) => x.id !== id),
+            activeWorkoutId: s.activeWorkoutId === id ? null : s.activeWorkoutId,
+            trashedWorkouts: w && worthTrashing(w) ? pruneTrash([...s.trashedWorkouts, toTrash(w)]) : pruneTrash(s.trashedWorkouts),
+          };
+        }),
+
+      restoreTrashedWorkout: (id) =>
+        set((s) => {
+          const t = s.trashedWorkouts.find((x) => x.id === id);
+          if (!t) return {};
+          const { trashedAt, ...w } = t;
+          // a discarded LIVE workout has no finishedAt - close it at the moment it was trashed
+          // (manual/backdated entries keep their chosen date as the end)
+          const finishedAt = w.finishedAt ?? (w.manual ? w.startedAt : Math.max(trashedAt, w.startedAt));
+          return {
+            trashedWorkouts: s.trashedWorkouts.filter((x) => x.id !== id),
+            workouts: [...s.workouts.filter((x) => x.id !== id), { ...w, finishedAt }],
+          };
+        }),
+
+      deleteTrashedForever: (id) =>
+        set((s) => ({ trashedWorkouts: s.trashedWorkouts.filter((x) => x.id !== id) })),
 
       // Re-open a finished workout for editing; keeps its original date (manual mode).
       editWorkout: (id) =>
@@ -413,6 +462,7 @@ export const useStore = create<State & Actions>()(
         favoriteExercises: s.favoriteExercises,
         routines: s.routines,
         workouts: s.workouts,
+        trashedWorkouts: s.trashedWorkouts,
         activeWorkoutId: s.activeWorkoutId,
         settings: s.settings,
         appleUser: s.appleUser,
@@ -438,6 +488,8 @@ export const useStore = create<State & Actions>()(
           const bw = merged.settings?.bodyweightKg ?? 80;
           merged.workouts = merged.workouts.map((w: any) => (w && w.bodyweightKg == null ? { ...w, bodyweightKg: bw } : w));
         }
+        // trash: drop entries older than 7 days on every launch
+        merged.trashedWorkouts = Array.isArray(merged.trashedWorkouts) ? pruneTrash(merged.trashedWorkouts) : [];
         return merged;
       },
       onRehydrateStorage: () => (state) => state?.setHydrated(true),
