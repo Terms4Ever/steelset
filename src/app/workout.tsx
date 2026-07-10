@@ -263,9 +263,18 @@ export default function Workout() {
     }
   };
   const onDiscard = () => {
-    liveActivity.end();
-    discardWorkout();
-    router.replace('/');
+    const hasAnything = active.exercises.length > 0;
+    const doDiscard = () => {
+      liveActivity.end();
+      discardWorkout();
+      router.replace('/');
+    };
+    if (!hasAnything) return doDiscard(); // nothing to lose - no friction
+    haptic.warning();
+    Alert.alert('Zahodit trénink?', 'Trénink se přesune do koše (Profil → Koš) a po 7 dnech smaže.', [
+      { text: 'Zpět', style: 'cancel' },
+      { text: 'Zahodit', style: 'destructive', onPress: doDiscard },
+    ]);
   };
 
   return (

@@ -159,6 +159,59 @@ describe('store · full workout lifecycle', () => {
     expect([...s().dismissedHealth].sort()).toEqual(['A', 'B', 'C']);
   });
 
+  it('discarding a live workout moves it to trash and restore saves it as finished', () => {
+    s().startWorkout(null);
+    s().addExerciseToActive('squat');
+    s().updateSet(0, 0, { weight: 100, reps: 5, done: true });
+    const id = s().activeWorkoutId!;
+    s().discardWorkout();
+    expect(s().workouts.find((w) => w.id === id)).toBeUndefined();
+    expect(s().trashedWorkouts).toHaveLength(1);
+    expect(s().trashedWorkouts[0].id).toBe(id);
+    expect(s().trashedWorkouts[0].trashedAt).toBeGreaterThan(0);
+    s().restoreTrashedWorkout(id);
+    expect(s().trashedWorkouts).toHaveLength(0);
+    const restored = s().workouts.find((w) => w.id === id)!;
+    expect(restored.finishedAt).toBeGreaterThanOrEqual(restored.startedAt);
+    expect((restored as any).trashedAt).toBeUndefined();
+    expect(restored.exercises[0].sets[0].weight).toBe(100);
+    expect(s().activeWorkoutId).toBeNull();
+  });
+
+  it('deleting a finished workout goes to trash and keeps its original finishedAt on restore', () => {
+    s().startWorkout(null);
+    s().addExerciseToActive('squat');
+    s().updateSet(0, 0, { weight: 100, reps: 5, done: true });
+    const id = s().activeWorkoutId!;
+    s().finishWorkout();
+    const finishedAt = s().workouts.find((w) => w.id === id)!.finishedAt!;
+    s().deleteWorkout(id);
+    expect(s().workouts.find((w) => w.id === id)).toBeUndefined();
+    s().restoreTrashedWorkout(id);
+    expect(s().workouts.find((w) => w.id === id)!.finishedAt).toBe(finishedAt);
+  });
+
+  it('trash prunes entries older than 7 days and supports permanent delete', () => {
+    s().startWorkout(null);
+    s().addExerciseToActive('squat');
+    const id = s().activeWorkoutId!;
+    s().discardWorkout();
+    // backdate the trash stamp past the TTL, then trigger any trash op → pruned
+    useStore.setState((st: any) => ({
+      trashedWorkouts: st.trashedWorkouts.map((t: any) => ({ ...t, trashedAt: Date.now() - 8 * 86_400_000 })),
+    }));
+    s().startWorkout(null);
+    s().discardWorkout(); // empty active → prune runs
+    expect(s().trashedWorkouts.find((t) => t.id === id)).toBeUndefined();
+    // permanent delete
+    s().startWorkout(null);
+    s().addExerciseToActive('squat');
+    const id2 = s().activeWorkoutId!;
+    s().discardWorkout();
+    s().deleteTrashedForever(id2);
+    expect(s().trashedWorkouts).toHaveLength(0);
+  });
+
   it('stamps a bodyweight snapshot on every started workout', () => {
     s().setSetting('bodyweightKg', 91);
     s().startWorkout(null);

@@ -87,7 +87,7 @@ export default function WorkoutDetail() {
     router.replace('/workout');
   };
   const onDelete = () => {
-    Alert.alert('Smazat trénink?', 'Tento záznam bude nenávratně smazán.', [
+    Alert.alert('Smazat trénink?', 'Záznam se přesune do koše (Profil → Koš) a po 7 dnech smaže.', [
       { text: 'Zrušit', style: 'cancel' },
       {
         text: 'Smazat',
