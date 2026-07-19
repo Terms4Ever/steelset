@@ -1,15 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, AppState, Pressable, ScrollView, View } from 'react-native';
+import { Alert, AppState, Pressable, ScrollView, TextInput, View } from 'react-native';
 import Animated, { SlideInDown, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { LoggedExercise, MUSCLE_GROUP_OPTIONS, MuscleGroup, SetEntry, SetType } from '@/data/types';
-import { isPR, lastPerformance, MS } from '@/lib/calc';
-import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtNum, fmtWeight, fromDisplayWeight, toDisplayWeight, unitIncrement } from '@/lib/format';
+import { isPR, lastPerformance, lastSession, MS, summarizeSets } from '@/lib/calc';
+import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtNum, fmtWeight, fromDisplayWeight, relativeDay, toDisplayWeight, unitIncrement } from '@/lib/format';
 import { haptic } from '@/lib/haptic';
 import { heartRateFor } from '@/lib/health';
 import { liveActivity } from '@/lib/liveActivity';
@@ -34,7 +34,7 @@ export default function Workout() {
   const restDefault = useStore((s) => s.settings.restDefaultSec);
   const unit = useStore((s) => s.settings.unit);
   const bodyweightSetting = useStore((s) => s.settings.bodyweightKg);
-  const { updateSet, addSet, toggleSetDone, removeSet, removeActiveExercise, finishWorkout, discardWorkout, startWorkout, linkSuperset, setWorkoutDate, setWorkoutHr, setExerciseMuscles } = useStore();
+  const { updateSet, addSet, toggleSetDone, removeSet, removeActiveExercise, finishWorkout, discardWorkout, startWorkout, linkSuperset, setWorkoutDate, setWorkoutHr, setExerciseMuscles, renameWorkout } = useStore();
   const exerciseMuscles = useStore((s) => s.exerciseMuscles);
   const healthEnabled = useStore((s) => s.settings.healthEnabled);
   const insets = useSafeAreaInsets();
@@ -57,6 +57,8 @@ export default function Workout() {
   const [pr, setPr] = useState<string | null>(null);
   // exercise-settings sheet: muscles + unilateral flag draft
   const [muscleEdit, setMuscleEdit] = useState<{ exId: string; primary: MuscleGroup; secondary: MuscleGroup[]; unilateral: boolean } | null>(null);
+  const [renaming, setRenaming] = useState(false);
+  const [draftName, setDraftName] = useState('');
   // rest is timestamp-based so it keeps counting real time across backgrounding
   const restLeft = restEndAt != null ? Math.max(0, Math.ceil((restEndAt - Date.now()) / 1000)) : null;
   const restEndRef = useRef<number | null>(null);
@@ -122,6 +124,11 @@ export default function Workout() {
       </SafeAreaView>
     );
   }
+
+  const saveName = () => {
+    if (draftName.trim()) renameWorkout(active.id, draftName);
+    setRenaming(false);
+  };
 
   const elapsed = Math.floor((Date.now() - active.startedAt) / 1000);
   const doneCount = active.exercises.reduce((n, le) => n + le.sets.filter((s) => s.done).length, 0);
@@ -285,9 +292,31 @@ export default function Workout() {
           <Ionicons name="chevron-down" size={26} color={palette.textDim} />
         </Pressable>
         <View style={{ alignItems: 'center' }}>
-          <Txt size={type.h2} weight="bold">
-            {active.name}
-          </Txt>
+          {renaming ? (
+            <TextInput
+              value={draftName}
+              onChangeText={setDraftName}
+              autoFocus
+              selectTextOnFocus
+              onSubmitEditing={saveName}
+              onBlur={saveName}
+              placeholder="Název tréninku"
+              placeholderTextColor={palette.textMute}
+              style={{ minWidth: 180, textAlign: 'center', backgroundColor: palette.surface2, borderRadius: radius.sm, color: palette.text, fontFamily: 'Inter_700Bold', fontSize: type.h2, paddingHorizontal: 12, paddingVertical: 5 }}
+            />
+          ) : (
+            <Pressable
+              onPress={() => {
+                setDraftName(active.name);
+                setRenaming(true);
+              }}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              <Txt size={type.h2} weight="bold">
+                {active.name}
+              </Txt>
+              <Ionicons name="pencil-outline" size={12} color={palette.textMute} />
+            </Pressable>
+          )}
           {active.manual ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 1 }}>
               <Pressable onPress={() => setWorkoutDate(active.startedAt - MS.DAY)} hitSlop={8}>
@@ -321,6 +350,14 @@ export default function Workout() {
           const showW = showsW(le.exerciseId);
           const repsLbl = exDef?.tracking === 'time' ? 'ČAS (s)' : 'OPAK.';
           const prev = lastPerformance(workouts, le.exerciseId);
+          // readable "last time" line instead of only the +/- deltas on the cells
+          const prevSession = lastSession(workouts, le.exerciseId, active.id);
+          const prevSummary = prevSession
+            ? summarizeSets(prevSession.sets, (kg) => fmtWeight(kg, unit), {
+                bwKg: isBw(le.exerciseId) ? (prevSession.bodyweightKg ?? bwKg) : undefined,
+                hideWeight: !showW,
+              })
+            : null;
           const tag = supTag(le, ex);
           const grouped = !!le.supersetGroup;
           const contWithPrev = grouped && active.exercises[ex - 1]?.supersetGroup === le.supersetGroup;
@@ -374,6 +411,31 @@ export default function Workout() {
                   <Ionicons name="close" size={22} color={palette.textMute} />
                 </Pressable>
               </View>
+
+              {/* what you did last time - plain language, not just +/- on the cells */}
+              {prevSummary && (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 7,
+                    marginBottom: 10,
+                    backgroundColor: palette.surface,
+                    borderRadius: radius.sm,
+                    borderWidth: 1,
+                    borderColor: palette.hairline,
+                    paddingHorizontal: 10,
+                    paddingVertical: 7,
+                  }}>
+                  <Ionicons name="time-outline" size={13} color={palette.textMute} />
+                  <Txt size={type.caption} weight="semibold" color={palette.textDim}>
+                    {relativeDay(prevSession!.at, Date.now())}
+                  </Txt>
+                  <Txt size={type.caption} weight="medium" num color={palette.textMute} style={{ flex: 1 }} numberOfLines={1}>
+                    {prevSummary}
+                  </Txt>
+                </View>
+              )}
 
               {/* column headers */}
               <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4, marginBottom: 6 }}>

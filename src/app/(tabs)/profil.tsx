@@ -169,8 +169,18 @@ export default function Profil() {
             <Stepper value={settings.increment} step={1.25} min={0.5} suffix=" kg" onChange={(v) => setSetting('increment', v)} />
           )}
         </Row>
-        <Row icon="timer-outline" label="Výchozí odpočinek" last>
+        <Row icon="timer-outline" label="Výchozí odpočinek">
           <Stepper value={settings.restDefaultSec} step={15} min={15} suffix=" s" onChange={(v) => setSetting('restDefaultSec', v)} />
+        </Row>
+        <Row icon="list-outline" label="Sérií u nového cviku" last>
+          <Stepper
+            value={settings.defaultSets ?? 3}
+            step={1}
+            min={1}
+            max={10}
+            suffix="×"
+            onChange={(v) => setSetting('defaultSets', v)}
+          />
         </Row>
       </Section>
 
@@ -267,7 +277,7 @@ function Toggle({ options, value, onChange }: { options: string[]; value: string
   );
 }
 
-function Stepper({ value, step, min, suffix, onChange }: { value: number; step: number; min: number; suffix: string; onChange: (v: number) => void }) {
+function Stepper({ value, step, min, max, suffix, onChange }: { value: number; step: number; min: number; max?: number; suffix: string; onChange: (v: number) => void }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
       <Pressable onPress={() => onChange(Math.max(min, Math.round((value - step) * 100) / 100))} hitSlop={6}>
@@ -277,8 +287,10 @@ function Stepper({ value, step, min, suffix, onChange }: { value: number; step: 
         {fmtNum(value, 2)}
         {suffix}
       </Txt>
-      <Pressable onPress={() => onChange(Math.round((value + step) * 100) / 100)} hitSlop={6}>
-        <Ionicons name="add-circle" size={26} color={palette.accent} />
+      <Pressable
+        onPress={() => onChange(Math.min(max ?? Infinity, Math.round((value + step) * 100) / 100))}
+        hitSlop={6}>
+        <Ionicons name="add-circle" size={26} color={max != null && value >= max ? palette.surface3 : palette.accent} />
       </Pressable>
     </View>
   );

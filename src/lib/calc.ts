@@ -75,6 +75,49 @@ export function lastPerformance(workouts: Workout[], exerciseId: string): SetEnt
   return le.sets.filter((s) => s.done && !!s.reps && s.reps > 0);
 }
 
+/** The whole previous session for an exercise: when it was, and the sets done. */
+export function lastSession(
+  workouts: Workout[],
+  exerciseId: string,
+  excludeWorkoutId?: string,
+): { at: number; sets: SetEntry[]; bodyweightKg?: number } | null {
+  const finished = workouts
+    .filter((w) => w.finishedAt && w.id !== excludeWorkoutId && w.exercises.some((le) => le.exerciseId === exerciseId))
+    .sort((a, b) => b.finishedAt! - a.finishedAt!);
+  for (const w of finished) {
+    const le = w.exercises.find((x) => x.exerciseId === exerciseId)!;
+    const sets = le.sets.filter((s) => s.done && !!s.reps && s.reps > 0);
+    if (sets.length) return { at: w.finishedAt!, sets, bodyweightKg: w.bodyweightKg };
+  }
+  return null;
+}
+
+/**
+ * Human summary of a set list: "3 × 100 kg × 8" when uniform, otherwise "100×8 · 100×6 · 90×6".
+ * Weights are passed already converted for display; `bwKg` renders weighted-bodyweight as BW +X.
+ */
+export function summarizeSets(
+  sets: SetEntry[],
+  fmtW: (kg: number) => string,
+  opts?: { bwKg?: number; hideWeight?: boolean },
+): string {
+  if (!sets.length) return '';
+  const label = (s: SetEntry) => {
+    const reps = s.reps ?? 0;
+    if (opts?.hideWeight || s.weight == null) return `${reps}`;
+    if (opts?.bwKg != null) {
+      const added = s.weight - opts.bwKg;
+      const w = Math.abs(added) < 0.005 ? 'BW' : `BW ${added > 0 ? '+' : '-'}${fmtW(Math.abs(added))}`;
+      return `${w} × ${reps}`;
+    }
+    return `${fmtW(s.weight)} × ${reps}`;
+  };
+  const parts = sets.map(label);
+  const allSame = parts.every((p) => p === parts[0]);
+  if (allSame) return sets.length > 1 ? `${sets.length}× ${parts[0]}` : parts[0];
+  return parts.join(' · ');
+}
+
 /**
  * Is (weight×reps) a personal record for this exercise vs all prior finished history?
  * PR = its estimated 1RM strictly beats the previous best e1RM.

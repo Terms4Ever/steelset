@@ -288,6 +288,37 @@ describe('strengthScore + trend', () => {
     expect(muscleAlerts({})).toEqual([]);
   });
 
+  it('summarizeSets collapses uniform sets and lists mixed ones', () => {
+    const { summarizeSets } = require('@/lib/calc');
+    const f = (kg: number) => `${kg} kg`;
+    const S = (w: number | null, r: number) => ({ type: 'R', weight: w, reps: r, done: true }) as any;
+    expect(summarizeSets([S(100, 8), S(100, 8), S(100, 8)], f)).toBe('3× 100 kg × 8');
+    expect(summarizeSets([S(100, 8), S(100, 6), S(90, 6)], f)).toBe('100 kg × 8 · 100 kg × 6 · 90 kg × 6');
+    expect(summarizeSets([S(100, 8)], f)).toBe('100 kg × 8');
+    expect(summarizeSets([S(null, 12), S(null, 12)], f, { hideWeight: true })).toBe('2× 12');
+    // weighted bodyweight renders as BW +X against the workout's snapshot
+    expect(summarizeSets([S(101, 5), S(101, 5)], f, { bwKg: 91 })).toBe('2× BW +10 kg × 5');
+    expect(summarizeSets([S(91, 5)], f, { bwKg: 91 })).toBe('BW × 5');
+    expect(summarizeSets([], f)).toBe('');
+  });
+
+  it('lastSession returns the most recent session with done sets, skipping the current workout', () => {
+    const { lastSession } = require('@/lib/calc');
+    const ws = [
+      { id: 'old', name: 't', startedAt: 0, finishedAt: 1000, bodyweightKg: 90, exercises: [
+        { exerciseId: 'squat', sets: [{ type: 'R', weight: 100, reps: 5, done: true }] } ] },
+      { id: 'empty', name: 't', startedAt: 0, finishedAt: 2000, exercises: [
+        { exerciseId: 'squat', sets: [{ type: 'R', weight: 120, reps: 5, done: false }] } ] }, // nothing done → skipped
+      { id: 'cur', name: 't', startedAt: 0, finishedAt: 3000, exercises: [
+        { exerciseId: 'squat', sets: [{ type: 'R', weight: 130, reps: 5, done: true }] } ] },
+    ] as any as Workout[];
+    expect(lastSession(ws, 'squat')!.sets[0].weight).toBe(130);
+    const excl = lastSession(ws, 'squat', 'cur')!;
+    expect(excl.sets[0].weight).toBe(100); // 'empty' skipped, falls through to 'old'
+    expect(excl.bodyweightKg).toBe(90);
+    expect(lastSession(ws, 'bench-barbell')).toBeNull();
+  });
+
   it('setZone maps weekly sets to absolute zones', () => {
     const { setZone } = require('@/lib/calc');
     expect(setZone(0)).toBe('none');

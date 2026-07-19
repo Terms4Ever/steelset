@@ -66,6 +66,7 @@ interface Actions {
   deleteWorkout: (id: string) => void;
   restoreTrashedWorkout: (id: string) => void;
   deleteTrashedForever: (id: string) => void;
+  renameWorkout: (id: string, name: string) => void;
   editWorkout: (id: string) => void;
   setWorkoutHr: (id: string, avg?: number, max?: number, series?: HrSample[], kcal?: number) => void;
   dismissHealthWorkouts: (uuids: string[]) => void;
@@ -81,7 +82,7 @@ interface Actions {
   }) => string | null;
 }
 
-const DEFAULT_SETTINGS: Settings = { unit: 'kg', restDefaultSec: 90, increment: 2.5, incrementLb: 5, healthEnabled: false, bodyweightKg: 80, onboarded: false };
+const DEFAULT_SETTINGS: Settings = { unit: 'kg', restDefaultSec: 90, increment: 2.5, incrementLb: 5, healthEnabled: false, bodyweightKg: 80, defaultSets: 3, onboarded: false };
 
 function patchActive(workouts: Workout[], activeId: string | null, fn: (w: Workout) => Workout): Workout[] {
   if (!activeId) return workouts;
@@ -242,7 +243,7 @@ export const useStore = create<State & Actions>()(
           // they don't retype it. bodyweight_reps (kliky) keep the column HIDDEN → no phantom tonnage.
           const ex = allExercises(s).find((e) => e.id === exerciseId);
           const bw = s.settings.bodyweightKg;
-          let sets = prefillSets(lastPerformance(s.workouts, exerciseId), 3);
+          let sets = prefillSets(lastPerformance(s.workouts, exerciseId), Math.max(1, s.settings.defaultSets ?? 3));
           if (ex?.tracking === 'weighted_bw' && bw > 0) sets = sets.map((st) => ({ ...st, weight: st.weight ?? bw }));
           // bodyweight_reps has a HIDDEN weight column — force weight null (even if history inherited one)
           else if (ex?.tracking === 'bodyweight_reps') sets = sets.map((st) => ({ ...st, weight: null }));
@@ -405,6 +406,11 @@ export const useStore = create<State & Actions>()(
         set((s) => ({ trashedWorkouts: s.trashedWorkouts.filter((x) => x.id !== id) })),
 
       // Re-open a finished workout for editing; keeps its original date (manual mode).
+      renameWorkout: (id, name) =>
+        set((s) => ({
+          workouts: s.workouts.map((w) => (w.id === id ? { ...w, name: name.trim() || w.name } : w)),
+        })),
+
       editWorkout: (id) =>
         set((s) => ({
           activeWorkoutId: id,
