@@ -1,18 +1,29 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, View } from 'react-native';
+import { Alert, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { HrChart } from '@/components/HrChart';
 import { PrimaryButton, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
-import { exerciseVolumeFor, hrWindow, perExerciseHr, workoutVolumeEx } from '@/lib/calc';
-import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtWeight } from '@/lib/format';
+import { e1rm, exerciseVolumeFor, hrWindow, perExerciseHr, summarizeSets, workoutVolumeEx } from '@/lib/calc';
+import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtWeight, plural } from '@/lib/format';
 import { heartRateFor } from '@/lib/health';
 import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
 
 const TAG: Record<string, string> = { W: 'Z', R: '', D: 'D', F: 'F' };
+
+/** "nejlepší 100 kg × 8" - the top set by estimated 1RM, so the summary shows the real effort. */
+function bestSetLabel(le: any, ex: any, w: any, unit: any): string {
+  const done = le.sets.filter((s: any) => s.done && s.weight != null && s.weight > 0 && s.reps);
+  if (done.length < 2) return '';
+  // pointless when every set was identical - the summary already says it
+  if (done.every((s: any) => s.weight === done[0].weight && s.reps === done[0].reps)) return '';
+  const best = done.reduce((a: any, b: any) => (e1rm(b.weight, b.reps) > e1rm(a.weight, a.reps) ? b : a));
+  const wLabel = ex?.tracking === 'weighted_bw' ? fmtBwWeight(best.weight, w.bodyweightKg ?? 80, unit) : fmtWeight(best.weight, unit);
+  return `nej ${wLabel} × ${best.reps}`;
+}
 
 export default function WorkoutDetail() {
   const router = useRouter();
@@ -24,11 +35,18 @@ export default function WorkoutDetail() {
   const deleteWorkout = useStore((s) => s.deleteWorkout);
   const editWorkout = useStore((s) => s.editWorkout);
   const setWorkoutHr = useStore((s) => s.setWorkoutHr);
+  const renameWorkout = useStore((s) => s.renameWorkout);
   const healthEnabled = useStore((s) => s.settings.healthEnabled);
 
   const w = workouts.find((x) => x.id === id);
   const exById = useMemo(() => exByIdSel({ customExercises: custom, exerciseMuscles }), [custom, exerciseMuscles]);
   const [hrLoading, setHrLoading] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [draftName, setDraftName] = useState('');
+  const saveName = () => {
+    if (w && draftName.trim()) renameWorkout(w.id, draftName);
+    setRenaming(false);
+  };
 
   const canPullHr = !!w && !w.manual && healthEnabled && !!w.finishedAt;
   const fetchHr = async () => {
@@ -115,9 +133,30 @@ export default function WorkoutDetail() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: space.xl, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
-        <Txt size={type.title} weight="bold">
-          {w.name}
-        </Txt>
+        {renaming ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <TextInput
+              value={draftName}
+              onChangeText={setDraftName}
+              autoFocus
+              selectTextOnFocus
+              onSubmitEditing={saveName}
+              placeholder="Název tréninku"
+              placeholderTextColor={palette.textMute}
+              style={{ flex: 1, backgroundColor: palette.surface2, borderRadius: radius.sm, color: palette.text, fontFamily: 'Inter_700Bold', fontSize: type.title, paddingHorizontal: 12, paddingVertical: 8 }}
+            />
+            <Pressable onPress={saveName} hitSlop={8} style={{ width: 38, height: 38, borderRadius: radius.sm, backgroundColor: palette.accent, alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name="checkmark" size={20} color={palette.bg} />
+            </Pressable>
+          </View>
+        ) : (
+          <Pressable onPress={() => { setDraftName(w.name); setRenaming(true); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Txt size={type.title} weight="bold">
+              {w.name}
+            </Txt>
+            <Ionicons name="pencil-outline" size={15} color={palette.textMute} />
+          </Pressable>
+        )}
         <Txt size={type.body} weight="medium" color={palette.textMute} style={{ marginTop: 2 }}>
           {metaParts.join(' · ')}
         </Txt>
@@ -187,9 +226,27 @@ export default function WorkoutDetail() {
           {w.exercises.map((le, i) => (
             <View key={i} style={{ backgroundColor: palette.surface, borderRadius: radius.md, padding: space.lg, borderWidth: 1, borderColor: palette.hairline }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
-                <Txt size={type.h2} weight="bold" style={{ flex: 1 }}>
-                  {exById[le.exerciseId]?.name ?? 'Cvik'}
-                </Txt>
+                <View style={{ flex: 1 }}>
+                  <Txt size={type.h2} weight="bold">
+                    {exById[le.exerciseId]?.name ?? 'Cvik'}
+                  </Txt>
+                  <Txt size={type.caption} weight="medium" num color={palette.textMute} style={{ marginTop: 2 }} numberOfLines={1}>
+                    {[
+                      (() => { const n = le.sets.filter((s) => s.done).length; return `${n} ${plural(n, 'série', 'série', 'sérií')}`; })(),
+                      summarizeSets(
+                        le.sets.filter((s) => s.done),
+                        (kg) => fmtWeight(kg, unit),
+                        {
+                          bwKg: exById[le.exerciseId]?.tracking === 'weighted_bw' ? (w.bodyweightKg ?? 80) : undefined,
+                          hideWeight: le.sets.every((s) => s.weight == null),
+                        },
+                      ),
+                      bestSetLabel(le, exById[le.exerciseId], w, unit),
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </Txt>
+                </View>
                 <View style={{ alignItems: 'flex-end' }}>
                   <Txt size={type.label} weight="semibold" num color={palette.textDim}>
                     {fmtWeight(exerciseVolumeFor(le, exById[le.exerciseId], w), unit)}

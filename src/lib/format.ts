@@ -9,6 +9,12 @@ export function fromDisplayWeight(value: number, unit: Unit): number {
   return unit === 'lb' ? value / KG_TO_LB : value;
 }
 
+/** Czech plural: 1 série · 2-4 série · 5+ sérií (n must be a whole count). */
+export function plural(n: number, one: string, few: string, many: string): string {
+  if (n === 1) return one;
+  return n >= 2 && n <= 4 ? few : many;
+}
+
 /** Czech number: comma decimal, trims trailing .0 */
 export function fmtNum(n: number, maxDecimals = 1): string {
   const rounded = Math.round(n * 10 ** maxDecimals) / 10 ** maxDecimals;
