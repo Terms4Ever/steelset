@@ -63,6 +63,7 @@ a **nemění se** - přejmenování by znamenalo nové vydání v App Store.
 |---|---|
 | `AGENTS.md` | kompletní kontext pro vývoj: názvosloví, doménová pravidla, brány před buildem, stav |
 | `docs/00-stav-projektu.md` | živý stav: co je hotové, co se dělá, co je dál a na co si dát pozor |
+| `docs/01-todo.md` | rozdělaná práce s postupem: účty a klíče pro monetizaci, zásady soukromí, watchOS |
 | `docs/03-rozhodovaci-dennik.md` | co bylo kdy rozhodnuto a proč. Nové rozhodnutí je nový záznam |
 | `SHIP.md` | postup vydání |
 | `TESTFLIGHT.md` | poznámky k TestFlightu |
