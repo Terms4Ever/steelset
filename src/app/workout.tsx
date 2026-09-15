@@ -5,11 +5,13 @@ import { Alert, AppState, Pressable, ScrollView, TextInput, View } from 'react-n
 import Animated, { SlideInDown, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AdBanner } from '@/components/AdBanner';
 import { Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { LoggedExercise, MUSCLE_GROUP_OPTIONS, MuscleGroup, SetEntry, SetType } from '@/data/types';
 import { isPR, lastPerformance, lastSession, MS, summarizeSets } from '@/lib/calc';
 import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtNum, fmtWeight, fromDisplayWeight, relativeDay, toDisplayWeight, unitIncrement } from '@/lib/format';
+import { showInterstitial } from '@/lib/ads';
 import { haptic } from '@/lib/haptic';
 import { heartRateFor } from '@/lib/health';
 import { liveActivity } from '@/lib/liveActivity';
@@ -260,6 +262,8 @@ export default function Workout() {
     liveActivity.end();
     finishWorkout();
     router.replace('/');
+    // free tier: full-screen ad after the workout is safely saved, never before
+    setTimeout(() => showInterstitial(), 600);
     // Apple Health: pull the heart rate the Watch recorded (read-only; we never write workouts).
     if (w && !w.manual && healthEnabled) {
       const start = w.startedAt;
@@ -532,6 +536,8 @@ export default function Workout() {
         </Pressable>
 
         <View style={{ height: 1, backgroundColor: palette.hairline, marginTop: 24, marginBottom: 20 }} />
+
+        {!focus && <AdBanner style={{ marginBottom: 12 }} />}
 
         <Pressable
           onPress={onFinish}

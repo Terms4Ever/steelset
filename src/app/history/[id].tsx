@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AdBanner } from '@/components/AdBanner';
 import { HrChart } from '@/components/HrChart';
 import { PrimaryButton, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
@@ -291,6 +292,8 @@ export default function WorkoutDetail() {
           <PrimaryButton label={w.exercises.length === 0 ? 'Přidat série' : 'Upravit trénink'} onPress={onEdit} />
         </View>
       </ScrollView>
+
+      <AdBanner />
     </SafeAreaView>
   );
 }

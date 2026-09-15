@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AdBanner } from '@/components/AdBanner';
 import { heatColor, MuscleMapChart, MuscleMapLegend, MuscleRegion } from '@/components/MuscleMapChart';
 import { Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
@@ -172,6 +173,8 @@ export default function MuscleMap() {
             </View>
           ))}
       </ScrollView>
+
+      <AdBanner />
 
       {/* muscle bottom sheet */}
       {sel && (

@@ -17,6 +17,7 @@ export default function Profil() {
   const settings = useStore((s) => s.settings);
   const workouts = useStore((s) => s.workouts);
   const trashedCount = useStore((s) => s.trashedWorkouts.length);
+  const isPro = useStore((s) => s.isPro);
   const custom = useStore((s) => s.customExercises);
   const setUnit = useStore((s) => s.setUnit);
   const setSetting = useStore((s) => s.setSetting);
@@ -214,11 +215,20 @@ export default function Profil() {
       </Section>
 
       <Section title="STEELSET">
-        <Row icon="star-outline" label="Steelset Pro" last>
-          <Txt size={type.label} weight="semibold" color={palette.accent}>
-            Lifetime
-          </Txt>
-        </Row>
+        <Pressable
+          onPress={() => router.push('/paywall')}
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 14, padding: space.lg }}>
+          <Ionicons name={isPro ? 'star' : 'star-outline'} size={20} color={isPro ? palette.accent : palette.textDim} />
+          <View style={{ flex: 1 }}>
+            <Txt size={type.body} weight="medium">
+              Steelset Pro
+            </Txt>
+            <Txt size={type.caption} weight="medium" color={isPro ? palette.accent : palette.textMute} style={{ marginTop: 1 }}>
+              {isPro ? 'Aktivní - bez reklam' : 'Vypni reklamy a podpoř vývoj'}
+            </Txt>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={palette.textMute} />
+        </Pressable>
       </Section>
 
       <Txt size={type.caption} color={palette.textMute} style={{ textAlign: 'center', marginTop: space.xl }}>

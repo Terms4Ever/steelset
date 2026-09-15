@@ -20,7 +20,8 @@
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSSupportsLiveActivities": true
+        "NSSupportsLiveActivities": true,
+        "NSUserTrackingUsageDescription": "Steelset pomocí tohoto povolení zobrazuje relevantnější reklamy. Bez souhlasu uvidíš reklamy obecné - aplikace funguje stejně."
       },
       "appleTeamId": "B5N5746R9W"
     },
@@ -67,7 +68,16 @@
           "NSHealthShareUsageDescription": "Steelset čte tep, tréninky a váhu z Apple Health, aby je přiřadil k tvým záznamům a mohl je importovat.",
           "NSHealthUpdateUsageDescription": "Steelset umožňuje odstranit tréninky, které do Apple Health zapsaly starší verze aplikace."
         }
-      ]
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511",
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "userTrackingUsageDescription": "Steelset pomocí tohoto povolení zobrazuje relevantnější reklamy. Bez souhlasu uvidíš reklamy obecné - aplikace funguje stejně."
+        }
+      ],
+      "expo-tracking-transparency"
     ],
     "experiments": {
       "typedRoutes": false,

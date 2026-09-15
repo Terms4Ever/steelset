@@ -15,6 +15,7 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 import { MiniWorkoutBar } from '@/components/MiniWorkoutBar';
 import { palette } from '@/constants/theme';
 import { scheduleBackup, syncFromCloud } from '@/lib/sync';
+import { useMonetization } from '@/lib/useMonetization';
 import { useStore } from '@/store/useStore';
 
 /**
@@ -54,6 +55,9 @@ export default function RootLayout() {
   const router = useRouter();
 
   const ready = loaded && hydrated;
+
+  // subscription state + ads (no-op for Pro subscribers)
+  useMonetization(ready);
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});
@@ -95,6 +99,7 @@ export default function RootLayout() {
         <Stack.Screen name="workout" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="exercises" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="exercise-new" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="paywall" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
         <Stack.Screen name="routine/[id]" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="history/[id]" options={{ animation: 'slide_from_right' }} />
       </Stack>

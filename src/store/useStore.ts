@@ -28,6 +28,8 @@ interface State {
   activeWorkoutId: string | null;
   settings: Settings;
   appleUser: AppleUser | null;
+  /** Ad-free subscription. Cached here for instant startup; RevenueCat is the source of truth. */
+  isPro: boolean;
   dismissedHealth: string[]; // uuids HKWorkoutů, které uživatel odmítl importovat (aby se nenabízely znovu)
   _hydrated: boolean;
 }
@@ -40,6 +42,7 @@ interface Actions {
   setUnit: (u: Unit) => void;
   setSetting: <K extends keyof Settings>(k: K, v: Settings[K]) => void;
   setAppleUser: (u: AppleUser | null) => void;
+  setPro: (v: boolean) => void;
   wipeAll: () => void;
   // exercises
   addExercise: (e: Omit<Exercise, 'id' | 'custom'>) => string;
@@ -129,6 +132,7 @@ export const useStore = create<State & Actions>()(
       activeWorkoutId: null,
       settings: DEFAULT_SETTINGS,
       appleUser: null,
+      isPro: false,
       dismissedHealth: [],
       _hydrated: false,
 
@@ -152,6 +156,7 @@ export const useStore = create<State & Actions>()(
       setUnit: (u) => set((s) => ({ settings: { ...s.settings, unit: u } })),
       setSetting: (k, v) => set((s) => ({ settings: { ...s.settings, [k]: v } })),
       setAppleUser: (u) => set({ appleUser: u }),
+      setPro: (v) => set({ isPro: v }),
       wipeAll: () =>
         set({
           customExercises: [],
@@ -472,6 +477,7 @@ export const useStore = create<State & Actions>()(
         activeWorkoutId: s.activeWorkoutId,
         settings: s.settings,
         appleUser: s.appleUser,
+        isPro: s.isPro,
         dismissedHealth: s.dismissedHealth,
       }),
       // deep-merge settings so newly added fields (e.g. incrementLb) keep their defaults for existing users

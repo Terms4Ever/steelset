@@ -3,6 +3,7 @@ import { Tabs } from 'expo-router';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AdBanner } from '@/components/AdBanner';
 import { MiniWorkoutBar } from '@/components/MiniWorkoutBar';
 import { Txt } from '@/components/ui';
 import { palette, space } from '@/constants/theme';
@@ -19,6 +20,7 @@ function TabBar({ state, navigation }: { state: any; navigation: any }) {
   const insets = useSafeAreaInsets();
   return (
     <View>
+      <AdBanner />
       <MiniWorkoutBar />
       <View
         style={{
