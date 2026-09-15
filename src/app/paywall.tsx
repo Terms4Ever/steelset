@@ -12,7 +12,7 @@ import { useStore } from '@/store/useStore';
 
 /** Apple's standard EULA - a terms link is required when selling subscriptions. */
 const TERMS_URL = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
-const PRIVACY_URL = 'https://setly.cz/soukromi';
+const PRIVACY_URL = 'https://steelset.cz/soukromi';
 
 const BENEFITS = [
   { icon: 'eye-off-outline' as const, title: 'Žádné reklamy', text: 'Bannery i celoobrazovkové reklamy zmizí.' },

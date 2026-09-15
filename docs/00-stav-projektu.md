@@ -34,19 +34,22 @@ Nic rozdělaného.
 
 ## Co je dál
 
+Rozepsané i s postupem v `01-todo.md`. Ve zkratce:
+
+- Spustit monetizaci naostro: účty a klíče pro AdMob a RevenueCat, produkty
+  a ceny v App Store Connectu. Do té doby běží testovací jednotky Googlu,
+  které vydělávají nulu.
+- Stránka se zásadami ochrany soukromí, paywall na ni odkazuje.
 - Aplikace pro watchOS. Jediná cesta k tepu v reálném čase.
 - Podklady pro App Store: snímky obrazovek a popis, před veřejným vydáním.
-- Zprovoznit monetizaci naostro. Kód je hotový, chybí účty a klíče: jednotky
-  z AdMobu, veřejný klíč RevenueCatu, produkty a ceny v App Store Connectu.
-  Do té doby běží testovací jednotky Googlu, které vydělávají nulu.
-- Vlastní stránka se zásadami soukromí. Paywall na ni odkazuje a Apple ji
-  u aplikace s reklamami a předplatným vyžaduje.
 
 ## Na co si dát pozor
 
 Historická jména se pletou. Složka projektu je `primed/`, slug v EAS `setly`,
-identifikátor balíčku `cz.setly.app`, aplikace se jmenuje Steelset. Nic z toho
-se nepřejmenovává, tabulka v `AGENTS.md` říká proč.
+identifikátor balíčku `cz.setly.app`, klíč uložených dat `setly-store-v1`,
+aplikace se jmenuje Steelset. Nic z toho se nepřejmenovává, tabulka v
+`AGENTS.md` říká proč. Všechno ostatní, co uživatel uvidí, už Steelset je:
+název, schéma odkazů, jméno exportu i souboru zálohy.
 
 Nativní části se z Windows otestovat nedají. TestFlight je test.
 

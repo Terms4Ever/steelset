@@ -2,8 +2,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { cloudBackup, cloudRestore } from './cloudsync';
 
-const STORE_KEY = 'setly-store-v1'; // must match zustand persist `name`
-const SYNC_AT_KEY = 'setly-synced-at';
+const STORE_KEY = 'setly-store-v1'; // must match zustand persist `name` - renaming it wipes every user's data
+const SYNC_AT_KEY = 'steelset-synced-at';
 
 /** Push the local persisted store to iCloud (last-write-wins by timestamp). */
 export async function syncToCloud(): Promise<void> {

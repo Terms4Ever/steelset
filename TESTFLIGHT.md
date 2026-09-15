@@ -1,4 +1,4 @@
-# Setly -> TestFlight / App Store (iOS)
+# Steelset -> TestFlight / App Store (iOS)
 
 Build i podpis běží v cloudu přes **EAS Build** - **Mac nepotřebuješ**. Já jsem připravil
 veškerou konfiguraci; níže jsou jen kroky, které vyžadují **tvoje** přihlášení (Expo + Apple) -
@@ -10,7 +10,7 @@ Odhad času: ~25-40 min (z toho ~15-20 min běží build v cloudu, můžeš odej
 
 ## Co je hotové (nemusíš řešit)
 
-- `app.json`: název **Setly**, `bundleIdentifier` **cz.setly.app**, `buildNumber` 1, verze 1.0.0,
+- `app.json`: název **Steelset**, `bundleIdentifier` **cz.setly.app**, `buildNumber` 1, verze 1.0.0,
   ikona (1024 bez alfa kanálu + iOS dark/tinted varianty), splash, `ITSAppUsesNonExemptEncryption: false`
   (přeskočí dotaz na export compliance), `supportsTablet: false` (nepotřebuješ iPad screenshoty).
 - `eas.json`: profily `production` (store .ipa) a `submit`.
@@ -98,7 +98,7 @@ Hotovo - appka běží na reálném iPhonu přes TestFlight.
 
 ## App Privacy (vyplň v App Store Connect než půjdeš do produkce)
 
-Setly **nesbírá žádná data** - vše je lokálně v telefonu, žádný účet, server ani analytika.
+Steelset **nesbírá žádná data** - vše je lokálně v telefonu, žádný účet, server ani analytika.
 V App Store Connect -> App Privacy zvol **"Data Not Collected"**. Výrazně to zjednoduší schválení.
 
 ## Verzování dalších buildů

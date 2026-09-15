@@ -3,7 +3,9 @@ import { Platform } from 'react-native';
 // Thin, defensive iCloud wrapper. Never throws — every call degrades to a no-op
 // so the app keeps working even if iCloud is unavailable. iOS only.
 
-const FILE = '/setly-backup.json';
+const FILE = '/steelset-backup.json';
+/** Backup written by versions that still used the old name; read as a fallback, never written. */
+const LEGACY_FILE = '/setly-backup.json';
 
 function getCloud(): any | null {
   if (Platform.OS !== 'ios') return null;
@@ -40,11 +42,16 @@ export async function cloudBackup(content: string): Promise<boolean> {
 export async function cloudRestore(): Promise<string | null> {
   const cs = getCloud();
   if (!cs) return null;
-  try {
-    const exists = typeof cs.exists === 'function' ? await cs.exists(FILE) : false;
-    if (!exists) return null;
-    return await cs.readFile(FILE);
-  } catch {
-    return null;
+  // try the current file first, then the pre-rename one so older backups aren't orphaned
+  for (const file of [FILE, LEGACY_FILE]) {
+    try {
+      const exists = typeof cs.exists === 'function' ? await cs.exists(file) : false;
+      if (!exists) continue;
+      const content = await cs.readFile(file);
+      if (content) return content;
+    } catch {
+      // try the next candidate
+    }
   }
+  return null;
 }

@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 
 /** Export a CSV string: web triggers a download, native writes to cache + share sheet. */
-export async function exportCsv(csv: string, filename = 'setly-export.csv'): Promise<void> {
+export async function exportCsv(csv: string, filename = 'steelset-export.csv'): Promise<void> {
   if (Platform.OS === 'web') {
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);

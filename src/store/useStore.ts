@@ -465,6 +465,7 @@ export const useStore = create<State & Actions>()(
       },
     }),
     {
+      // historical name - renaming it would wipe every existing user's workouts
       name: 'setly-store-v1',
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (s) => ({

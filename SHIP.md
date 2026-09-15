@@ -1,4 +1,4 @@
-# Setly — odeslání do App Store / Google Play
+# Steelset — odeslání do App Store / Google Play
 
 Silový tréninkový deník. Expo (React Native) SDK 56, TypeScript, lokální data (offline-first,
 žádný účet). Vše níže je připravené — chybí už jen kroky, které vyžadují **tvoje** vývojářské účty.
@@ -55,7 +55,7 @@ eas submit --platform android  # nahraje do Google Play (potřebuje service-acco
 
 ## Metadata do obchodu (návrh, CZ)
 
-- **Název:** Setly
+- **Název:** Steelset
 - **Podtitul:** Silový deník, který ví, kdy jsi připravený
 - **Kategorie:** Zdraví a fitness
 - **Klíčová slova:** posilovna, silový trénink, deník, série, progresivní zátěž, 1RM, plán, činka
