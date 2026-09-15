@@ -1,0 +1,16 @@
+name: Kontroly
+
+on:
+  push:
+  pull_request:
+
+# Token nesmi vic, nez je potreba ke cteni repozitare. Volany workflow
+# zije v Terms4Ever/nastroje a odkazuje se na nej vetvi, ne otiskem —
+# zamerne, aby se pravidla menila na jednom miste. Tohle omezeni je
+# pojistka pro pripad, ze by se ta vetev zmenila.
+permissions:
+  contents: read
+
+jobs:
+  readme:
+    uses: Terms4Ever/nastroje/.github/workflows/readme.yml@main

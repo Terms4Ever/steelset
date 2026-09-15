@@ -1,28 +1,89 @@
-# Steelset 🏋️
+# 🏋️ Steelset
 
-Česká iOS appka na zapisování tréninků v gymu - série, opakování, váhy, pokrok,
-Apple Health/Watch (tep, import tréninků), Live Activity, kalendář.
+**Česká iOS aplikace na zapisování tréninků v posilovně**
 
-> Interní názvy: EAS slug `setly`, bundle `cz.setly.app` - historické, neměnit.
-> Kompletní kontext pro vývoj (i pro Claude Code) je v **[AGENTS.md](AGENTS.md)**.
+Steelset vede série, opakování, váhy a pokrok v čase. Napojuje se na Apple
+Health a Apple Watch (tep, import tréninků), umí Live Activity během tréninku
+a kalendář odcvičených dnů.
 
-## Setup na novém PC
+![Expo](https://img.shields.io/badge/Expo-SDK%2056-000020?logo=expo&logoColor=white)
+![React Native](https://img.shields.io/badge/React%20Native-0.85-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white)
+![License](https://img.shields.io/badge/license-proprietary-red)
+
+---
+
+## 🛠️ Tech Stack
+
+| Vrstva     | Technologie                        |
+|------------|------------------------------------|
+| Základ     | Expo SDK 56, React Native 0.85     |
+| Jazyk      | TypeScript 6.0                     |
+| Nativní    | HealthKit, Live Activity, iCloud   |
+| Build      | EAS Build, TestFlight              |
+
+---
+
+## 📁 Struktura projektu
+
+```
+steelset/
+├── src/              # obrazovky a logika
+├── modules/          # nativní moduly
+├── targets/          # rozšíření pro Live Activity
+├── assets/           # obrázky a ikony
+├── scripts/          # pomocné skripty
+└── __tests__/        # testy
+```
+
+---
+
+## 🏷️ Interní názvy
+
+Slug v EAS je `setly` a identifikátor balíčku `cz.setly.app`. Jsou historické
+a **nemění se** — přejmenování by znamenalo nové vydání v App Store.
+
+---
+
+## 🚀 Instalace (lokální vývoj)
 
 ```bash
 git clone https://github.com/Terms4Ever/steelset.git
 cd steelset
 npm install
+npx expo start --web
 ```
 
-Vývoj (web náhled): `npx expo start --web`
-Brány před buildem: `npx tsc --noEmit` · `npx jest` · `npx expo export --platform web`
-
-## Build → TestFlight
+Brány, které musí projít, než se cokoli buildí:
 
 ```bash
-npm i -g eas-cli && eas login   # účet terms4e
+npx tsc --noEmit
+npx jest
+npx expo export --platform web
+```
+
+Nativní funkce — HealthKit, Live Activity, iCloud — ve webovém náhledu
+nefungují. Ověřují se až v TestFlightu.
+
+---
+
+## 📦 Nasazení
+
+**Build a odeslání do TestFlightu:**
+
+```bash
+npm i -g eas-cli && eas login
 eas build --platform ios --profile production --non-interactive --auto-submit
 ```
 
-Nativní funkce (HealthKit, Live Activity, iCloud) se testují jen přes TestFlight.
-Detaily, pravidla a stav projektu: [AGENTS.md](AGENTS.md).
+Profily buildů jsou v [eas.json](eas.json), postup vydání v [SHIP.md](SHIP.md)
+a poznámky k TestFlightu v [TESTFLIGHT.md](TESTFLIGHT.md).
+
+**Kompletní kontext pro vývoj**, včetně pravidel a stavu projektu, je
+v [AGENTS.md](AGENTS.md).
+
+---
+
+## 📄 Licence
+
+Proprietární software. Veškerá práva vyhrazena. Viz [LICENSE](LICENSE).
