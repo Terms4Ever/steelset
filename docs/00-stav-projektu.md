@@ -26,6 +26,7 @@ TestFlight build 19, verze 1.0.0. Aplikace není veřejně v App Store.
 - Živá aktivita na zamčené obrazovce a v Dynamic Island
 - Přihlášení přes Apple, záloha na iCloud, export do CSV
 - Onboarding
+- Monetizace: aplikace zdarma s reklamami, předplatné Steelset Pro je vypne
 
 ## Co se dělá
 
@@ -35,7 +36,11 @@ Nic rozdělaného.
 
 - Aplikace pro watchOS. Jediná cesta k tepu v reálném čase.
 - Podklady pro App Store: snímky obrazovek a popis, před veřejným vydáním.
-- Předplatné Steelset Pro.
+- Zprovoznit monetizaci naostro. Kód je hotový, chybí účty a klíče: jednotky
+  z AdMobu, veřejný klíč RevenueCatu, produkty a ceny v App Store Connectu.
+  Do té doby běží testovací jednotky Googlu, které vydělávají nulu.
+- Vlastní stránka se zásadami soukromí. Paywall na ni odkazuje a Apple ji
+  u aplikace s reklamami a předplatným vyžaduje.
 
 ## Na co si dát pozor
 
@@ -44,3 +49,7 @@ identifikátor balíčku `cz.setly.app`, aplikace se jmenuje Steelset. Nic z toh
 se nepřejmenovává, tabulka v `AGENTS.md` říká proč.
 
 Nativní části se z Windows otestovat nedají. TestFlight je test.
+
+Reklamy ani nákupy se v prohlížeči nespustí. Balíčky mají varianty `.web`, které
+se tváří jako neplatící uživatel bez reklam, takže náhled zůstává použitelný,
+ale chování reklam se ověřuje jen na zařízení.

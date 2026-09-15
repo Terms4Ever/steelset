@@ -62,3 +62,33 @@ a hlídá ho kontrola z `Terms4Ever/nastroje` při každém pushi.
 
 **Proč.** Sedm repozitářů mělo sedm různých README, tenhle patřil k nejkratším:
 dvě sekce, žádná zmínka o tom, z čeho je aplikace postavená.
+
+---
+
+## S6 - Aplikace zdarma s reklamami, předplatné je vypne (15. 9. 2026)
+
+**Rozhodnutí.** Steelset zůstává celý zdarma. Předplatné Steelset Pro nepřidává
+funkce, jen odstraňuje reklamy. Nabídka je měsíční a roční, roční předvybraná.
+Reklamy jsou záměrně agresivní: bannery na všech hlavních obrazovkách včetně
+zápisu tréninku, celoobrazovková reklama po uloženém tréninku a po návratu
+z pozadí.
+
+**Proč.** Placená aplikace bez publika nevydělá nic. Zdarma s reklamami dá
+důvod stáhnout si ji a předplatné prodává klid, ne funkce. Zamykat zápis sérií
+za paywall by z deníku udělalo ukázku.
+
+**Meze, které se nepřekročily.** Reklama při načítání aplikace je proti
+pravidlům AdMobu a hrozí za ni zablokování účtu. Na spuštění je určený formát
+app open, ten se použil. Banner v zápisu tréninku se skrývá, když je otevřená
+numerická klávesnice, protože reklama nalepená nad číselníkem sbírá omylné
+kliky, a to AdMob zakazuje také. Souhlas podle GDPR běží před dotazem na
+sledování od Applu, v tomto pořadí to Google vyžaduje.
+
+**Past.** Zjišťování předplatného vrací `null`, když odpověď není k dispozici,
+a volající si v tom případě nechá uloženou hodnotu. Kdyby se neznámý stav
+vyhodnotil jako neplatící, stačil by výpadek sítě a platícímu uživateli by
+naskočily reklamy.
+
+**Past podruhé.** Nativní moduly se na webu nezabalí ani přes podmíněný
+`require`, Metro si je najde statickou analýzou a překlad spadne. Řeší to
+soubory s příponou `.web`, ne podmínky uvnitř kódu.
