@@ -3,6 +3,14 @@
 Živý stav. Přepisuje se, nepřidává. Podrobný kontext pro vývoj je
 v `AGENTS.md`, tenhle soubor říká, kde se právě je.
 
+<!-- generovano nastroji, needitovat -->
+```
+verze:            1.0.0
+běhové prostředí: Expo ~56.0.12
+hlavní větev:     main
+```
+<!-- konec generovaneho bloku -->
+
 ## Kde to stojí
 
 TestFlight build 19, verze 1.0.0. Aplikace není veřejně v App Store.
