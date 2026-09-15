@@ -13,6 +13,18 @@ a kalendář odcvičených dnů.
 
 ---
 
+## ✨ Hlavní funkce
+
+- Zápis tréninku: série, opakování, váhy, odpočet mezi sériemi, supersérie
+- Plány a pokrok se skóre a odhadem 1RM
+- Anatomická svalová mapa, objem a trend po jednotlivých svalech
+- Kalendář odcvičených dnů
+- Apple Health a Apple Watch: tep, import tréninků, grafy tepu po cvicích
+- Živá aktivita na zamčené obrazovce a v Dynamic Island
+- Záloha na iCloud, export do CSV
+
+---
+
 ## 🛠️ Tech Stack
 
 | Vrstva     | Technologie                        |
@@ -41,7 +53,19 @@ steelset/
 ## 🏷️ Interní názvy
 
 Slug v EAS je `setly` a identifikátor balíčku `cz.setly.app`. Jsou historické
-a **nemění se** — přejmenování by znamenalo nové vydání v App Store.
+a **nemění se** - přejmenování by znamenalo nové vydání v App Store.
+
+---
+
+## 📚 Dokumentace
+
+| Dokument | K čemu |
+|---|---|
+| `AGENTS.md` | kompletní kontext pro vývoj: názvosloví, doménová pravidla, brány před buildem, stav |
+| `docs/00-stav-projektu.md` | živý stav: co je hotové, co se dělá, co je dál a na co si dát pozor |
+| `docs/03-rozhodovaci-dennik.md` | co bylo kdy rozhodnuto a proč. Nové rozhodnutí je nový záznam |
+| `SHIP.md` | postup vydání |
+| `TESTFLIGHT.md` | poznámky k TestFlightu |
 
 ---
 
@@ -62,7 +86,7 @@ npx jest
 npx expo export --platform web
 ```
 
-Nativní funkce — HealthKit, Live Activity, iCloud — ve webovém náhledu
+Nativní funkce - HealthKit, Live Activity, iCloud - ve webovém náhledu
 nefungují. Ověřují se až v TestFlightu.
 
 ---
