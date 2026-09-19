@@ -30,7 +30,12 @@ TestFlight build 19, verze 1.0.0. Aplikace není veřejně v App Store.
 
 ## Co se dělá
 
-Nic rozdělaného.
+Plní se otevřené issues z GitHubu (#1 až #10). Hotové v kódu a čekající na
+ověření na zařízení:
+
+- #2 a #6 - číselná klávesnice v tréninku: neotevírá se při odškrtávání
+  předvyplněných sérií a jde zavřít křížkem, tažením dolů i ťuknutím mimo
+  buňky (S8 v deníku)
 
 ## Co je dál
 

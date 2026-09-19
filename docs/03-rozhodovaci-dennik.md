@@ -118,3 +118,42 @@ nemění, důvody z S1 u nich platí dál. Jméno `setly-store-v1` proto v kódu
 zůstává na jednom místě, jako název starého klíče, který se čte. Stejně tak
 `/setly-backup.json` v `cloudsync.ts`, což je záloha na iCloudu ze starších
 verzí - čte se, nikdy nezapisuje.
+
+---
+
+## S8 - Číselná klávesnice se otevírá jen při psaní a jde zavřít (19. 9. 2026)
+
+**Stav.** Klávesnice v živém tréninku vyskakovala i tehdy, když uživatel jen
+odškrtával předvyplněné série: `commit()` po dokončení série vždy posunul
+fokus na další nedokončenou. Zavřít ji přitom nešlo, takže zakryla spodní
+polovinu obrazovky. Fokus navíc drží index série, takže po smazání dřívější
+série ukazoval na jinou sérii a psaní by upravilo cizí data.
+
+**Rozhodnutí.** Fokus se po odškrtnutí posouvá jen tehdy, když už klávesnice
+otevřená byla. Zavřít ji jde třemi způsoby: křížkem v jejím záhlaví, tažením
+za úchyt dolů a ťuknutím mimo buňky. Po smazání série se fokus zruší (pokud
+se psalo do smazané), nebo se posune o jednu zpět.
+
+**Proč.** Otevřená klávesnice je signál „uživatel právě píše". Odškrtávání
+série je jiné gesto než zápis hodnoty, a když je plán předvyplněný, je to
+jediné, co uživatel v sérii dělá.
+
+**Jak.** Tažení řeší `PanResponder` z React Native, ne
+`react-native-gesture-handler`. Ten je sice v projektu jako závislost, ale
+nikde se nepoužívá a jeho gesta vyžadují `GestureHandlerRootView` v kořenovém
+rozvržení. Kvůli jednomu tažení se nevyplatí měnit kořen aplikace.
+
+Ťuknutí mimo buňky odchytává `Pressable` uvnitř `ScrollView`, který obaluje
+obsah tréninku. Buňky a tlačítka si stisk vezmou dřív, protože jsou hlouběji
+ve stromu, takže jim obal nic nebere.
+
+Čistá část logiky fokusu je v `src/lib/keypad.ts` a hlídá ji
+`__tests__/keypad.test.ts`.
+
+**Co se nedělalo.** Issue #2 zvažovalo nastavení „Po dokončení série přejít na
+další". Nepřidalo se: po opravě dělá klávesnice přesně to, co uživatel čeká,
+a přepínač by byl nastavení navíc bez zřejmého užitku.
+
+**Past.** Hláška o rekordu a lišta odpočtu se nad klávesnicí umisťovaly na
+pevných `bottom: 322`. Jakmile klávesnice dostala záhlaví, bylo číslo špatně,
+takže se výška teď měří přes `onLayout`.

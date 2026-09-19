@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, AppState, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, AppState, PanResponder, Pressable, ScrollView, TextInput, View } from 'react-native';
 import Animated, { SlideInDown, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -11,6 +11,7 @@ import { palette, radius, space, type } from '@/constants/theme';
 import { LoggedExercise, MUSCLE_GROUP_OPTIONS, MuscleGroup, SetEntry, SetType } from '@/data/types';
 import { isPR, lastPerformance, lastSession, MS, summarizeSets } from '@/lib/calc';
 import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtNum, fmtWeight, fromDisplayWeight, relativeDay, toDisplayWeight, unitIncrement } from '@/lib/format';
+import { focusAfterSetRemoved, KeypadFocus } from '@/lib/keypad';
 import { showInterstitial } from '@/lib/ads';
 import { haptic } from '@/lib/haptic';
 import { heartRateFor } from '@/lib/health';
@@ -24,7 +25,7 @@ const SET_TAG_COLOR: Record<SetType, string> = {
   F: palette.red,
 };
 
-type Focus = { ex: number; set: number; field: 'weight' | 'reps' } | null;
+type Focus = KeypadFocus;
 
 export default function Workout() {
   const router = useRouter();
@@ -61,6 +62,10 @@ export default function Workout() {
   const [muscleEdit, setMuscleEdit] = useState<{ exId: string; primary: MuscleGroup; secondary: MuscleGroup[]; unilateral: boolean } | null>(null);
   const [renaming, setRenaming] = useState(false);
   const [draftName, setDraftName] = useState('');
+  // skutecna vyska keypadu - hlaska o rekordu i lista odpoctu nad ni sedi i kdyz keypad zmeni obsah
+  const [keypadH, setKeypadH] = useState(322);
+  // stabilni reference: PanResponder keypadu se vytvari jen jednou
+  const closeKeypad = useCallback(() => setFocus(null), []);
   // rest is timestamp-based so it keeps counting real time across backgrounding
   const restLeft = restEndAt != null ? Math.max(0, Math.ceil((restEndAt - Date.now()) / 1000)) : null;
   const restEndRef = useRef<number | null>(null);
@@ -236,11 +241,21 @@ export default function Workout() {
     } else {
       haptic.light();
     }
-    // advance focus
-    const le = active.exercises[ex];
-    const ns = le.sets.findIndex((x, i) => i > set && !x.done);
-    if (ns !== -1) focusCell(ex, ns, showW ? 'weight' : 'reps');
-    else setFocus(null);
+    // advance focus - only while the user is actually typing. Checking off prefilled sets with the
+    // keypad closed must not pop it open again (that was the whole complaint).
+    if (focus) {
+      const le = active.exercises[ex];
+      const ns = le.sets.findIndex((x, i) => i > set && !x.done);
+      if (ns !== -1) focusCell(ex, ns, showW ? 'weight' : 'reps');
+      else setFocus(null);
+    }
+  };
+
+  // focus holds a set INDEX, so deleting an earlier set would silently point it at a different set
+  // (and typing would then rewrite the wrong one)
+  const removeSetAt = (ex: number, si: number) => {
+    setFocus((f) => focusAfterSetRemoved(f, ex, si));
+    removeSet(ex, si);
   };
 
   const onFinish = () => {
@@ -343,223 +358,227 @@ export default function Workout() {
       </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: space.xl, paddingBottom: 40 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        {active.exercises.length === 0 && (
-          <Txt size={type.body} weight="medium" color={palette.textMute} style={{ marginTop: 20, textAlign: 'center' }}>
-            Volný trénink - přidej první cvik.
-          </Txt>
-        )}
+        {/* tuknuti mimo bunky zavira keypad - press na prazdne misto probubla sem, deti (bunky,
+            tlacitka) si responder vezmou driv, takze jim to nic nebere */}
+        <Pressable onPress={closeKeypad} accessible={false}>
+          {active.exercises.length === 0 && (
+            <Txt size={type.body} weight="medium" color={palette.textMute} style={{ marginTop: 20, textAlign: 'center' }}>
+              Volný trénink - přidej první cvik.
+            </Txt>
+          )}
 
-        {active.exercises.map((le, ex) => {
-          const exDef = exById[le.exerciseId];
-          const showW = showsW(le.exerciseId);
-          const repsLbl = exDef?.tracking === 'time' ? 'ČAS (s)' : 'OPAK.';
-          const prev = lastPerformance(workouts, le.exerciseId);
-          // readable "last time" line instead of only the +/- deltas on the cells
-          const prevSession = lastSession(workouts, le.exerciseId, active.id);
-          const prevSummary = prevSession
-            ? summarizeSets(prevSession.sets, (kg) => fmtWeight(kg, unit), {
-                bwKg: isBw(le.exerciseId) ? (prevSession.bodyweightKg ?? bwKg) : undefined,
-                hideWeight: !showW,
-              })
-            : null;
-          const tag = supTag(le, ex);
-          const grouped = !!le.supersetGroup;
-          const contWithPrev = grouped && active.exercises[ex - 1]?.supersetGroup === le.supersetGroup;
-          return (
-            <View
-              key={`${le.exerciseId}-${ex}`}
-              style={{
-                marginTop: ex === 0 ? 8 : contWithPrev ? 8 : 22,
-                borderLeftWidth: grouped ? 3 : 0,
-                borderLeftColor: palette.accent,
-                paddingLeft: grouped ? 12 : 0,
-                marginLeft: grouped ? 2 : 0,
-              }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <Pressable
-                  style={{ flex: 1 }}
-                  onPress={() =>
-                    exDef &&
-                    setMuscleEdit({
-                      exId: le.exerciseId,
-                      primary: exDef.primary,
-                      secondary: exDef.secondary ?? [],
-                      unilateral: !!exDef.unilateral,
-                    })
-                  }>
-                  <Txt size={type.caption} weight="bold" color={palette.accent} style={{ letterSpacing: 1 }}>
-                    {tag ? `SUPERSÉRIE ${tag}` : `CVIK ${ex + 1}/${active.exercises.length}`}
-                  </Txt>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                    <Txt size={type.h1} weight="bold">
-                      {exDef?.name ?? 'Cvik'}
+          {active.exercises.map((le, ex) => {
+            const exDef = exById[le.exerciseId];
+            const showW = showsW(le.exerciseId);
+            const repsLbl = exDef?.tracking === 'time' ? 'ČAS (s)' : 'OPAK.';
+            const prev = lastPerformance(workouts, le.exerciseId);
+            // readable "last time" line instead of only the +/- deltas on the cells
+            const prevSession = lastSession(workouts, le.exerciseId, active.id);
+            const prevSummary = prevSession
+              ? summarizeSets(prevSession.sets, (kg) => fmtWeight(kg, unit), {
+                  bwKg: isBw(le.exerciseId) ? (prevSession.bodyweightKg ?? bwKg) : undefined,
+                  hideWeight: !showW,
+                })
+              : null;
+            const tag = supTag(le, ex);
+            const grouped = !!le.supersetGroup;
+            const contWithPrev = grouped && active.exercises[ex - 1]?.supersetGroup === le.supersetGroup;
+            return (
+              <View
+                key={`${le.exerciseId}-${ex}`}
+                style={{
+                  marginTop: ex === 0 ? 8 : contWithPrev ? 8 : 22,
+                  borderLeftWidth: grouped ? 3 : 0,
+                  borderLeftColor: palette.accent,
+                  paddingLeft: grouped ? 12 : 0,
+                  marginLeft: grouped ? 2 : 0,
+                }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <Pressable
+                    style={{ flex: 1 }}
+                    onPress={() =>
+                      exDef &&
+                      setMuscleEdit({
+                        exId: le.exerciseId,
+                        primary: exDef.primary,
+                        secondary: exDef.secondary ?? [],
+                        unilateral: !!exDef.unilateral,
+                      })
+                    }>
+                    <Txt size={type.caption} weight="bold" color={palette.accent} style={{ letterSpacing: 1 }}>
+                      {tag ? `SUPERSÉRIE ${tag}` : `CVIK ${ex + 1}/${active.exercises.length}`}
                     </Txt>
-                    <Ionicons name="pencil-outline" size={13} color={palette.textMute} />
-                  </View>
-                  {exDef && (
-                    <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ marginTop: 1 }} numberOfLines={1}>
-                      {[exDef.primary, ...(exDef.secondary ?? [])].join(' · ')}
-                      {exDef.unilateral ? ' · 1-str.' : ''}
-                    </Txt>
-                  )}
-                </Pressable>
-                <Pressable
-                  hitSlop={6}
-                  onPress={() =>
-                    Alert.alert('Odebrat cvik?', exDef?.name ?? 'Cvik', [
-                      { text: 'Zrušit', style: 'cancel' },
-                      { text: 'Odebrat', style: 'destructive', onPress: () => { setFocus(null); removeActiveExercise(ex); } },
-                    ])
-                  }
-                  style={{ width: 44, height: 44, borderRadius: radius.sm, backgroundColor: palette.surface2, alignItems: 'center', justifyContent: 'center' }}>
-                  <Ionicons name="close" size={22} color={palette.textMute} />
-                </Pressable>
-              </View>
-
-              {/* what you did last time - plain language, not just +/- on the cells */}
-              {prevSummary && (
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 7,
-                    marginBottom: 10,
-                    backgroundColor: palette.surface,
-                    borderRadius: radius.sm,
-                    borderWidth: 1,
-                    borderColor: palette.hairline,
-                    paddingHorizontal: 10,
-                    paddingVertical: 7,
-                  }}>
-                  <Ionicons name="time-outline" size={13} color={palette.textMute} />
-                  <Txt size={type.caption} weight="semibold" color={palette.textDim}>
-                    {relativeDay(prevSession!.at, Date.now())}
-                  </Txt>
-                  <Txt size={type.caption} weight="medium" num color={palette.textMute} style={{ flex: 1 }} numberOfLines={1}>
-                    {prevSummary}
-                  </Txt>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                      <Txt size={type.h1} weight="bold">
+                        {exDef?.name ?? 'Cvik'}
+                      </Txt>
+                      <Ionicons name="pencil-outline" size={13} color={palette.textMute} />
+                    </View>
+                    {exDef && (
+                      <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ marginTop: 1 }} numberOfLines={1}>
+                        {[exDef.primary, ...(exDef.secondary ?? [])].join(' · ')}
+                        {exDef.unilateral ? ' · 1-str.' : ''}
+                      </Txt>
+                    )}
+                  </Pressable>
+                  <Pressable
+                    hitSlop={6}
+                    onPress={() =>
+                      Alert.alert('Odebrat cvik?', exDef?.name ?? 'Cvik', [
+                        { text: 'Zrušit', style: 'cancel' },
+                        { text: 'Odebrat', style: 'destructive', onPress: () => { setFocus(null); removeActiveExercise(ex); } },
+                      ])
+                    }
+                    style={{ width: 44, height: 44, borderRadius: radius.sm, backgroundColor: palette.surface2, alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="close" size={22} color={palette.textMute} />
+                  </Pressable>
                 </View>
-              )}
 
-              {/* column headers */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4, marginBottom: 6 }}>
-                <Txt size={type.caption} weight="semibold" color={palette.textMute} style={{ width: 40 }}>
-                  SÉRIE
-                </Txt>
-                {showW && (
-                  <Txt size={type.caption} weight="semibold" color={palette.textMute} style={{ flex: 1, textAlign: 'center' }}>
-                    {isBw(le.exerciseId) ? `+${unit.toUpperCase()}` : unit.toUpperCase()}
-                  </Txt>
-                )}
-                <Txt size={type.caption} weight="semibold" color={palette.textMute} style={{ flex: 1, textAlign: 'center' }}>
-                  {repsLbl}
-                </Txt>
-                <View style={{ width: 48 }} />
-              </View>
-
-              {le.sets.map((s, si) => {
-                const p = prev?.[si];
-                // per-set delta vs the same set last session, shown once the set is done (+5 kg / +2 opak.)
-                const dW = s.done && p?.weight != null && s.weight != null ? toDisplayWeight(s.weight - p.weight, unit) : null;
-                const dR = s.done && p?.reps != null && s.reps != null ? s.reps - p.reps : null;
-                return (
+                {/* what you did last time - plain language, not just +/- on the cells */}
+                {prevSummary && (
                   <View
-                    key={si}
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
-                      backgroundColor: s.done ? palette.accentDeep : palette.surface,
+                      gap: 7,
+                      marginBottom: 10,
+                      backgroundColor: palette.surface,
                       borderRadius: radius.sm,
-                      paddingVertical: 9,
-                      paddingHorizontal: 6,
-                      marginBottom: 8,
                       borderWidth: 1,
-                      borderColor: s.done ? 'transparent' : palette.hairline,
+                      borderColor: palette.hairline,
+                      paddingHorizontal: 10,
+                      paddingVertical: 7,
                     }}>
-                    <Pressable
-                      onPress={() => cycleType(updateSet, ex, si, s)}
-                      style={{ width: 40, alignItems: 'center' }}>
-                      <View style={{ width: 26, height: 26, borderRadius: 8, backgroundColor: s.done ? 'transparent' : palette.surface2, alignItems: 'center', justifyContent: 'center' }}>
-                        <Txt size={type.label} weight="bold" color={s.type === 'R' ? palette.text : SET_TAG_COLOR[s.type]}>
-                          {s.type === 'R' ? String(workingIndex(le.sets, si)) : s.type}
-                        </Txt>
-                      </View>
-                    </Pressable>
-
-                    {showW && (
-                      <Cell focused={isFocus(focus, ex, si, 'weight')} value={cellValue(ex, si, 'weight')} ghost={p?.weight != null ? fmtNum(toDisplayWeight(isBw(le.exerciseId) ? p.weight - bwKg : p.weight, unit), 2).replace(',', '.') : ''} done={s.done} delta={dW} onPress={() => focusCell(ex, si, 'weight')} />
-                    )}
-                    <Cell focused={isFocus(focus, ex, si, 'reps')} value={cellValue(ex, si, 'reps')} ghost={p?.reps != null ? String(p.reps) : ''} done={s.done} delta={dR} deltaInt onPress={() => focusCell(ex, si, 'reps')} />
-
-                    <Pressable onLongPress={() => removeSet(ex, si)} onPress={() => commit(ex, si)} style={{ width: 48, alignItems: 'center' }}>
-                      <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: s.done ? palette.accent : 'transparent', borderWidth: s.done ? 0 : 2, borderColor: palette.surface3, alignItems: 'center', justifyContent: 'center' }}>
-                        <Ionicons name="checkmark" size={20} color={s.done ? palette.bg : palette.textMute} />
-                      </View>
-                    </Pressable>
+                    <Ionicons name="time-outline" size={13} color={palette.textMute} />
+                    <Txt size={type.caption} weight="semibold" color={palette.textDim}>
+                      {relativeDay(prevSession!.at, Date.now())}
+                    </Txt>
+                    <Txt size={type.caption} weight="medium" num color={palette.textMute} style={{ flex: 1 }} numberOfLines={1}>
+                      {prevSummary}
+                    </Txt>
                   </View>
-                );
-              })}
+                )}
 
-              <Pressable onPress={() => addSet(ex)} style={{ paddingVertical: 11, alignItems: 'center', borderRadius: radius.sm, borderWidth: 1, borderColor: palette.hairline, borderStyle: 'dashed' }}>
-                <Txt size={type.label} weight="semibold" color={palette.textDim}>
-                  + Přidat sérii
-                </Txt>
-              </Pressable>
+                {/* column headers */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4, marginBottom: 6 }}>
+                  <Txt size={type.caption} weight="semibold" color={palette.textMute} style={{ width: 40 }}>
+                    SÉRIE
+                  </Txt>
+                  {showW && (
+                    <Txt size={type.caption} weight="semibold" color={palette.textMute} style={{ flex: 1, textAlign: 'center' }}>
+                      {isBw(le.exerciseId) ? `+${unit.toUpperCase()}` : unit.toUpperCase()}
+                    </Txt>
+                  )}
+                  <Txt size={type.caption} weight="semibold" color={palette.textMute} style={{ flex: 1, textAlign: 'center' }}>
+                    {repsLbl}
+                  </Txt>
+                  <View style={{ width: 48 }} />
+                </View>
 
-              {ex < active.exercises.length - 1 &&
-                (() => {
-                  const linked = grouped && active.exercises[ex + 1]?.supersetGroup === le.supersetGroup;
+                {le.sets.map((s, si) => {
+                  const p = prev?.[si];
+                  // per-set delta vs the same set last session, shown once the set is done (+5 kg / +2 opak.)
+                  const dW = s.done && p?.weight != null && s.weight != null ? toDisplayWeight(s.weight - p.weight, unit) : null;
+                  const dR = s.done && p?.reps != null && s.reps != null ? s.reps - p.reps : null;
                   return (
-                    <Pressable
-                      onPress={() => {
-                        haptic.tap();
-                        linkSuperset(ex);
-                      }}
-                      style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, marginTop: 6 }}>
-                      <Ionicons name={linked ? 'unlink-outline' : 'git-merge-outline'} size={14} color={linked ? palette.textMute : palette.accent} />
-                      <Txt size={type.caption} weight="semibold" color={linked ? palette.textMute : palette.accent}>
-                        {linked ? 'Zrušit supersérii' : 'Supersérie s dalším cvikem'}
-                      </Txt>
-                    </Pressable>
+                    <View
+                      key={si}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: s.done ? palette.accentDeep : palette.surface,
+                        borderRadius: radius.sm,
+                        paddingVertical: 9,
+                        paddingHorizontal: 6,
+                        marginBottom: 8,
+                        borderWidth: 1,
+                        borderColor: s.done ? 'transparent' : palette.hairline,
+                      }}>
+                      <Pressable
+                        onPress={() => cycleType(updateSet, ex, si, s)}
+                        style={{ width: 40, alignItems: 'center' }}>
+                        <View style={{ width: 26, height: 26, borderRadius: 8, backgroundColor: s.done ? 'transparent' : palette.surface2, alignItems: 'center', justifyContent: 'center' }}>
+                          <Txt size={type.label} weight="bold" color={s.type === 'R' ? palette.text : SET_TAG_COLOR[s.type]}>
+                            {s.type === 'R' ? String(workingIndex(le.sets, si)) : s.type}
+                          </Txt>
+                        </View>
+                      </Pressable>
+
+                      {showW && (
+                        <Cell focused={isFocus(focus, ex, si, 'weight')} value={cellValue(ex, si, 'weight')} ghost={p?.weight != null ? fmtNum(toDisplayWeight(isBw(le.exerciseId) ? p.weight - bwKg : p.weight, unit), 2).replace(',', '.') : ''} done={s.done} delta={dW} onPress={() => focusCell(ex, si, 'weight')} />
+                      )}
+                      <Cell focused={isFocus(focus, ex, si, 'reps')} value={cellValue(ex, si, 'reps')} ghost={p?.reps != null ? String(p.reps) : ''} done={s.done} delta={dR} deltaInt onPress={() => focusCell(ex, si, 'reps')} />
+
+                      <Pressable onLongPress={() => removeSetAt(ex, si)} onPress={() => commit(ex, si)} style={{ width: 48, alignItems: 'center' }}>
+                        <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: s.done ? palette.accent : 'transparent', borderWidth: s.done ? 0 : 2, borderColor: palette.surface3, alignItems: 'center', justifyContent: 'center' }}>
+                          <Ionicons name="checkmark" size={20} color={s.done ? palette.bg : palette.textMute} />
+                        </View>
+                      </Pressable>
+                    </View>
                   );
-                })()}
-            </View>
-          );
-        })}
+                })}
 
-        <Pressable
-          onPress={() => router.push('/exercises?target=workout')}
-          style={{ marginTop: 20, paddingVertical: 14, alignItems: 'center', borderRadius: radius.md, backgroundColor: palette.surface2 }}>
-          <Txt size={type.body} weight="bold" color={palette.accent}>
-            + Přidat cvik
-          </Txt>
-        </Pressable>
+                <Pressable onPress={() => addSet(ex)} style={{ paddingVertical: 11, alignItems: 'center', borderRadius: radius.sm, borderWidth: 1, borderColor: palette.hairline, borderStyle: 'dashed' }}>
+                  <Txt size={type.label} weight="semibold" color={palette.textDim}>
+                    + Přidat sérii
+                  </Txt>
+                </Pressable>
 
-        <View style={{ height: 1, backgroundColor: palette.hairline, marginTop: 24, marginBottom: 20 }} />
+                {ex < active.exercises.length - 1 &&
+                  (() => {
+                    const linked = grouped && active.exercises[ex + 1]?.supersetGroup === le.supersetGroup;
+                    return (
+                      <Pressable
+                        onPress={() => {
+                          haptic.tap();
+                          linkSuperset(ex);
+                        }}
+                        style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, marginTop: 6 }}>
+                        <Ionicons name={linked ? 'unlink-outline' : 'git-merge-outline'} size={14} color={linked ? palette.textMute : palette.accent} />
+                        <Txt size={type.caption} weight="semibold" color={linked ? palette.textMute : palette.accent}>
+                          {linked ? 'Zrušit supersérii' : 'Supersérie s dalším cvikem'}
+                        </Txt>
+                      </Pressable>
+                    );
+                  })()}
+              </View>
+            );
+          })}
 
-        {!focus && <AdBanner style={{ marginBottom: 12 }} />}
+          <Pressable
+            onPress={() => router.push('/exercises?target=workout')}
+            style={{ marginTop: 20, paddingVertical: 14, alignItems: 'center', borderRadius: radius.md, backgroundColor: palette.surface2 }}>
+            <Txt size={type.body} weight="bold" color={palette.accent}>
+              + Přidat cvik
+            </Txt>
+          </Pressable>
 
-        <Pressable
-          onPress={onFinish}
-          style={({ pressed }) => ({ paddingVertical: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, borderRadius: radius.md, backgroundColor: palette.accent, opacity: pressed ? 0.85 : 1 })}>
-          <Ionicons name="checkmark-circle" size={20} color={palette.bg} />
-          <Txt size={17} weight="bold" color={palette.bg}>
-            Ukončit trénink
-          </Txt>
-        </Pressable>
+          <View style={{ height: 1, backgroundColor: palette.hairline, marginTop: 24, marginBottom: 20 }} />
 
-        <Pressable
-          onPress={onDiscard}
-          style={({ pressed }) => ({ marginTop: 10, paddingVertical: 13, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7, borderRadius: radius.md, backgroundColor: palette.surface2, opacity: pressed ? 0.85 : 1 })}>
-          <Ionicons name="trash-outline" size={17} color={palette.red} />
-          <Txt size={type.label} weight="semibold" color={palette.red}>
-            Zahodit trénink
-          </Txt>
+          {!focus && <AdBanner style={{ marginBottom: 12 }} />}
+
+          <Pressable
+            onPress={onFinish}
+            style={({ pressed }) => ({ paddingVertical: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, borderRadius: radius.md, backgroundColor: palette.accent, opacity: pressed ? 0.85 : 1 })}>
+            <Ionicons name="checkmark-circle" size={20} color={palette.bg} />
+            <Txt size={17} weight="bold" color={palette.bg}>
+              Ukončit trénink
+            </Txt>
+          </Pressable>
+
+          <Pressable
+            onPress={onDiscard}
+            style={({ pressed }) => ({ marginTop: 10, paddingVertical: 13, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7, borderRadius: radius.md, backgroundColor: palette.surface2, opacity: pressed ? 0.85 : 1 })}>
+            <Ionicons name="trash-outline" size={17} color={palette.red} />
+            <Txt size={type.label} weight="semibold" color={palette.red}>
+              Zahodit trénink
+            </Txt>
+          </Pressable>
         </Pressable>
       </ScrollView>
 
       {pr && (
-        <Animated.View key={pr} entering={ZoomIn.duration(280)} style={{ position: 'absolute', left: space.xl, right: space.xl, bottom: focus ? 322 : 28, backgroundColor: palette.accent, borderRadius: radius.md, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <Animated.View key={pr} entering={ZoomIn.duration(280)} style={{ position: 'absolute', left: space.xl, right: space.xl, bottom: focus ? keypadH + 12 : 28, backgroundColor: palette.accent, borderRadius: radius.md, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <Ionicons name="trophy" size={20} color={palette.bg} />
           <Txt size={type.body} weight="bold" color={palette.bg}>
             {pr}
@@ -568,7 +587,7 @@ export default function Workout() {
       )}
 
       {restLeft !== null && restLeft > 0 && !pr && (
-        <Animated.View entering={SlideInDown.duration(220)} style={{ position: 'absolute', left: space.xl, right: space.xl, bottom: focus ? 322 : 28, backgroundColor: palette.surface2, borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: palette.hairline }}>
+        <Animated.View entering={SlideInDown.duration(220)} style={{ position: 'absolute', left: space.xl, right: space.xl, bottom: focus ? keypadH + 12 : 28, backgroundColor: palette.surface2, borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: palette.hairline }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Ionicons name="timer-outline" size={18} color={palette.accent} />
             <Txt size={type.body} weight="bold" num>
@@ -584,8 +603,8 @@ export default function Workout() {
       )}
 
       {focus && (
-        <Animated.View entering={SlideInDown.duration(180)}>
-          <Keypad onKey={key} onStep={step} onNext={next} inc={focus.field === 'reps' ? { full: 5, half: 1 } : unitIncrement(unit, increment, incrementLb)} />
+        <Animated.View entering={SlideInDown.duration(180)} onLayout={(e) => setKeypadH(e.nativeEvent.layout.height)}>
+          <Keypad onKey={key} onStep={step} onNext={next} onClose={closeKeypad} inc={focus.field === 'reps' ? { full: 5, half: 1 } : unitIncrement(unit, increment, incrementLb)} />
         </Animated.View>
       )}
 
@@ -752,10 +771,30 @@ function RestBtn({ label, onPress }: { label: string; onPress: () => void }) {
   );
 }
 
-function Keypad({ onKey, onStep, onNext, inc }: { onKey: (k: string) => void; onStep: (d: number) => void; onNext: () => void; inc: { full: number; half: number } }) {
+function Keypad({ onKey, onStep, onNext, onClose, inc }: { onKey: (k: string) => void; onStep: (d: number) => void; onNext: () => void; onClose: () => void; inc: { full: number; half: number } }) {
   const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'del'];
+  // tazeni za uchyt dolu keypad zavre; PanResponder staci a nevyzaduje GestureHandlerRootView
+  const pan = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_e, g) => g.dy > 6 && Math.abs(g.dy) > Math.abs(g.dx),
+        onPanResponderRelease: (_e, g) => {
+          if (g.dy > 40) onClose();
+        },
+      }),
+    [onClose],
+  );
   return (
-    <View style={{ backgroundColor: palette.surface, borderTopWidth: 1, borderTopColor: palette.hairline, paddingHorizontal: 12, paddingTop: 10, paddingBottom: 24 }}>
+    <View style={{ backgroundColor: palette.surface, borderTopWidth: 1, borderTopColor: palette.hairline, paddingHorizontal: 12, paddingTop: 2, paddingBottom: 24 }}>
+      <View {...pan.panHandlers} style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 6 }}>
+        <View style={{ width: 44 }} />
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <View style={{ width: 38, height: 4, borderRadius: 2, backgroundColor: palette.surface3 }} />
+        </View>
+        <Pressable onPress={onClose} hitSlop={10} style={{ width: 44, height: 30, alignItems: 'flex-end', justifyContent: 'center' }}>
+          <Ionicons name="chevron-down" size={24} color={palette.textMute} />
+        </Pressable>
+      </View>
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 10 }}>
         <Stepper label={`-${fmtNum(inc.full, 2)}`} onPress={() => onStep(-inc.full)} />
         <Stepper label={`-${fmtNum(inc.half, 2)}`} onPress={() => onStep(-inc.half)} />
