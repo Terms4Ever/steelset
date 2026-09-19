@@ -92,3 +92,29 @@ naskočily reklamy.
 **Past podruhé.** Nativní moduly se na webu nezabalí ani přes podmíněný
 `require`, Metro si je najde statickou analýzou a překlad spadne. Řeší to
 soubory s příponou `.web`, ne podmínky uvnitř kódu.
+
+---
+
+## S7 - Klíč uložených dat je `steelset-store-v1` (19. 9. 2026)
+
+**Stav.** Zápisník se ukládal pod klíčem `setly-store-v1`. S1 říkal, že se
+nepřejmenovává, protože by uživatelé přišli o tréninky.
+
+**Rozhodnutí.** Klíč se přejmenoval na `steelset-store-v1`. Starý klíč se při
+prvním čtení zkopíruje do nového a zůstane ležet jako záložní kopie -
+nepřepisuje se a nemaže. Zápis míří vždy jen na nový klíč. Kód je v
+`src/lib/storeKeys.ts`, chování hlídá `__tests__/storeKeys.test.ts`.
+
+**Proč.** Původní důvod pro S1 byla ztráta dat, ne samotný klíč. Převod přes
+čtecí fallback tu ztrátu ruší a navíc je vratný: kdyby se změna vracela zpět,
+stará kopie v telefonu pořád je.
+
+**Past.** Smazání všech dat v Profilu jen přepíše stav na prázdný, klíč z
+úložiště neodstraňuje. Kdyby ho mazalo, fallback by při dalším spuštění
+smazané tréninky vzkřísil ze staré kopie.
+
+**Co zůstává.** Slug v EAS `setly` a identifikátor balíčku `cz.setly.app` se
+nemění, důvody z S1 u nich platí dál. Jméno `setly-store-v1` proto v kódu
+zůstává na jednom místě, jako název starého klíče, který se čte. Stejně tak
+`/setly-backup.json` v `cloudsync.ts`, což je záloha na iCloudu ze starších
+verzí - čte se, nikdy nezapisuje.

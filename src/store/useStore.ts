@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
@@ -6,6 +5,7 @@ import { SEED_EXERCISES, STARTER_ROUTINES } from '@/data/exercises';
 import { Exercise, HrSample, LoggedExercise, MuscleGroup, Routine, SetEntry, Settings, Unit, Workout } from '@/data/types';
 import { isCountable, lastPerformance } from '@/lib/calc';
 import { buildPrefilledExercise, prefillSets } from '@/lib/prefill';
+import { persistedStoreStorage, STORE_KEY } from '@/lib/storeKeys';
 
 let _c = 0;
 export const uid = (p = 'id') =>
@@ -465,9 +465,9 @@ export const useStore = create<State & Actions>()(
       },
     }),
     {
-      // historical name - renaming it would wipe every existing user's workouts
-      name: 'setly-store-v1',
-      storage: createJSONStorage(() => AsyncStorage),
+      name: STORE_KEY,
+      // reads fall back to the pre-rename key, so existing installs keep their workouts
+      storage: createJSONStorage(() => persistedStoreStorage),
       partialize: (s) => ({
         customExercises: s.customExercises,
         exerciseMuscles: s.exerciseMuscles,

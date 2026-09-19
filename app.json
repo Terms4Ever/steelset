@@ -30,8 +30,8 @@
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#00E07A",
-        "foregroundImage": "./assets/images/liftbook-glyph-dark.png",
-        "monochromeImage": "./assets/images/liftbook-icon-tinted.png"
+        "foregroundImage": "./assets/images/steelset-glyph-dark.png",
+        "monochromeImage": "./assets/images/steelset-icon-mono.png"
       },
       "predictiveBackGestureEnabled": false
     },

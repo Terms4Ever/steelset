@@ -53,7 +53,9 @@ steelset/
 ## 🏷️ Interní názvy
 
 Slug v EAS je `setly` a identifikátor balíčku `cz.setly.app`. Jsou historické
-a **nemění se** - přejmenování by znamenalo nové vydání v App Store.
+a **nemění se** - přejmenování by znamenalo nové vydání v App Store. Klíč
+uložených dat je `steelset-store-v1`; data z verzí před přejmenováním se
+načtou ze starého klíče.
 
 ---
 

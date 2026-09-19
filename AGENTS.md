@@ -18,7 +18,7 @@ Apple Health/Watch integrace, Live Activity. Cíl: App Store. Jazyk UI: **češt
 | EAS slug | `setly` | NEMĚNIT - vázaný na EAS projekt |
 | Bundle ID | `cz.setly.app` | NEMĚNIT - provisioning, TestFlight |
 | Widget bundle | `cz.setly.app.widget` | Live Activity extension |
-| Persist klíč | `setly-store-v1` | NEMĚNIT - uživatelé by přišli o data |
+| Persist klíč | `steelset-store-v1` | přejmenováno 19. 9. 2026; starý `setly-store-v1` se čte jako fallback (`src/lib/storeKeys.ts`) |
 | Historická jména | Pulse → Setly → Liftbook → Steelset | stará jména se mohou objevit v komentářích/assetech |
 
 ## Stack

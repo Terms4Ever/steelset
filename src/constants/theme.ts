@@ -1,5 +1,5 @@
 /**
- * Primed design tokens - extracted 1:1 from the "Pulse / Primed Hi-Fi" Claude Design doc.
+ * Steelset design tokens - extracted 1:1 from the "Steelset - Hi-Fi Mobile UI" Claude Design doc.
  * Dark-mode-first strength tracker. Single accent (electric green), big tabular numbers.
  */
 import { Platform, TextStyle } from 'react-native';

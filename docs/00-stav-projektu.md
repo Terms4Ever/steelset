@@ -46,10 +46,11 @@ Rozepsané i s postupem v `01-todo.md`. Ve zkratce:
 ## Na co si dát pozor
 
 Historická jména se pletou. Složka projektu je `primed/`, slug v EAS `setly`,
-identifikátor balíčku `cz.setly.app`, klíč uložených dat `setly-store-v1`,
-aplikace se jmenuje Steelset. Nic z toho se nepřejmenovává, tabulka v
-`AGENTS.md` říká proč. Všechno ostatní, co uživatel uvidí, už Steelset je:
-název, schéma odkazů, jméno exportu i souboru zálohy.
+identifikátor balíčku `cz.setly.app`, aplikace se jmenuje Steelset. Slug ani
+identifikátor balíčku se nepřejmenovávají, tabulka v `AGENTS.md` říká proč.
+Klíč uložených dat už `steelset-store-v1` je, starý `setly-store-v1` se jen
+čte jako fallback (S7 v deníku). Všechno ostatní, co uživatel uvidí, Steelset
+je: název, schéma odkazů, jméno exportu i souboru zálohy.
 
 Nativní části se z Windows otestovat nedají. TestFlight je test.
 

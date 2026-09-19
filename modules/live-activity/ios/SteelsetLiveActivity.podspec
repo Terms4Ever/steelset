@@ -4,7 +4,7 @@ Pod::Spec.new do |s|
   s.summary        = 'Live Activity bridge for the Steelset workout tracker'
   s.description    = 'Starts, updates and ends the running-workout Live Activity from JS.'
   s.author         = 'Steelset'
-  s.homepage       = 'https://setly.cz'
+  s.homepage       = 'https://github.com/Terms4Ever/steelset'
   s.license        = 'MIT'
   s.platforms      = { :ios => '15.1' }
   s.source         = { :git => '' }
