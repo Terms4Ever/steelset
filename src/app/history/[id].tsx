@@ -11,6 +11,7 @@ import { palette, radius, space, type } from '@/constants/theme';
 import { e1rm, exerciseVolumeFor, hrWindow, perExerciseHr, summarizeSets, workoutVolumeEx } from '@/lib/calc';
 import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtGrouped, fmtWeight, NBSP, plural } from '@/lib/format';
 import { heartRateFor } from '@/lib/health';
+import { canMakeRoutine, workoutToRoutine } from '@/lib/routineFromWorkout';
 import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
 
 const TAG: Record<string, string> = { W: 'Z', R: '', D: 'D', F: 'F' };
@@ -37,6 +38,9 @@ export default function WorkoutDetail() {
   const editWorkout = useStore((s) => s.editWorkout);
   const setWorkoutHr = useStore((s) => s.setWorkoutHr);
   const renameWorkout = useStore((s) => s.renameWorkout);
+  const routines = useStore((s) => s.routines);
+  const addRoutine = useStore((s) => s.addRoutine);
+  const updateRoutine = useStore((s) => s.updateRoutine);
   const healthEnabled = useStore((s) => s.settings.healthEnabled);
 
   const w = workouts.find((x) => x.id === id);
@@ -47,6 +51,32 @@ export default function WorkoutDetail() {
   const saveName = () => {
     if (w && draftName.trim()) renameWorkout(w.id, draftName);
     setRenaming(false);
+  };
+
+  // plán z odcvičeného tréninku: stejné cviky a pořadí, série a opakování podle skutečného výkonu
+  const canSaveRoutine = !!w && canMakeRoutine(w);
+  const sourceRoutine = w?.routineId ? routines.find((r) => r.id === w.routineId) : undefined;
+  const saveAsRoutine = () => {
+    if (!w) return;
+    const id = addRoutine(workoutToRoutine(w));
+    router.push(`/routine/${id}`);
+  };
+  const updateSourceRoutine = () => {
+    if (!w || !sourceRoutine) return;
+    Alert.alert(
+      'Aktualizovat plán?',
+      `Plán „${sourceRoutine.name}" dostane cviky, série a opakování z tohoto tréninku. Původní nastavení plánu se přepíše.`,
+      [
+        { text: 'Zrušit', style: 'cancel' },
+        {
+          text: 'Aktualizovat',
+          onPress: () => {
+            updateRoutine(sourceRoutine.id, { exercises: workoutToRoutine(w).exercises });
+            router.push(`/routine/${sourceRoutine.id}`);
+          },
+        },
+      ],
+    );
   };
 
   const canPullHr = !!w && !w.manual && healthEnabled && !!w.finishedAt;
@@ -290,8 +320,28 @@ export default function WorkoutDetail() {
           ))}
         </View>
 
-        <View style={{ marginTop: space.xxl }}>
+        <View style={{ marginTop: space.xxl, gap: 10 }}>
           <PrimaryButton label={w.exercises.length === 0 ? 'Přidat série' : 'Upravit trénink'} onPress={onEdit} />
+          {canSaveRoutine && (
+            <Pressable
+              onPress={saveAsRoutine}
+              style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: radius.md, backgroundColor: palette.surface2, opacity: pressed ? 0.85 : 1 })}>
+              <Ionicons name="bookmark-outline" size={17} color={palette.accent} />
+              <Txt size={type.body} weight="bold" color={palette.accent}>
+                Uložit jako plán
+              </Txt>
+            </Pressable>
+          )}
+          {canSaveRoutine && !!sourceRoutine && (
+            <Pressable
+              onPress={updateSourceRoutine}
+              style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: radius.md, backgroundColor: palette.surface2, opacity: pressed ? 0.85 : 1 })}>
+              <Ionicons name="refresh-outline" size={17} color={palette.textDim} />
+              <Txt size={type.body} weight="bold" color={palette.textDim} numberOfLines={1}>
+                Aktualizovat plán „{sourceRoutine.name}"
+              </Txt>
+            </Pressable>
+          )}
         </View>
       </ScrollView>
 

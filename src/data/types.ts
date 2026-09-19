@@ -113,6 +113,7 @@ export interface RoutineExercise {
   targetSets: number;
   targetReps: number;
   targetRpe?: number | null;
+  supersetGroup?: string; // cviky se stejnou hodnotou se cvičí jako supersérie
 }
 
 export interface Routine {

@@ -31,6 +31,19 @@ export default function RoutineEditor() {
     );
   }
 
+  // supersérie z plánu (přenesená z uloženého tréninku): sousedé se stejnou skupinou dostanou
+  // značku A1, A2 - stejně jako v živém tréninku, ať je vidět, že se cvičí dohromady
+  const groups: Record<string, number[]> = {};
+  routine.exercises.forEach((re, i) => {
+    if (re.supersetGroup) (groups[re.supersetGroup] ||= []).push(i);
+  });
+  const groupLetter: Record<string, string> = {};
+  Object.keys(groups).forEach((g, i) => (groupLetter[g] = String.fromCharCode(65 + i)));
+  const supTag = (re: { supersetGroup?: string }, i: number) =>
+    re.supersetGroup && groups[re.supersetGroup].length > 1
+      ? `${groupLetter[re.supersetGroup]}${groups[re.supersetGroup].indexOf(i) + 1}`
+      : null;
+
   const setEx = (index: number, patch: Partial<{ targetSets: number; targetReps: number }>) =>
     updateRoutine(routine.id, {
       exercises: routine.exercises.map((e, i) => (i === index ? { ...e, ...patch } : e)),
@@ -93,9 +106,16 @@ export default function RoutineEditor() {
         {routine.exercises.map((re, i) => (
           <View key={i} style={{ backgroundColor: palette.surface, borderRadius: radius.sm, padding: space.lg, marginBottom: 10, borderWidth: 1, borderColor: palette.hairline }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Txt size={type.body} weight="bold" style={{ flex: 1 }}>
-                {exById[re.exerciseId]?.name ?? 'Cvik'}
-              </Txt>
+              <View style={{ flex: 1 }}>
+                {supTag(re, i) && (
+                  <Txt size={type.caption} weight="bold" color={palette.accent} style={{ letterSpacing: 1, marginBottom: 2 }}>
+                    SUPERSÉRIE {supTag(re, i)}
+                  </Txt>
+                )}
+                <Txt size={type.body} weight="bold">
+                  {exById[re.exerciseId]?.name ?? 'Cvik'}
+                </Txt>
+              </View>
               <Pressable onPress={() => removeEx(i)} hitSlop={8}>
                 <Ionicons name="close-circle" size={20} color={palette.textMute} />
               </Pressable>

@@ -188,3 +188,42 @@ v Pokroku a sloupce v Kalendáři proto volí velikost písma podle délky
 
 **Co zbývá ověřit na zařízení.** Zvětšené systémové písmo v iOSu (Dynamic
 Type) se z Windows nasimulovat nedá.
+
+---
+
+## S10 - Plán z tréninku nese i supersérie, váhy ne (19. 9. 2026)
+
+**Stav.** Plán šel založit jen prázdný nebo ze startovacích programů. Z
+odcvičeného tréninku se plán udělat nedal, i když je to nejpřirozenější cesta:
+uživatel si trénink poskládá v posilovně a chce ho příště zopakovat.
+
+**Rozhodnutí.** V detailu tréninku je akce „Uložit jako plán". Převod bere
+cviky v pořadí tréninku, jen ty s aspoň jednou hotovou pracovní sérií.
+`targetSets` je počet hotových pracovních sérií bez zahřívacích, `targetReps`
+nejčastější počet opakování (při shodě vyšší). Automatická progrese je
+vypnutá.
+
+**Váhy se do plánu neukládají.** Předvyplní je při spuštění
+`buildPrefilledExercise` z posledního výkonu, takže plán nezastarává. Kdyby si
+plán váhy pamatoval, po pár týdnech by táhl uživatele zpátky na staré číslo.
+
+**Supersérie.** `RoutineExercise` dostal volitelné `supersetGroup` a
+`startWorkout` skupinu přenáší zpátky do živého tréninku. Druhá varianta ze
+zadání (na ztrátu jen upozornit) by znamenala, že plán vzniklý ze skutečného
+tréninku cvičí něco jiného, než co uživatel odcvičil. Pole je volitelné, takže
+stará data ani startovací plány se nemění.
+
+Osamocenou skupinu (druhý cvik z ní už v plánu není) zahodí
+`normalizeSupersets` při spuštění, stejně jako v živém tréninku. V editoru
+plánu je supersérie vidět jako značka A1, A2.
+
+**Navíc.** Trénink spuštěný z plánu (`routineId`) nabízí i „Aktualizovat
+plán", s potvrzením - přepisuje cizí záznam.
+
+**Co se nedělalo.** Volitelná nabídka „Uložit jako plán" hned po ukončení
+tréninku. Ukončení tréninku má být tečka, ne další otázka; akce v detailu
+tréninku je dostupná pořád.
+
+**Past.** Obecné názvy („Rychlý trénink", „Zápis tréninku") se jako název
+plánu nehodí, plán z nich dostane název „Nový plán" a editor se otevře rovnou
+s polem na přejmenování.

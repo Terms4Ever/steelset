@@ -38,6 +38,8 @@ ověření na zařízení:
   buňky (S8 v deníku)
 - #4 - hodnoty s jednotkou se nezalamují, objemy mají oddělovač tisíců
   (S9 v deníku)
+- #5 - z odcvičeného tréninku jde udělat plán, včetně supersérií
+  (S10 v deníku)
 
 ## Co je dál
 

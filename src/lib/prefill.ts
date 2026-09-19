@@ -39,5 +39,5 @@ export function buildPrefilledExercise(
       done: false,
     });
   }
-  return { exerciseId: re.exerciseId, sets };
+  return { exerciseId: re.exerciseId, sets, ...(re.supersetGroup ? { supersetGroup: re.supersetGroup } : {}) };
 }

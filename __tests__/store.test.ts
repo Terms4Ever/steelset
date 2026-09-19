@@ -315,3 +315,27 @@ describe('store · full workout lifecycle', () => {
     expect(h[0].finishedAt).toBe(chosen);
   });
 });
+
+describe('store · supersérie v plánu', () => {
+  it('spuštěný plán si supersérii nese do živého tréninku', () => {
+    const rid = s().addRoutine({
+      name: 'Superplán',
+      exercises: [
+        { exerciseId: 'bench-barbell', targetSets: 2, targetReps: 8, supersetGroup: 'ss1' },
+        { exerciseId: 'row-barbell', targetSets: 2, targetReps: 8, supersetGroup: 'ss1' },
+      ],
+    });
+    s().startWorkout(rid);
+    const a = activeWorkout(s())!;
+    expect(a.exercises.map((e) => e.supersetGroup)).toEqual(['ss1', 'ss1']);
+  });
+
+  it('osamocená skupina se při spuštění zahodí', () => {
+    const rid = s().addRoutine({
+      name: 'Zbytek po smazání',
+      exercises: [{ exerciseId: 'squat', targetSets: 1, targetReps: 5, supersetGroup: 'ss1' }],
+    });
+    s().startWorkout(rid);
+    expect(activeWorkout(s())!.exercises[0].supersetGroup).toBeUndefined();
+  });
+});

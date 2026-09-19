@@ -217,7 +217,8 @@ export const useStore = create<State & Actions>()(
           const r = st.routines.find((x) => x.id === routineId);
           if (r) {
             name = r.name;
-            exercises = r.exercises.map((re) => buildPrefilledExercise(re, ws, !!r.autoProgress, st.settings.increment));
+            // supersérie z plánu se přenášejí; osamocená skupina (druhý cvik z ní už v plánu není) se zahodí
+            exercises = normalizeSupersets(r.exercises.map((re) => buildPrefilledExercise(re, ws, !!r.autoProgress, st.settings.increment)));
           }
         }
         const w: Workout = {
