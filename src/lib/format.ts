@@ -15,6 +15,12 @@ export function plural(n: number, one: string, few: string, many: string): strin
   return n >= 2 && n <= 4 ? few : many;
 }
 
+/**
+ * Nezlomitelná mezera. Drží pohromadě číslo a jednotku ("102,5 kg") i řády v objemu
+ * ("12 345 kg") - React Native by je jinak na úzkém místě zalomil na dva řádky.
+ */
+export const NBSP = '\u00A0';
+
 /** Czech number: comma decimal, trims trailing .0 */
 export function fmtNum(n: number, maxDecimals = 1): string {
   const rounded = Math.round(n * 10 ** maxDecimals) / 10 ** maxDecimals;
@@ -24,18 +30,26 @@ export function fmtNum(n: number, maxDecimals = 1): string {
     .replace('.', ',');
 }
 
+/** Jako fmtNum, ale tisíce odděluje nezlomitelnou mezerou: 12 345,5 */
+export function fmtGrouped(n: number, maxDecimals = 1): string {
+  const [int, dec] = fmtNum(n, maxDecimals).split(',');
+  const grouped = int.replace(/\B(?=(\d{3})+(?!\d))/g, NBSP);
+  return dec ? `${grouped},${dec}` : grouped;
+}
+
 export function fmtWeight(kg: number, unit: Unit): string {
-  return `${fmtNum(toDisplayWeight(kg, unit))} ${unit}`;
+  return `${fmtGrouped(toDisplayWeight(kg, unit))}${NBSP}${unit}`;
 }
 
 /**
  * Weighted-bodyweight display: weight is stored as TOTAL kg (bodyweight + added), the user sees the ADDED
- * part — "BW" (no extra), "BW +10 kg" (plates), "BW −20 kg" (assisted).
+ * part — "BW" (no extra), "BW +10 kg" (plates), "BW −20 kg" (assisted). Spaces are non-breaking so the
+ * whole value stays on one line.
  */
 export function fmtBwWeight(totalKg: number, bwKg: number, unit: Unit): string {
   const added = toDisplayWeight(totalKg - bwKg, unit);
   if (Math.abs(added) < 0.005) return 'BW';
-  return `BW ${added > 0 ? '+' : '-'}${fmtNum(Math.abs(added), 2)} ${unit}`;
+  return `BW${NBSP}${added > 0 ? '+' : '-'}${fmtNum(Math.abs(added), 2)}${NBSP}${unit}`;
 }
 
 /** Stepper increments in the user's display unit (separate setting per unit). */

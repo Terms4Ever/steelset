@@ -6,7 +6,7 @@ import { Pressable, View } from 'react-native';
 import { Card, Screen, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { weekStreak, workoutVolumeEx } from '@/lib/calc';
-import { fmtWeight, relativeDay } from '@/lib/format';
+import { fmtWeight, NBSP, relativeDay } from '@/lib/format';
 import { Workout } from '@/data/types';
 import { exercisesById as exByIdSel, history as historySel, useStore } from '@/store/useStore';
 
@@ -196,10 +196,10 @@ export default function Kalendar() {
                         </Txt>
                         <Txt size={type.caption} weight="medium" num color={palette.textMute}>
                           {w.exercises.length} cviků · {sets} sérií
-                          {w.avgHr ? ` · ⌀${w.avgHr} tep` : ''}
+                          {w.avgHr ? ` · ⌀${w.avgHr}${NBSP}tep` : ''}
                         </Txt>
                       </View>
-                      <Txt size={type.body} weight="bold" num color={palette.textDim}>
+                      <Txt size={type.body} weight="bold" num color={palette.textDim} numberOfLines={1} style={{ flexShrink: 0 }}>
                         {fmtWeight(workoutVolumeEx(w, exById), unit)}
                       </Txt>
                       <Ionicons name="chevron-forward" size={18} color={palette.textMute} />
@@ -222,9 +222,11 @@ export default function Kalendar() {
 }
 
 function Stat({ value, label, accent }: { value: string; label: string; accent?: boolean }) {
+  // tři sloupce vedle sebe: dlouhá hodnota (objem přes deset tisíc) by jinak přetekla přes oddělovač
+  const size = value.length > 10 ? type.body : value.length > 7 ? type.h2 : type.h1;
   return (
     <View style={{ flex: 1, alignItems: 'center' }}>
-      <Txt size={type.h1} weight="bold" num color={accent ? palette.accent : palette.text}>
+      <Txt size={size} weight="bold" num color={accent ? palette.accent : palette.text} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
         {value}
       </Txt>
       <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ marginTop: 2, textAlign: 'center' }}>

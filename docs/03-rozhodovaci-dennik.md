@@ -157,3 +157,34 @@ a přepínač by byl nastavení navíc bez zřejmého užitku.
 **Past.** Hláška o rekordu a lišta odpočtu se nad klávesnicí umisťovaly na
 pevných `bottom: 322`. Jakmile klávesnice dostala záhlaví, bylo číslo špatně,
 takže se výška teď měří přes `onLayout`.
+
+---
+
+## S9 - Číslo a jednotka drží pohromadě, tisíce se oddělují (19. 9. 2026)
+
+**Stav.** `fmtWeight` a `fmtBwWeight` oddělovaly číslo a jednotku běžnou
+mezerou. Vedle bloku s `flex: 1` (název cviku nebo tréninku) se hodnota při
+dlouhém názvu stlačila a „kg" skočilo na druhý řádek. Objemy bez oddělovače
+(„53082 kg") byly navíc tak široké, že ve třísloupcovém shrnutí kalendáře
+přetekly přes oddělovač do sousedních sloupců.
+
+**Rozhodnutí.** Mezi číslem a jednotkou je nezlomitelná mezera (`NBSP`,
+`U+00A0`) a tisíce se oddělují taky nezlomitelnou mezerou: „53 082 kg". Platí
+i pro „tep/min", „kcal" a „tep". Hodnoty vedle pružného bloku mají
+`numberOfLines={1}` a `flexShrink: 0`, takže se zalamuje název, ne číslo.
+
+**Proč.** Číslo s jednotkou je jedna informace, rozdělit ji je vždy chyba.
+Oddělovač tisíců není jen kosmetika: šestimístný objem se bez něj v appce
+čte špatně a nevejde se.
+
+**Jak.** `fmtGrouped` v `src/lib/format.ts` vkládá oddělovač, `fmtWeight` ho
+používá. `fmtNum` zůstává beze změny - používají ho buňky v zápisu tréninku
+a krokovače u klávesnice, kde by oddělovač překážel.
+
+**Past.** `adjustsFontSizeToFit` funguje na iOSu, ale react-native-web ho
+ignoruje, takže v náhledu na webu se dlouhá hodnota nezmenší. Dlaždice
+v Pokroku a sloupce v Kalendáři proto volí velikost písma podle délky
+řetězce, což platí všude stejně; zmenšování na iOSu zůstalo jako pojistka.
+
+**Co zbývá ověřit na zařízení.** Zvětšené systémové písmo v iOSu (Dynamic
+Type) se z Windows nasimulovat nedá.

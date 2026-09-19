@@ -12,7 +12,7 @@ import { Workout } from '@/data/types';
 import { bestE1rm, e1rm, e1rmTrend, fmtSets, isCountable, MS, muscleSetsDetailed, perWeek, strengthScore, weeklyVolume } from '@/lib/calc';
 import { workoutsToCsv } from '@/lib/csv';
 import { exportCsv } from '@/lib/export';
-import { fmtNum, fmtWeight, toDisplayWeight } from '@/lib/format';
+import { fmtGrouped, fmtWeight, toDisplayWeight } from '@/lib/format';
 import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
 
 function scoreAsOf(workouts: Workout[], cutoff: number) {
@@ -121,9 +121,9 @@ export default function Pokrok() {
           </Card>
 
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.md, marginTop: space.md }}>
-            <Stat label="Tento týden" value={fmtNum(toDisplayWeight(weekVol, unit))} unit={`${unit} objem`} />
+            <Stat label="Tento týden" value={fmtGrouped(toDisplayWeight(weekVol, unit))} unit={`${unit} objem`} />
             <Stat label="Tréninků" value={String(weekCount)} unit="tento týden" />
-            <Stat label="Odhad 1RM dřep" value={squat1rm ? fmtNum(toDisplayWeight(squat1rm, unit)) : '-'} unit={unit} />
+            <Stat label="Odhad 1RM dřep" value={squat1rm ? fmtGrouped(toDisplayWeight(squat1rm, unit)) : '-'} unit={unit} />
             <Stat label="Rekordů" value={String(prs30)} unit="za 30 dní" />
           </View>
 
@@ -135,10 +135,10 @@ export default function Pokrok() {
               <Card>
                 <LineChart points={trend.map((p) => p.value)} />
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-                  <Txt size={type.caption} color={palette.textMute} num>
+                  <Txt size={type.caption} color={palette.textMute} num numberOfLines={1}>
                     {fmtWeight(trend[0].value, unit)}
                   </Txt>
-                  <Txt size={type.caption} weight="bold" color={palette.accent} num>
+                  <Txt size={type.caption} weight="bold" color={palette.accent} num numberOfLines={1}>
                     {fmtWeight(trend[trend.length - 1].value, unit)}
                   </Txt>
                 </View>
@@ -187,12 +187,14 @@ export default function Pokrok() {
 }
 
 function Stat({ label, value, unit }: { label: string; value: string; unit: string }) {
+  // dlaždice je půl obrazovky široká; šestimístný objem se do displejové velikosti nevejde
+  const size = value.length > 8 ? type.h1 : value.length > 6 ? type.h2 + 6 : type.display;
   return (
     <Card style={{ width: '47.5%', flexGrow: 1 }}>
       <Txt size={type.caption} weight="medium" color={palette.textDim}>
         {label}
       </Txt>
-      <Txt size={type.display} weight="bold" num style={{ marginTop: 6 }}>
+      <Txt size={size} weight="bold" num style={{ marginTop: 6 }} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
         {value}
       </Txt>
       <Txt size={type.caption} weight="medium" color={palette.textMute}>

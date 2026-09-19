@@ -1,15 +1,18 @@
-import { fmtBwWeight, fmtClock, fmtNum, fmtWeight, fromDisplayWeight, relativeDay, toDisplayWeight } from '@/lib/format';
+import { fmtBwWeight, fmtClock, fmtGrouped, fmtNum, fmtWeight, fromDisplayWeight, NBSP, relativeDay, toDisplayWeight } from '@/lib/format';
 
 describe('fmtBwWeight (weighted bodyweight, stored as total)', () => {
   it('plain bodyweight shows BW', () => {
     expect(fmtBwWeight(91, 91, 'kg')).toBe('BW');
   });
   it('added plates show BW +N', () => {
-    expect(fmtBwWeight(101, 91, 'kg')).toBe('BW +10 kg');
-    expect(fmtBwWeight(93.5, 91, 'kg')).toBe('BW +2,5 kg');
+    expect(fmtBwWeight(101, 91, 'kg')).toBe(`BW${NBSP}+10${NBSP}kg`);
+    expect(fmtBwWeight(93.5, 91, 'kg')).toBe(`BW${NBSP}+2,5${NBSP}kg`);
   });
   it('assisted shows BW -N', () => {
-    expect(fmtBwWeight(71, 91, 'kg')).toBe('BW -20 kg');
+    expect(fmtBwWeight(71, 91, 'kg')).toBe(`BW${NBSP}-20${NBSP}kg`);
+  });
+  it('nezalomí se mezi číslem a jednotkou', () => {
+    expect(fmtBwWeight(101, 91, 'kg')).not.toContain(' ');
   });
 });
 
@@ -18,6 +21,23 @@ describe('fmtNum (Czech)', () => {
     expect(fmtNum(102.5)).toBe('102,5');
     expect(fmtNum(100)).toBe('100');
     expect(fmtNum(2.0)).toBe('2');
+  });
+});
+
+describe('fmtGrouped (oddělovač tisíců)', () => {
+  it('malá čísla nechává být', () => {
+    expect(fmtGrouped(999)).toBe('999');
+    expect(fmtGrouped(0)).toBe('0');
+  });
+  it('dělí tisíce nezlomitelnou mezerou', () => {
+    expect(fmtGrouped(1000)).toBe(`1${NBSP}000`);
+    expect(fmtGrouped(1234567)).toBe(`1${NBSP}234${NBSP}567`);
+  });
+  it('desetinná část zůstává vcelku', () => {
+    expect(fmtGrouped(12345.5)).toBe(`12${NBSP}345,5`);
+  });
+  it('záporné číslo dělí stejně', () => {
+    expect(fmtGrouped(-12345)).toBe(`-12${NBSP}345`);
   });
 });
 
@@ -31,7 +51,13 @@ describe('unit conversion', () => {
     expect(toDisplayWeight(100, 'kg')).toBe(100);
   });
   it('formats with unit suffix', () => {
-    expect(fmtWeight(102.5, 'kg')).toBe('102,5 kg');
+    expect(fmtWeight(102.5, 'kg')).toBe(`102,5${NBSP}kg`);
+  });
+  it('mezi číslem a jednotkou je nezlomitelná mezera', () => {
+    expect(fmtWeight(102.5, 'kg')).not.toContain(' ');
+  });
+  it('velké objemy dělí tisíce nezlomitelnou mezerou', () => {
+    expect(fmtWeight(12345, 'kg')).toBe(`12${NBSP}345${NBSP}kg`);
   });
 });
 

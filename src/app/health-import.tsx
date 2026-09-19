@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
-import { fmtClock, relativeDay } from '@/lib/format';
+import { fmtClock, NBSP, relativeDay } from '@/lib/format';
 import { HealthWorkout, heartRateFor, listHealthWorkouts } from '@/lib/health';
 import { localCoversWindow, useStore } from '@/store/useStore';
 
@@ -155,7 +155,7 @@ export default function HealthImport() {
                     </Txt>
                     <Txt size={type.caption} weight="medium" num color={palette.textMute}>
                       {relativeDay(hw.start, now)} · {fmtClock(hw.durationSec)}
-                      {hw.energyKcal ? ` · ${hw.energyKcal} kcal` : ''}
+                      {hw.energyKcal ? ` · ${hw.energyKcal}${NBSP}kcal` : ''}
                     </Txt>
                   </View>
                   {imported ? (

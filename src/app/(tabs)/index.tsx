@@ -6,7 +6,7 @@ import { Pressable, View } from 'react-native';
 import { Card, PrimaryButton, Screen, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { weekStreak, workoutVolumeEx } from '@/lib/calc';
-import { fmtClock, fmtHeaderDate, fmtWeight, relativeDay } from '@/lib/format';
+import { fmtClock, fmtHeaderDate, fmtWeight, NBSP, relativeDay } from '@/lib/format';
 import { useHealthScan } from '@/lib/useHealthScan';
 import { activeWorkout, exercisesById as exByIdSel, history as historySel, useStore } from '@/store/useStore';
 
@@ -172,7 +172,7 @@ export default function Dnesek() {
               const empty = w.exercises.length === 0;
               const dur = w.finishedAt && !w.manual ? Math.round((w.finishedAt - w.startedAt) / 1000) : 0;
               const sub = empty
-                ? [relativeDay(w.finishedAt!, now), dur >= 30 ? fmtClock(dur) : null, w.avgHr ? `⌀${w.avgHr} tep` : null]
+                ? [relativeDay(w.finishedAt!, now), dur >= 30 ? fmtClock(dur) : null, w.avgHr ? `⌀${w.avgHr}${NBSP}tep` : null]
                     .filter(Boolean)
                     .join(' · ')
                 : `${relativeDay(w.finishedAt!, now)} · ${w.exercises.length} cviků · ${setCount} sérií`;
@@ -189,7 +189,7 @@ export default function Dnesek() {
                   {empty ? (
                     w.source === 'health' ? <Ionicons name="heart" size={16} color={palette.red} /> : null
                   ) : (
-                    <Txt size={type.body} weight="bold" num color={palette.textDim}>
+                    <Txt size={type.body} weight="bold" num color={palette.textDim} numberOfLines={1} style={{ flexShrink: 0 }}>
                       {fmtWeight(workoutVolumeEx(w, exById), unit)}
                     </Txt>
                   )}

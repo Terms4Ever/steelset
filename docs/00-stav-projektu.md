@@ -36,6 +36,8 @@ ověření na zařízení:
 - #2 a #6 - číselná klávesnice v tréninku: neotevírá se při odškrtávání
   předvyplněných sérií a jde zavřít křížkem, tažením dolů i ťuknutím mimo
   buňky (S8 v deníku)
+- #4 - hodnoty s jednotkou se nezalamují, objemy mají oddělovač tisíců
+  (S9 v deníku)
 
 ## Co je dál
 

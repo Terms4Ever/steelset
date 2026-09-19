@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
-import { dayName, fmtDateShort } from '@/lib/format';
+import { dayName, fmtDateShort, NBSP } from '@/lib/format';
 import { haptic } from '@/lib/haptic';
 import { useStore } from '@/store/useStore';
 
@@ -76,7 +76,7 @@ export default function Trash() {
                       </Txt>
                       <Txt size={type.caption} weight="medium" num color={palette.textMute} style={{ marginTop: 2 }}>
                         {dayName(t.startedAt)} {fmtDateShort(t.startedAt)} · {t.exercises.length} cviků · {sets} sérií
-                        {t.avgHr ? ` · ⌀${t.avgHr} tep` : ''}
+                        {t.avgHr ? ` · ⌀${t.avgHr}${NBSP}tep` : ''}
                       </Txt>
                       <Txt size={type.caption} weight="semibold" color={dl <= 1 ? palette.red : palette.textMute} style={{ marginTop: 2 }}>
                         {dl <= 0 ? 'smaže se dnes' : dl === 1 ? 'zbývá 1 den' : dl <= 4 ? `zbývají ${dl} dny` : `zbývá ${dl} dní`}

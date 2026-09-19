@@ -9,7 +9,7 @@ import { HrChart } from '@/components/HrChart';
 import { PrimaryButton, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { e1rm, exerciseVolumeFor, hrWindow, perExerciseHr, summarizeSets, workoutVolumeEx } from '@/lib/calc';
-import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtWeight, plural } from '@/lib/format';
+import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtGrouped, fmtWeight, NBSP, plural } from '@/lib/format';
 import { heartRateFor } from '@/lib/health';
 import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
 
@@ -175,9 +175,10 @@ export default function WorkoutDetail() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Ionicons name="heart" size={15} color={palette.red} />
                 <Txt size={type.label} weight="semibold" num>
-                  {w.avgHr ? `⌀ ${w.avgHr}` : ''}
+                  {w.avgHr ? `⌀${NBSP}${w.avgHr}` : ''}
                   {w.avgHr && w.maxHr ? ' · ' : ''}
-                  {w.maxHr ? `max ${w.maxHr}` : ''} tep/min
+                  {w.maxHr ? `max${NBSP}${w.maxHr}` : ''}
+                  {NBSP}tep/min
                 </Txt>
               </View>
             )}
@@ -185,7 +186,8 @@ export default function WorkoutDetail() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Ionicons name="flame" size={15} color={palette.amber} />
                 <Txt size={type.label} weight="semibold" num>
-                  {w.kcal} kcal
+                  {fmtGrouped(w.kcal)}
+                  {NBSP}kcal
                 </Txt>
               </View>
             )}
@@ -248,15 +250,15 @@ export default function WorkoutDetail() {
                       .join(' · ')}
                   </Txt>
                 </View>
-                <View style={{ alignItems: 'flex-end' }}>
-                  <Txt size={type.label} weight="semibold" num color={palette.textDim}>
+                <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
+                  <Txt size={type.label} weight="semibold" num color={palette.textDim} numberOfLines={1}>
                     {fmtWeight(exerciseVolumeFor(le, exById[le.exerciseId], w), unit)}
                   </Txt>
                   {exHr[i] != null && (
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 3 }}>
                       <Ionicons name="heart" size={11} color={palette.red} />
                       <Txt size={type.caption} weight="semibold" num color={palette.textMute}>
-                        ⌀ {exHr[i]} tep
+                        ⌀{NBSP}{exHr[i]}{NBSP}tep
                       </Txt>
                     </View>
                   )}
