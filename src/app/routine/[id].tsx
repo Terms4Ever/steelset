@@ -6,19 +6,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PrimaryButton, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
-import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
+import { useExercisesById, useStore } from '@/store/useStore';
 
 export default function RoutineEditor() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const routines = useStore((s) => s.routines);
-  const custom = useStore((s) => s.customExercises);
   const updateRoutine = useStore((s) => s.updateRoutine);
   const deleteRoutine = useStore((s) => s.deleteRoutine);
   const startWorkout = useStore((s) => s.startWorkout);
 
   const routine = routines.find((r) => r.id === id);
-  const exById = useMemo(() => exByIdSel({ customExercises: custom }), [custom]);
+  const exById = useExercisesById();
 
   if (!routine) {
     return (

@@ -20,7 +20,7 @@ import {
   topExerciseSetsForMuscle,
 } from '@/lib/calc';
 import { fmtNum, toDisplayWeight } from '@/lib/format';
-import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
+import { useExercisesById, useStore } from '@/store/useStore';
 
 const PERIODS = [
   { days: 7, label: '7 dní' },
@@ -33,14 +33,12 @@ export default function MuscleMap() {
   // frozen at mount so the window is stable and the memos below actually hold between renders
   const [now] = useState(() => Date.now());
   const workouts = useStore((s) => s.workouts);
-  const custom = useStore((s) => s.customExercises);
-  const exerciseMuscles = useStore((s) => s.exerciseMuscles);
   const unit = useStore((s) => s.settings.unit);
 
   const [days, setDays] = useState(30);
   const [sel, setSel] = useState<MuscleRegion | null>(null);
 
-  const exById = useMemo(() => exByIdSel({ customExercises: custom, exerciseMuscles }), [custom, exerciseMuscles]);
+  const exById = useExercisesById();
   const since = now - days * MS.DAY;
   // primary metric = weekly hard sets (absolute zones); tonnage stays as secondary info in the sheet
   const setsTotal = useMemo(() => muscleSetsDetailed(workouts, exById, since), [workouts, exById, since]);

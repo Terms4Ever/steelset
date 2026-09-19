@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
-import { allExercises as allExSel, useStore } from '@/store/useStore';
+import { originalExerciseName, useAllExercises, useStore } from '@/store/useStore';
 
 function norm(s: string) {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -15,16 +15,21 @@ function norm(s: string) {
 export default function Exercises() {
   const router = useRouter();
   const params = useLocalSearchParams<{ target?: string; routineId?: string }>();
-  const custom = useStore((s) => s.customExercises);
-  const exerciseMuscles = useStore((s) => s.exerciseMuscles);
   const favs = useStore((s) => s.favoriteExercises);
   const toggleFavorite = useStore((s) => s.toggleFavorite);
   const routines = useStore((s) => s.routines);
   const addExerciseToActive = useStore((s) => s.addExerciseToActive);
   const updateRoutine = useStore((s) => s.updateRoutine);
+  const setExerciseName = useStore((s) => s.setExerciseName);
   const [q, setQ] = useState('');
+  // přejmenování z výběru cviků: platí všude, protože tréninky odkazují na cvik přes id
+  const [rename, setRename] = useState<{ id: string; name: string } | null>(null);
+  const saveRename = () => {
+    if (rename && rename.name.trim()) setExerciseName(rename.id, rename.name);
+    setRename(null);
+  };
 
-  const all = useMemo(() => allExSel({ customExercises: custom, exerciseMuscles }), [custom, exerciseMuscles]);
+  const all = useAllExercises();
   const filtered = useMemo(() => {
     const nq = norm(q.trim());
     if (!nq) return all;
@@ -103,6 +108,9 @@ export default function Exercises() {
                   {e.custom ? ' · vlastní' : ''}
                 </Txt>
               </View>
+              <Pressable onPress={() => setRename({ id: e.id, name: e.name })} hitSlop={10} style={{ padding: 4 }}>
+                <Ionicons name="pencil-outline" size={18} color={palette.textMute} />
+              </Pressable>
               <Pressable onPress={() => toggleFavorite(e.id)} hitSlop={10} style={{ padding: 4 }}>
                 <Ionicons name={fav ? 'star' : 'star-outline'} size={20} color={fav ? palette.amber : palette.textMute} />
               </Pressable>
@@ -117,6 +125,52 @@ export default function Exercises() {
           </Txt>
         )}
       </ScrollView>
+
+      {/* přejmenování cviku */}
+      {rename && (
+        <Pressable onPress={() => setRename(null)} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)' }}>
+          <Pressable
+            onPress={(e) => e.stopPropagation()}
+            style={{ position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: palette.surface, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: space.xl, paddingBottom: 34, borderWidth: 1, borderColor: palette.hairline }}>
+            <View style={{ width: 38, height: 4, borderRadius: 2, backgroundColor: palette.surface3, alignSelf: 'center', marginBottom: 12 }} />
+            <Txt size={type.h1} weight="bold">
+              Přejmenovat cvik
+            </Txt>
+            <Txt size={type.label} weight="medium" color={palette.textMute} style={{ marginTop: 2 }}>
+              Nový název se projeví všude - v historii, plánech i v exportu. Zapsané série zůstanou.
+            </Txt>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: space.lg, marginBottom: 8 }}>
+              <Txt size={type.caption} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5 }}>
+                NÁZEV
+              </Txt>
+              {originalExerciseName(rename.id) && originalExerciseName(rename.id) !== rename.name && (
+                <Pressable onPress={() => setRename({ ...rename, name: originalExerciseName(rename.id)! })} hitSlop={8}>
+                  <Txt size={type.caption} weight="bold" color={palette.accent}>
+                    Obnovit původní
+                  </Txt>
+                </Pressable>
+              )}
+            </View>
+            <TextInput
+              value={rename.name}
+              onChangeText={(t) => setRename({ ...rename, name: t })}
+              autoFocus
+              placeholder="Název cviku"
+              placeholderTextColor={palette.textMute}
+              onSubmitEditing={saveRename}
+              style={{ backgroundColor: palette.surface2, borderRadius: radius.sm, color: palette.text, fontFamily: 'Inter_600SemiBold', fontSize: type.body, paddingHorizontal: 14, paddingVertical: 12 }}
+            />
+            <Pressable
+              onPress={saveRename}
+              disabled={!rename.name.trim()}
+              style={{ marginTop: space.lg, paddingVertical: 14, alignItems: 'center', borderRadius: radius.md, backgroundColor: palette.accent, opacity: rename.name.trim() ? 1 : 0.4 }}>
+              <Txt size={type.body} weight="bold" color={palette.bg}>
+                Uložit
+              </Txt>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      )}
     </SafeAreaView>
   );
 }

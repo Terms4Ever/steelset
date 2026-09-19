@@ -2,8 +2,12 @@ jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { bestE1rm } from '@/lib/calc';
-import { activeWorkout, history, localCoversWindow, useStore } from '@/store/useStore';
+import { workoutsToCsv } from '@/lib/csv';
+import { STORE_KEY } from '@/lib/storeKeys';
+import { activeWorkout, allExercises, exercisesById, history, localCoversWindow, useStore } from '@/store/useStore';
 
 const s = () => useStore.getState();
 
@@ -337,5 +341,78 @@ describe('store · supersérie v plánu', () => {
     });
     s().startWorkout(rid);
     expect(activeWorkout(s())!.exercises[0].supersetGroup).toBeUndefined();
+  });
+});
+
+describe('store · přejmenování cviku', () => {
+  it('nové jméno platí pro vestavěný cvik všude a historie zůstane u cviku', () => {
+    const rid = s().addRoutine({ name: 'T', exercises: [{ exerciseId: 'squat', targetSets: 1, targetReps: 5 }] });
+    s().startWorkout(rid);
+    s().updateSet(0, 0, { weight: 150, reps: 5, done: true });
+    s().finishWorkout();
+
+    s().setExerciseName('squat', '  Dřep vzadu  ');
+    const byId = exercisesById(s());
+    expect(byId['squat'].name).toBe('Dřep vzadu'); // mezery se ořežou
+    expect(allExercises(s()).find((e) => e.id === 'squat')!.name).toBe('Dřep vzadu');
+    // historie i rekordy visí na id, ne na jménu
+    expect(s().workouts[0].exercises[0].exerciseId).toBe('squat');
+    expect(bestE1rm(s().workouts, 'squat')).toBeCloseTo(175, 2);
+  });
+
+  it('prázdné jméno vrátí vestavěnému cviku původní', () => {
+    s().setExerciseName('squat', 'Dřep vzadu');
+    s().setExerciseName('squat', '   ');
+    expect(exercisesById(s())['squat'].name).toBe('Dřep s činkou');
+    expect(s().exerciseNames['squat']).toBeUndefined();
+  });
+
+  it('jméno shodné s původním nenechá v datech zbytečný přepis', () => {
+    s().setExerciseName('squat', 'Dřep s činkou');
+    expect(s().exerciseNames).toEqual({});
+  });
+
+  it('přejmenování se skládá s přepisem partií', () => {
+    s().setExerciseName('bench-barbell', 'Bench široký');
+    s().setExerciseMuscles('bench-barbell', 'Ramena', ['Triceps']);
+    const ex = exercisesById(s())['bench-barbell'];
+    expect(ex.name).toBe('Bench široký');
+    expect(ex.primary).toBe('Ramena');
+  });
+
+  it('vlastní cvik se přejmenuje ve svém záznamu', () => {
+    const id = s().addExercise({ name: 'Můj cvik', primary: 'Hrudník', equipment: 'Stroj', tracking: 'weight_reps' });
+    s().setExerciseName(id, 'Můj cvik lépe');
+    expect(s().customExercises.find((e) => e.id === id)!.name).toBe('Můj cvik lépe');
+    expect(exercisesById(s())[id].name).toBe('Můj cvik lépe');
+  });
+
+  it('smazání všech dat přepisy jmen odstraní', () => {
+    s().setExerciseName('squat', 'Dřep vzadu');
+    s().wipeAll();
+    expect(s().exerciseNames).toEqual({});
+    expect(exercisesById(s())['squat'].name).toBe('Dřep s činkou');
+  });
+
+  it('přejmenování se ukládá, takže přežije restart i zálohu', async () => {
+    s().setExerciseName('squat', 'Dřep vzadu');
+    await new Promise((r) => setTimeout(r, 0));
+    const raw = await AsyncStorage.getItem(STORE_KEY);
+    expect(JSON.parse(raw!).state.exerciseNames).toEqual({ squat: 'Dřep vzadu' });
+  });
+});
+
+describe('store · export do CSV bere přejmenované cviky', () => {
+  it('v exportu je nový název, ne původní', () => {
+    const rid = s().addRoutine({ name: 'T', exercises: [{ exerciseId: 'squat', targetSets: 1, targetReps: 5 }] });
+    s().startWorkout(rid);
+    s().updateSet(0, 0, { weight: 150, reps: 5, done: true });
+    s().finishWorkout();
+    s().setExerciseName('squat', 'Dřep vzadu');
+
+    // obě obrazovky (Pokrok i Profil) předávají do exportu právě tenhle selektor
+    const csv = workoutsToCsv(s().workouts, exercisesById(s()));
+    expect(csv).toContain('Dřep vzadu');
+    expect(csv).not.toContain('Dřep s činkou');
   });
 });

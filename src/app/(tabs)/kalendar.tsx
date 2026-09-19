@@ -8,7 +8,7 @@ import { palette, radius, space, type } from '@/constants/theme';
 import { weekStreak, workoutVolumeEx } from '@/lib/calc';
 import { fmtWeight, NBSP, relativeDay } from '@/lib/format';
 import { Workout } from '@/data/types';
-import { exercisesById as exByIdSel, history as historySel, useStore } from '@/store/useStore';
+import { history as historySel, useExercisesById, useStore } from '@/store/useStore';
 
 const WD = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
 const MONTHS = ['Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen', 'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec'];
@@ -24,9 +24,7 @@ export default function Kalendar() {
   const today = new Date(now);
   const workouts = useStore((s) => s.workouts);
   const unit = useStore((s) => s.settings.unit);
-  const custom = useStore((s) => s.customExercises);
-  const exerciseMuscles = useStore((s) => s.exerciseMuscles);
-  const exById = useMemo(() => exByIdSel({ customExercises: custom, exerciseMuscles }), [custom, exerciseMuscles]);
+  const exById = useExercisesById();
 
   const finished = useMemo(() => historySel({ workouts }), [workouts]);
   const streak = useMemo(() => weekStreak(workouts, now), [workouts, now]);

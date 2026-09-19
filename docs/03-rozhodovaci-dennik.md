@@ -227,3 +227,34 @@ tréninku je dostupná pořád.
 **Past.** Obecné názvy („Rychlý trénink", „Zápis tréninku") se jako název
 plánu nehodí, plán z nich dostane název „Nový plán" a editor se otevře rovnou
 s polem na přejmenování.
+
+---
+
+## S11 - Cviky jdou přejmenovat a obrazovky si jména berou z jednoho místa (19. 9. 2026)
+
+**Stav.** Přejmenovat cvik nešlo. Vlastní cvik měl jméno ve svém záznamu, ale
+UI na to nemělo pole; vestavěné cviky jsou konstanty v `src/data/exercises.ts`.
+Zároveň dvě obrazovky (editor plánu a Profil, odkud se exportuje CSV) volaly
+selektor bez přepisů, takže tam zůstávaly původní partie - a zůstala by i
+původní jména.
+
+**Rozhodnutí.** Nový stav `exerciseNames: Record<string, string>` vedle
+`exerciseMuscles`, aplikovaný v `allExercises`. Vestavěný cvik dostává přepis,
+vlastní cvik se přejmenuje rovnou ve svém záznamu - dvě evidence téhož jména
+by se rozešly. Prázdné jméno nebo jméno shodné s původním přepis ruší, takže
+„Obnovit původní" nepotřebuje zvláštní akci a v datech nezůstává balast.
+
+**Proč to nic nerozbije.** Tréninky, plány, rekordy i svalová mapa odkazují na
+cvik přes `exerciseId`. Jméno je jen popisek.
+
+**Hlavní změna je jinde.** Místo dalšího ručního volání selektoru přibyly hooky
+`useExercisesById()` a `useAllExercises()` a všech devět obrazovek je teď
+používá. Ruční volání byla ta chyba: stačilo zapomenout jeden přepis a na
+obrazovce zůstalo staré jméno nebo partie. Hook nemá jak zapomenout.
+
+**Kde se jméno mění.** V sheetu „Nastavení cviku" v živém tréninku a tužkou
+u cviku ve výběru cviků. Prázdné jméno se neuloží.
+
+**Past.** `exerciseNames` musí být v `partialize` i ve `wipeAll`. Bez
+`partialize` by se přejmenování nedostalo ani do zálohy na iCloud, ta ukládá
+celý uložený stav. Hlídá to test, který po přejmenování čte uložená data.

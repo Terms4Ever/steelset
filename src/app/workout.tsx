@@ -16,7 +16,7 @@ import { showInterstitial } from '@/lib/ads';
 import { haptic } from '@/lib/haptic';
 import { heartRateFor } from '@/lib/health';
 import { liveActivity } from '@/lib/liveActivity';
-import { activeWorkout, exercisesById as exByIdSel, useStore } from '@/store/useStore';
+import { activeWorkout, originalExerciseName, useExercisesById, useStore } from '@/store/useStore';
 
 const SET_TAG_COLOR: Record<SetType, string> = {
   W: palette.amber,
@@ -31,19 +31,17 @@ export default function Workout() {
   const router = useRouter();
   const workouts = useStore((s) => s.workouts);
   const activeId = useStore((s) => s.activeWorkoutId);
-  const custom = useStore((s) => s.customExercises);
   const increment = useStore((s) => s.settings.increment);
   const incrementLb = useStore((s) => s.settings.incrementLb);
   const restDefault = useStore((s) => s.settings.restDefaultSec);
   const unit = useStore((s) => s.settings.unit);
   const bodyweightSetting = useStore((s) => s.settings.bodyweightKg);
-  const { updateSet, addSet, toggleSetDone, removeSet, removeActiveExercise, finishWorkout, discardWorkout, startWorkout, linkSuperset, setWorkoutDate, setWorkoutHr, setExerciseMuscles, renameWorkout } = useStore();
-  const exerciseMuscles = useStore((s) => s.exerciseMuscles);
+  const { updateSet, addSet, toggleSetDone, removeSet, removeActiveExercise, finishWorkout, discardWorkout, startWorkout, linkSuperset, setWorkoutDate, setWorkoutHr, setExerciseMuscles, setExerciseName, renameWorkout } = useStore();
   const healthEnabled = useStore((s) => s.settings.healthEnabled);
   const insets = useSafeAreaInsets();
 
   const active = useMemo(() => activeWorkout({ workouts, activeWorkoutId: activeId }), [workouts, activeId]);
-  const exById = useMemo(() => exByIdSel({ customExercises: custom, exerciseMuscles }), [custom, exerciseMuscles]);
+  const exById = useExercisesById();
   const showsW = (exId: string) => {
     const t = exById[exId]?.tracking;
     return t === undefined || t === 'weight_reps' || t === 'weighted_bw' || t === 'distance_time';
@@ -59,7 +57,7 @@ export default function Workout() {
   const [restEndAt, setRestEndAt] = useState<number | null>(null);
   const [pr, setPr] = useState<string | null>(null);
   // exercise-settings sheet: muscles + unilateral flag draft
-  const [muscleEdit, setMuscleEdit] = useState<{ exId: string; primary: MuscleGroup; secondary: MuscleGroup[]; unilateral: boolean } | null>(null);
+  const [muscleEdit, setMuscleEdit] = useState<{ exId: string; name: string; primary: MuscleGroup; secondary: MuscleGroup[]; unilateral: boolean } | null>(null);
   const [renaming, setRenaming] = useState(false);
   const [draftName, setDraftName] = useState('');
   // skutecna vyska keypadu - hlaska o rekordu i lista odpoctu nad ni sedi i kdyz keypad zmeni obsah
@@ -400,6 +398,7 @@ export default function Workout() {
                       exDef &&
                       setMuscleEdit({
                         exId: le.exerciseId,
+                        name: exDef.name,
                         primary: exDef.primary,
                         secondary: exDef.secondary ?? [],
                         unilateral: !!exDef.unilateral,
@@ -621,8 +620,28 @@ export default function Workout() {
               Nastavení cviku
             </Txt>
             <Txt size={type.label} weight="medium" color={palette.textMute} style={{ marginTop: 2 }}>
-              {exById[muscleEdit.exId]?.name ?? 'Cvik'} - změna platí všude (i v historii a mapě)
+              Změna platí všude - i v historii, v plánech a na svalové mapě
             </Txt>
+
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: space.lg, marginBottom: 8 }}>
+              <Txt size={type.caption} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5 }}>
+                NÁZEV
+              </Txt>
+              {originalExerciseName(muscleEdit.exId) && originalExerciseName(muscleEdit.exId) !== muscleEdit.name && (
+                <Pressable onPress={() => setMuscleEdit({ ...muscleEdit, name: originalExerciseName(muscleEdit.exId)! })} hitSlop={8}>
+                  <Txt size={type.caption} weight="bold" color={palette.accent}>
+                    Obnovit původní
+                  </Txt>
+                </Pressable>
+              )}
+            </View>
+            <TextInput
+              value={muscleEdit.name}
+              onChangeText={(t) => setMuscleEdit({ ...muscleEdit, name: t })}
+              placeholder="Název cviku"
+              placeholderTextColor={palette.textMute}
+              style={{ backgroundColor: palette.surface2, borderRadius: radius.sm, color: palette.text, fontFamily: 'Inter_600SemiBold', fontSize: type.body, paddingHorizontal: 14, paddingVertical: 12 }}
+            />
 
             <Txt size={type.caption} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5, marginTop: space.lg, marginBottom: 8 }}>
               HLAVNÍ PARTIE
@@ -695,6 +714,8 @@ export default function Workout() {
 
             <Pressable
               onPress={() => {
+                // prázdný název se neukládá - cvik bez jména by zmizel z historie i z výběru
+                if (muscleEdit.name.trim()) setExerciseName(muscleEdit.exId, muscleEdit.name);
                 setExerciseMuscles(muscleEdit.exId, muscleEdit.primary, muscleEdit.secondary, muscleEdit.unilateral);
                 haptic.light();
                 setMuscleEdit(null);

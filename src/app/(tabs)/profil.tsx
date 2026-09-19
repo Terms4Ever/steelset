@@ -10,7 +10,7 @@ import { workoutsToCsv } from '@/lib/csv';
 import { exportCsv } from '@/lib/export';
 import { deleteMyHealthWorkouts, healthSelfTest, latestBodyweightKg, requestHealth } from '@/lib/health';
 import { fmtNum, fromDisplayWeight, toDisplayWeight } from '@/lib/format';
-import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
+import { useExercisesById, useStore } from '@/store/useStore';
 
 export default function Profil() {
   const router = useRouter();
@@ -18,13 +18,12 @@ export default function Profil() {
   const workouts = useStore((s) => s.workouts);
   const trashedCount = useStore((s) => s.trashedWorkouts.length);
   const isPro = useStore((s) => s.isPro);
-  const custom = useStore((s) => s.customExercises);
   const setUnit = useStore((s) => s.setUnit);
   const setSetting = useStore((s) => s.setSetting);
   const wipeAll = useStore((s) => s.wipeAll);
   const appleUser = useStore((s) => s.appleUser);
   const setAppleUser = useStore((s) => s.setAppleUser);
-  const exById = useMemo(() => exByIdSel({ customExercises: custom }), [custom]);
+  const exById = useExercisesById();
 
   const signInApple = async () => {
     try {

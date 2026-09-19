@@ -13,7 +13,7 @@ import { bestE1rm, e1rm, e1rmTrend, fmtSets, isCountable, MS, muscleSetsDetailed
 import { workoutsToCsv } from '@/lib/csv';
 import { exportCsv } from '@/lib/export';
 import { fmtGrouped, fmtWeight, toDisplayWeight } from '@/lib/format';
-import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
+import { useExercisesById, useStore } from '@/store/useStore';
 
 function scoreAsOf(workouts: Workout[], cutoff: number) {
   return strengthScore(workouts.filter((w) => w.finishedAt && w.finishedAt <= cutoff));
@@ -41,10 +41,8 @@ export default function Pokrok() {
   const router = useRouter();
   const now = Date.now();
   const workouts = useStore((s) => s.workouts);
-  const custom = useStore((s) => s.customExercises);
-  const exerciseMuscles = useStore((s) => s.exerciseMuscles);
   const unit = useStore((s) => s.settings.unit);
-  const exById = useMemo(() => exByIdSel({ customExercises: custom, exerciseMuscles }), [custom, exerciseMuscles]);
+  const exById = useExercisesById();
 
   const finished = useMemo(() => workouts.filter((w) => w.finishedAt), [workouts]);
   const score = useMemo(() => strengthScore(workouts), [workouts]);

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
@@ -21,6 +22,11 @@ interface State {
   customExercises: Exercise[];
   /** Per-exercise overrides (muscles + unilateral flag; works for seed i custom exercises), applied in selectors. */
   exerciseMuscles: Record<string, { primary: MuscleGroup; secondary: MuscleGroup[]; unilateral?: boolean }>;
+  /**
+   * Přepsaná jména cviků (vestavěných i vlastních), applied in selectors. Tréninky a plány odkazují
+   * na cvik přes `exerciseId`, ne přes jméno, takže přejmenování nerozbije historii ani rekordy.
+   */
+  exerciseNames: Record<string, string>;
   favoriteExercises: string[];
   routines: Routine[];
   workouts: Workout[];
@@ -49,6 +55,8 @@ interface Actions {
   updateExercise: (id: string, patch: Partial<Exercise>) => void;
   deleteExercise: (id: string) => void;
   setExerciseMuscles: (id: string, primary: MuscleGroup, secondary: MuscleGroup[], unilateral?: boolean) => void;
+  /** Přejmenuje cvik. Prázdné jméno přepis zruší, takže vestavěný cvik dostane zpátky původní. */
+  setExerciseName: (id: string, name: string) => void;
   toggleFavorite: (id: string) => void;
   // routines
   addRoutine: (r: Omit<Routine, 'id'>) => string;
@@ -125,6 +133,7 @@ export const useStore = create<State & Actions>()(
     (set, get) => ({
       customExercises: [],
       exerciseMuscles: {},
+      exerciseNames: {},
       favoriteExercises: [],
       routines: [],
       workouts: [],
@@ -161,6 +170,7 @@ export const useStore = create<State & Actions>()(
         set({
           customExercises: [],
           exerciseMuscles: {},
+          exerciseNames: {},
           favoriteExercises: [],
           routines: [],
           workouts: [],
@@ -191,6 +201,20 @@ export const useStore = create<State & Actions>()(
             [id]: { primary, secondary: secondary.filter((m) => m !== primary), ...(unilateral != null ? { unilateral } : {}) },
           },
         })),
+
+      setExerciseName: (id, name) =>
+        set((s) => {
+          const trimmed = name.trim();
+          // vlastní cvik má jméno ve svém vlastním záznamu, přepis by byl druhá evidence téhož
+          if (s.customExercises.some((e) => e.id === id)) {
+            return trimmed ? { customExercises: s.customExercises.map((e) => (e.id === id ? { ...e, name: trimmed } : e)) } : {};
+          }
+          const next = { ...s.exerciseNames };
+          // prázdné jméno nebo jméno shodné s původním přepis ruší, ať nezůstává zbytečný záznam
+          if (!trimmed || trimmed === originalExerciseName(id)) delete next[id];
+          else next[id] = trimmed;
+          return { exerciseNames: next };
+        }),
 
       toggleFavorite: (id) =>
         set((s) => ({
@@ -472,6 +496,7 @@ export const useStore = create<State & Actions>()(
       partialize: (s) => ({
         customExercises: s.customExercises,
         exerciseMuscles: s.exerciseMuscles,
+        exerciseNames: s.exerciseNames,
         favoriteExercises: s.favoriteExercises,
         routines: s.routines,
         workouts: s.workouts,
@@ -512,11 +537,20 @@ export const useStore = create<State & Actions>()(
 );
 
 // ---- selectors ----
-export function allExercises(s: Pick<State, 'customExercises'> & Partial<Pick<State, 'exerciseMuscles'>>): Exercise[] {
+/** Původní (vestavěný) název cviku, pokud jde o cvik ze seznamu v aplikaci. */
+export function originalExerciseName(id: string): string | undefined {
+  return SEED_EXERCISES.find((e) => e.id === id)?.name;
+}
+
+type ExerciseSlice = Pick<State, 'customExercises'> & Partial<Pick<State, 'exerciseMuscles' | 'exerciseNames'>>;
+
+export function allExercises(s: ExerciseSlice): Exercise[] {
   const overrides = s.exerciseMuscles ?? {};
+  const names = s.exerciseNames ?? {};
   return [...SEED_EXERCISES, ...s.customExercises].map((e) => {
     const o = overrides[e.id];
-    return o
+    const name = names[e.id];
+    const withMuscles = o
       ? {
           ...e,
           primary: o.primary,
@@ -524,10 +558,30 @@ export function allExercises(s: Pick<State, 'customExercises'> & Partial<Pick<St
           unilateral: o.unilateral ?? e.unilateral,
         }
       : e;
+    return name ? { ...withMuscles, name } : withMuscles;
   });
 }
-export function exercisesById(s: Pick<State, 'customExercises'> & Partial<Pick<State, 'exerciseMuscles'>>): Record<string, Exercise> {
+export function exercisesById(s: ExerciseSlice): Record<string, Exercise> {
   return Object.fromEntries(allExercises(s).map((e) => [e.id, e]));
+}
+
+/**
+ * Cviky se všemi přepisy (partie, jednostrannost, jméno). Obrazovky mají sahat sem: selektor volaný
+ * ručně se snadno zavolá bez některého přepisu a pak někde zůstane staré jméno nebo partie.
+ */
+export function useAllExercises(): Exercise[] {
+  const customExercises = useStore((s) => s.customExercises);
+  const exerciseMuscles = useStore((s) => s.exerciseMuscles);
+  const exerciseNames = useStore((s) => s.exerciseNames);
+  return useMemo(
+    () => allExercises({ customExercises, exerciseMuscles, exerciseNames }),
+    [customExercises, exerciseMuscles, exerciseNames],
+  );
+}
+
+export function useExercisesById(): Record<string, Exercise> {
+  const all = useAllExercises();
+  return useMemo(() => Object.fromEntries(all.map((e) => [e.id, e])), [all]);
 }
 export function activeWorkout(s: Pick<State, 'workouts' | 'activeWorkoutId'>): Workout | null {
   return s.workouts.find((w) => w.id === s.activeWorkoutId) ?? null;

@@ -12,7 +12,7 @@ import { e1rm, exerciseVolumeFor, hrWindow, perExerciseHr, summarizeSets, workou
 import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtGrouped, fmtWeight, NBSP, plural } from '@/lib/format';
 import { heartRateFor } from '@/lib/health';
 import { canMakeRoutine, workoutToRoutine } from '@/lib/routineFromWorkout';
-import { exercisesById as exByIdSel, useStore } from '@/store/useStore';
+import { useExercisesById, useStore } from '@/store/useStore';
 
 const TAG: Record<string, string> = { W: 'Z', R: '', D: 'D', F: 'F' };
 
@@ -31,8 +31,6 @@ export default function WorkoutDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const workouts = useStore((s) => s.workouts);
-  const custom = useStore((s) => s.customExercises);
-  const exerciseMuscles = useStore((s) => s.exerciseMuscles);
   const unit = useStore((s) => s.settings.unit);
   const deleteWorkout = useStore((s) => s.deleteWorkout);
   const editWorkout = useStore((s) => s.editWorkout);
@@ -44,7 +42,7 @@ export default function WorkoutDetail() {
   const healthEnabled = useStore((s) => s.settings.healthEnabled);
 
   const w = workouts.find((x) => x.id === id);
-  const exById = useMemo(() => exByIdSel({ customExercises: custom, exerciseMuscles }), [custom, exerciseMuscles]);
+  const exById = useExercisesById();
   const [hrLoading, setHrLoading] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [draftName, setDraftName] = useState('');

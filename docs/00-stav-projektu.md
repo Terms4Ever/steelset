@@ -40,6 +40,8 @@ ověření na zařízení:
   (S9 v deníku)
 - #5 - z odcvičeného tréninku jde udělat plán, včetně supersérií
   (S10 v deníku)
+- #1 - cviky jdou přejmenovat (i vestavěné) a nové jméno platí všude
+  (S11 v deníku)
 
 ## Co je dál
 
