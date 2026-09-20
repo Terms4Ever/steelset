@@ -539,3 +539,19 @@ Tréninková data zůstávají v telefonu a v iCloudu uživatele, Apple Health s
 Reklamní SDK v aplikaci je přesně ten případ, který Apple kontroluje, a zamítnutí
 z tohoto důvodu se týká celého účtu, ne jen jednoho buildu.
 
+---
+
+## S20 - Testy leží v `tests/`, ne v `src/__tests__/` (20. 9. 2026)
+
+**Stav.** S18 přestěhovalo testy z kořene do `src/__tests__/`, což je výchozí
+konvence jestu ve světě JavaScriptu: dvě podtržítka znamenají složku, kterou si
+jest najde sám.
+
+**Rozhodnutí.** Obrací se na `tests/` v kořeni. `jest.config.js` má `testMatch`
+natvrdo na `<rootDir>/tests/**/*.test.ts`, `tsconfig.json` je vyjímá stejně
+jako dosud.
+
+**Proč.** Ostatní repozitáře Terms4Ever mají `tests/`. Podtržítka nic neřeší,
+jen odlišují jeden projekt od zbytku. Výchozí konvenci nástroje nepotřebujeme,
+když si cestu stejně píšeme sami.
+

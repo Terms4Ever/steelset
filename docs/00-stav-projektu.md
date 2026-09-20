@@ -40,8 +40,8 @@ Běží jen nad issue od vlastníka a spolupracovníků, ne nad cizím hlášen�
 - Přihlášení přes Apple, záloha na iCloud, export do CSV
 - Onboarding
 - Monetizace: aplikace zdarma s reklamami, předplatné Steelset Pro je vypne
-- Uklizený kořen repozitáře: postup vydání je v `02-vydani.md`, testy v
-  `src/__tests__/`, zbytky po šabloně Expo jsou pryč (S18 v deníku)
+- Uklizený kořen repozitáře: postup vydání je v `02-vydani.md`, testy v `tests/`
+  jako v ostatních repozitářích, zbytky po šabloně Expo jsou pryč (S18, S20 v deníku)
 
 ## Co se dělá
 

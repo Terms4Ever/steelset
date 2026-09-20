@@ -44,8 +44,7 @@ steelset/
 ├── modules/          # nativní moduly
 ├── targets/          # rozšíření pro Live Activity
 ├── assets/           # obrázky a ikony
-├── scripts/          # pomocné skripty
-└── __tests__/        # testy
+└── tests/            # testy
 ```
 
 ---
