@@ -541,3 +541,63 @@ describe('store · pořadí cviků', () => {
     ]);
   });
 });
+
+describe('store · mazání cviků nesmí rozbít historii', () => {
+  it('nepoužitý vlastní cvik zmizí úplně', () => {
+    const id = s().addExercise({ name: 'Pokusný', primary: 'Hrudník', equipment: 'Činka', tracking: 'weight_reps' });
+    expect(s().deleteExercise(id)).toBe(true);
+    expect(s().customExercises).toHaveLength(0);
+    expect(s().hiddenExercises).not.toContain(id);
+    expect(exercisesById(s())[id]).toBeUndefined();
+  });
+
+  it('vlastní cvik použitý v tréninku se jen schová a historie ho dál najde', () => {
+    const id = s().addExercise({ name: 'Pokusný', primary: 'Hrudník', equipment: 'Činka', tracking: 'weight_reps' });
+    s().startWorkout(null);
+    s().addExerciseToActive(id);
+    s().updateSet(0, 0, { weight: 50, reps: 10, done: true });
+    s().finishWorkout();
+
+    expect(s().deleteExercise(id)).toBe(false);
+    expect(s().customExercises).toHaveLength(1); // data zůstala
+    expect(s().hiddenExercises).toContain(id);
+
+    const found = exercisesById(s())[id];
+    expect(found).toBeDefined();
+    expect(found.name).toBe('Pokusný');
+    expect(found.hidden).toBe(true);
+    expect(s().workouts[0].exercises[0].exerciseId).toBe(id);
+  });
+
+  it('vestavěný cvik se maže vždy jen schováním', () => {
+    expect(s().deleteExercise('squat')).toBe(false);
+    expect(s().hiddenExercises).toContain('squat');
+    expect(exercisesById(s()).squat.hidden).toBe(true);
+    expect(allExercises(s()).some((e) => e.id === 'squat')).toBe(true);
+  });
+
+  it('cvik v plánu se jen schová', () => {
+    const id = s().addExercise({ name: 'Pokusný', primary: 'Záda', equipment: 'Kladka', tracking: 'weight_reps' });
+    s().addRoutine({ name: 'Plán', exercises: [{ exerciseId: id, targetSets: 3, targetReps: 8 }] });
+    expect(s().deleteExercise(id)).toBe(false);
+    expect(s().hiddenExercises).toContain(id);
+  });
+
+  it('smazání vyhodí cvik i z oblíbených a obnova ho vrátí do nabídky', () => {
+    s().toggleFavorite('squat');
+    expect(s().favoriteExercises).toContain('squat');
+    s().deleteExercise('squat');
+    expect(s().favoriteExercises).not.toContain('squat');
+
+    s().restoreExercise('squat');
+    expect(s().hiddenExercises).not.toContain('squat');
+    expect(exercisesById(s()).squat.hidden).toBeUndefined();
+  });
+
+  it('schovaný cvik přežije uložení a načtení', async () => {
+    s().deleteExercise('squat');
+    await new Promise((r) => setTimeout(r, 0));
+    const raw = await AsyncStorage.getItem(STORE_KEY);
+    expect(JSON.parse(raw!).state.hiddenExercises).toContain('squat');
+  });
+});

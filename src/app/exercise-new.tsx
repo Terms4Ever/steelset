@@ -6,19 +6,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PrimaryButton, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
+import { EQUIPMENT_OPTIONS, TRACKING_OPTIONS } from '@/data/exerciseOptions';
 import { Equipment, MUSCLE_GROUP_OPTIONS, MuscleGroup, TrackingType } from '@/data/types';
 import { useStore } from '@/store/useStore';
 
 const MUSCLES: MuscleGroup[] = MUSCLE_GROUP_OPTIONS;
-const EQUIPMENT: Equipment[] = ['Činka', 'Jednoručky', 'Kladka', 'Stroj', 'Vlastní váha', 'Kettlebell', 'Guma'];
-const TRACKING: { value: TrackingType; label: string }[] = [
-  { value: 'weight_reps', label: 'Váha × opak.' },
-  { value: 'bodyweight_reps', label: 'Vlastní váha × opak.' },
-  { value: 'weighted_bw', label: 'Přidaná váha' },
-  { value: 'reps', label: 'Jen opakování' },
-  { value: 'time', label: 'Jen čas' },
-  { value: 'distance_time', label: 'Vzdálenost × čas' },
-];
 
 function Chip({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
   return (
@@ -156,14 +148,14 @@ export default function ExerciseNew() {
 
         <Label>Vybavení</Label>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          {EQUIPMENT.map((e) => (
+          {EQUIPMENT_OPTIONS.map((e) => (
             <Chip key={e} label={e} on={equipment === e} onPress={() => setEquipment(e)} />
           ))}
         </View>
 
         <Label>Typ měření</Label>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          {TRACKING.map((t) => (
+          {TRACKING_OPTIONS.map((t) => (
             <Chip key={t.value} label={t.label} on={tracking === t.value} onPress={() => setTracking(t.value)} />
           ))}
         </View>

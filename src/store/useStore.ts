@@ -5,6 +5,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { SEED_EXERCISES, STARTER_ROUTINES } from '@/data/exercises';
 import { Exercise, HrSample, LoggedExercise, MuscleGroup, Routine, SetEntry, Settings, Unit, Workout } from '@/data/types';
 import { isCountable, lastPerformance } from '@/lib/calc';
+import { exerciseUsage, isExerciseUsed } from '@/lib/exerciseUsage';
 import { buildPrefilledExercise, prefillSets } from '@/lib/prefill';
 import { moveBlock } from '@/lib/reorder';
 import { persistedStoreStorage, STORE_KEY } from '@/lib/storeKeys';
@@ -28,6 +29,11 @@ interface State {
    * na cvik přes `exerciseId`, ne přes jméno, takže přejmenování nerozbije historii ani rekordy.
    */
   exerciseNames: Record<string, string>;
+  /**
+   * Cviky schované z výběru. Mazání je měkké: cvik zmizí z nabídky, ale zůstane v `allExercises`,
+   * takže detail odcvičeného tréninku i svalová mapa ho dál najdou podle `exerciseId`.
+   */
+  hiddenExercises: string[];
   favoriteExercises: string[];
   routines: Routine[];
   workouts: Workout[];
@@ -54,7 +60,13 @@ interface Actions {
   // exercises
   addExercise: (e: Omit<Exercise, 'id' | 'custom'>) => string;
   updateExercise: (id: string, patch: Partial<Exercise>) => void;
-  deleteExercise: (id: string) => void;
+  /**
+   * Smaže cvik. Nepoužitý vlastní cvik zmizí úplně, použitý (nebo vestavěný) se jen schová,
+   * aby se neztratila historie. Vrací `true`, když šlo o úplné smazání.
+   */
+  deleteExercise: (id: string) => boolean;
+  /** Vrátí schovaný cvik zpátky do nabídky. */
+  restoreExercise: (id: string) => void;
   setExerciseMuscles: (id: string, primary: MuscleGroup, secondary: MuscleGroup[], unilateral?: boolean) => void;
   /** Přejmenuje cvik. Prázdné jméno přepis zruší, takže vestavěný cvik dostane zpátky původní. */
   setExerciseName: (id: string, name: string) => void;
@@ -137,6 +149,7 @@ export const useStore = create<State & Actions>()(
       customExercises: [],
       exerciseMuscles: {},
       exerciseNames: {},
+      hiddenExercises: [],
       favoriteExercises: [],
       routines: [],
       workouts: [],
@@ -174,6 +187,7 @@ export const useStore = create<State & Actions>()(
           customExercises: [],
           exerciseMuscles: {},
           exerciseNames: {},
+          hiddenExercises: [],
           favoriteExercises: [],
           routines: [],
           workouts: [],
@@ -193,8 +207,26 @@ export const useStore = create<State & Actions>()(
         set((s) => ({
           customExercises: s.customExercises.map((e) => (e.id === id ? { ...e, ...patch } : e)),
         })),
-      deleteExercise: (id) =>
-        set((s) => ({ customExercises: s.customExercises.filter((e) => e.id !== id) })),
+      deleteExercise: (id) => {
+        const s = get();
+        const used = isExerciseUsed(exerciseUsage(id, s.workouts, s.routines, s.trashedWorkouts));
+        const custom = s.customExercises.some((e) => e.id === id);
+        if (custom && !used) {
+          // na nic neodkazuje, takže po něm nic nezbyde a nemá smysl ho držet
+          set((st) => ({
+            customExercises: st.customExercises.filter((e) => e.id !== id),
+            favoriteExercises: st.favoriteExercises.filter((f) => f !== id),
+            hiddenExercises: st.hiddenExercises.filter((h) => h !== id),
+          }));
+          return true;
+        }
+        set((st) => ({
+          hiddenExercises: st.hiddenExercises.includes(id) ? st.hiddenExercises : [...st.hiddenExercises, id],
+          favoriteExercises: st.favoriteExercises.filter((f) => f !== id),
+        }));
+        return false;
+      },
+      restoreExercise: (id) => set((s) => ({ hiddenExercises: s.hiddenExercises.filter((h) => h !== id) })),
 
       // reassign which muscles an exercise hits + unilateral flag (applies everywhere via selectors, incl. history)
       setExerciseMuscles: (id, primary, secondary, unilateral) =>
@@ -528,6 +560,7 @@ export const useStore = create<State & Actions>()(
         customExercises: s.customExercises,
         exerciseMuscles: s.exerciseMuscles,
         exerciseNames: s.exerciseNames,
+        hiddenExercises: s.hiddenExercises,
         favoriteExercises: s.favoriteExercises,
         routines: s.routines,
         workouts: s.workouts,
@@ -573,12 +606,19 @@ export function originalExerciseName(id: string): string | undefined {
   return SEED_EXERCISES.find((e) => e.id === id)?.name;
 }
 
-type ExerciseSlice = Pick<State, 'customExercises'> & Partial<Pick<State, 'exerciseMuscles' | 'exerciseNames'>>;
+type ExerciseSlice = Pick<State, 'customExercises'> &
+  Partial<Pick<State, 'exerciseMuscles' | 'exerciseNames' | 'hiddenExercises'>>;
 
+/**
+ * Všechny cviky i s přepisy. Schované se **nevyfiltrují**, jen se označí `hidden`: odcvičené
+ * tréninky a svalová mapa je musí dál najít podle `exerciseId`. Filtrovat patří až do nabídky.
+ */
 export function allExercises(s: ExerciseSlice): Exercise[] {
   const overrides = s.exerciseMuscles ?? {};
   const names = s.exerciseNames ?? {};
-  return [...SEED_EXERCISES, ...s.customExercises].map((e) => {
+  const hidden = new Set(s.hiddenExercises ?? []);
+  return [...SEED_EXERCISES, ...s.customExercises].map((e0) => {
+    const e = hidden.has(e0.id) ? { ...e0, hidden: true } : e0;
     const o = overrides[e.id];
     const name = names[e.id];
     const withMuscles = o
@@ -604,9 +644,10 @@ export function useAllExercises(): Exercise[] {
   const customExercises = useStore((s) => s.customExercises);
   const exerciseMuscles = useStore((s) => s.exerciseMuscles);
   const exerciseNames = useStore((s) => s.exerciseNames);
+  const hiddenExercises = useStore((s) => s.hiddenExercises);
   return useMemo(
-    () => allExercises({ customExercises, exerciseMuscles, exerciseNames }),
-    [customExercises, exerciseMuscles, exerciseNames],
+    () => allExercises({ customExercises, exerciseMuscles, exerciseNames, hiddenExercises }),
+    [customExercises, exerciseMuscles, exerciseNames, hiddenExercises],
   );
 }
 

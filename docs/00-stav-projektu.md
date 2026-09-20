@@ -75,6 +75,10 @@ ověření na zařízení:
   místo ručního `PanResponder`, haptika se ozve už při aktivaci a cíl je vidět
   i na hotové sérii (S24 v deníku)
 
+- #11 - cviky jdou spravovat i mimo trénink: Profil otevře katalog v režimu správy,
+  detail umí jméno, partie, jednostrannost a u vlastních i vybavení a typ měření.
+  Mazání je měkké, takže smazaný cvik nezmizí z historie (S25 v deníku)
+
 Gesta jsou jediná část, kterou z Windows neověřím: syntetické pointer eventy
 gesture-handler na webu neřídí. Přetahování i tažení keypadu tedy čekají na
 TestFlight.

@@ -149,6 +149,11 @@ export default function Profil() {
         </Row>
       </Section>
 
+      <Section title="CVIKY">
+        {/* katalog jde spravovat i bez běžícího tréninku: úprava a mazání cviků (#11) */}
+        <RowButton icon="barbell-outline" label="Správa cviků" last onPress={() => router.push('/exercises?mode=manage')} />
+      </Section>
+
       <Section title="JEDNOTKY">
         <Row icon="barbell-outline" label="Váhové jednotky">
           <Toggle options={['kg', 'lb']} value={settings.unit} onChange={(v) => setUnit(v as any)} />

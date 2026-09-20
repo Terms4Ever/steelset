@@ -66,6 +66,8 @@ export interface Exercise {
   equipment: Equipment;
   tracking: TrackingType;
   custom?: boolean;
+  /** Schovaný z nabídky (měkké smazání). V historii a ve výpočtech zůstává. */
+  hidden?: boolean;
   unilateral?: boolean; // jednostranný cvik (jedna ruka/noha) - objem se počítá 2×
   defaultBar?: number; // hmotnost tyče pro plate kalkulačku
   note?: string;

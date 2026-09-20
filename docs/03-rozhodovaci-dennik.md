@@ -683,3 +683,43 @@ neřídí `Pressable`. Ověřit až na zařízení.
 obaluje obsah `Pressable` s `closeKeypad` (`src/app/workout.tsx:447`). Dřívější
 tvrzení v komentáři u #6, že chybí, bylo špatně.
 
+---
+
+## S25 - Mazání cviku je měkké, katalog jde spravovat i mimo trénink (20. 9. 2026)
+
+**Stav.** Ke katalogu se bez běžícího tréninku nebo plánu nedalo dostat, obrazovka
+`/exercises` uměla jen vybírat. Akce `updateExercise` a `deleteExercise` ve store
+existovaly, ale nikdo je nevolal. `deleteExercise` navíc mazalo natvrdo z
+`customExercises`, což by rozbilo historii: odcvičený trénink si drží jen
+`exerciseId` a detail tréninku by místo názvu ukázal „Cvik", objem by zmizel ze
+svalové mapy (#11).
+
+**Rozhodnutí.**
+
+- Katalog má druhý režim. `/exercises?mode=manage` se otevírá z Profilu, ťuknutí
+  tam otevře detail cviku místo přidání do tréninku.
+- Mazání je měkké. Cvik jde do `hiddenExercises`, zmizí z nabídky, ale
+  `allExercises` ho dál vrací s příznakem `hidden`. Výjimka: **vlastní cvik, na
+  který nic neodkazuje**, se smaže doopravdy, protože po něm nemá co zbýt. Rozhoduje
+  o tom čistá funkce `exerciseUsage` v `src/lib/exerciseUsage.ts`.
+- Schované cviky jsou ve správě v sekci Smazané a ťuknutím se vrátí.
+- Detail cviku je dostupný i z výběru (přes tužku), takže smazat jde i z výběru
+  otevřeného z běžícího tréninku.
+
+**Vybavení a typ měření jen u vlastních cviků.** Pro partie a jméno existují přepisy
+(`exerciseMuscles`, `exerciseNames`), pro vybavení a typ měření ne. U vestavěného
+cviku jsou proto zamčené: typ měření určuje, co znamená zapsané číslo, takže jeho
+změna by přepsala význam už odcvičených sérií. V detailu je to napsané.
+
+**Cvik v plánu.** Nezmizí, jen se přestane nabízet. Plán ho dál najde, protože
+`allExercises` schované vrací. Potvrzovací dialog dopředu vypíše, v kolika trénincích
+a plánech cvik je.
+
+**Čím ověřeno.** Třináct nových testů (`tests/exerciseUsage.test.ts`,
+`tests/store.test.ts`): nepoužitý vlastní cvik zmizí, použitý se schová a zůstane
+dohledatelný, vestavěný se schová vždy, schování vyhodí cvik z oblíbených, obnova
+funguje a schování přežije uložení. Ve webovém náhledu: režim správy se otevře,
+detail ukáže všechna pole a u vestavěného cviku zamčené vybavení, schovaný cvik
+zmizí z nabídky, objeví se v sekci Smazané a v detailu odcvičeného tréninku se dál
+ukazuje jeho jménem, ne jako „Cvik".
+
