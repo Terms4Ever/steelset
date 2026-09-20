@@ -75,14 +75,14 @@ akcent `#00E07A`, Inter, tabulární číslice. Vizuály vznikají v Claude Desi
 
 ```
 npx tsc --noEmit                 # 0 chyb
-npx jest                         # všechny testy (aktuálně 62)
+npx jest                         # všechny testy (aktuálně 142)
 npx expo export --platform web   # bundling check
 ```
 
 Web preview: `.claude/launch.json` config `primed-web` (expo web na :8081).
 POZOR: expo web dev server PŘEPISUJE `tsconfig.json` a maže `expo-env.d.ts` -
 po zavření preview `git checkout -- tsconfig.json`, případně obnovit expo-env.d.ts
-(`/// <reference types="expo/types" />`). `src/css-modules.d.ts` drží tsc zelené.
+(`/// <reference types="expo/types" />`).
 Web klik-testy: Alert.alert na webu nefunguje; RN Pressable nejde spolehlivě klikat
 syntetickými eventy - ověřovat přes DOM text (preview_eval) a screenshoty.
 

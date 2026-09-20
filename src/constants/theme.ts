@@ -2,7 +2,7 @@
  * Steelset design tokens - extracted 1:1 from the "Steelset - Hi-Fi Mobile UI" Claude Design doc.
  * Dark-mode-first strength tracker. Single accent (electric green), big tabular numbers.
  */
-import { Platform, TextStyle } from 'react-native';
+import { TextStyle } from 'react-native';
 
 export const palette = {
   bg: '#0A0B0D', // app background (true-black-ish, OLED)
@@ -66,39 +66,3 @@ export const type = {
   label: 13,
   caption: 11,
 } as const;
-
-// ---- legacy shape kept so default-template imports keep compiling ----
-export const Colors = {
-  light: {
-    text: palette.text,
-    background: palette.bg,
-    backgroundElement: palette.surface2,
-    backgroundSelected: palette.surface3,
-    textSecondary: palette.textDim,
-  },
-  dark: {
-    text: palette.text,
-    background: palette.bg,
-    backgroundElement: palette.surface2,
-    backgroundSelected: palette.surface3,
-    textSecondary: palette.textDim,
-  },
-} as const;
-
-export type ThemeColor = keyof typeof Colors.dark;
-
-export const Fonts = Platform.select({
-  default: { sans: font.regular, serif: 'serif', rounded: font.regular, mono: 'monospace' },
-});
-
-export const Spacing = {
-  half: 2,
-  one: 4,
-  two: 8,
-  three: 16,
-  four: 24,
-  five: 32,
-  six: 64,
-} as const;
-
-export const MaxContentWidth = 480;

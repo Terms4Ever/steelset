@@ -319,3 +319,33 @@ Tlačítko neslibuje víc, než dělá.
 tolik místa, že se „Tlak nad hlavu (OHP)" zalomil na dva řádky. Šipky jsou
 proto nad sebou v jednom sloupci širokém 32 px. Souvisí s S9 - dlouhý název
 vedle pružného bloku je v téhle appce opakovaný zdroj ošklivého zalomení.
+
+---
+
+## S14 - Zbytky po šabloně Expo jsou pryč (20. 9. 2026)
+
+**Stav.** V repozitáři ležely soubory ze startovací šablony Expo, na které
+nevedl odkaz z kódu ani z `app.json`: komponenty `external-link`, `hint-row`,
+`collapsible`, `animated-icon`, `web-badge`, `themed-text`, `themed-view`,
+obrázky s logem Reactu a Expa, ikony pro tabbar a pro Android a skript
+`reset-project`, který maže zdrojáky šablony.
+
+**Rozhodnutí.** Smazáno, celkem 27 souborů. Navíc oproti seznamu v issue:
+
+- `src/hooks/` zmizel celý. `use-theme.ts` měl podle issue zůstat, jenže ho
+  volaly jen `themed-text`, `themed-view` a `collapsible` - tedy samé mazané
+  soubory. Se šablonou odešly i `use-color-scheme.ts` a `.web.ts`.
+- `src/css-modules.d.ts` byl kvůli `animated-icon.web.tsx`, který jediný
+  importoval `.module.css`. Zmínka o něm zmizela i z `AGENTS.md`.
+- `Colors`, `ThemeColor`, `Fonts` a `Spacing` v `src/constants/theme.ts` nesly
+  komentář „legacy shape kept so default-template imports keep compiling".
+  Ty importy už neexistují. `palette`, `radius`, `space`, `type` a `font`
+  zůstávají, na nich appka stojí.
+
+**Co se nedělalo.** `assets/images/icon.png` nikdo nepoužívá (`app.json` míří na
+`steelset-icon.png`), ale v seznamu v issue není a na ikony se bez výslovného
+zadání nesahá. Zůstává. Odkazy na stará jména v `app.json`, na které issue
+upozorňovalo, už tam nejsou - vyřešil je rebrand (S7).
+
+**Ověřeno.** tsc čistý, 142 testů, web export projde. V prohlížeči všech devět
+obrazovek naběhne, konzole je čistá a nic si nesahá na chybějící obrázek.

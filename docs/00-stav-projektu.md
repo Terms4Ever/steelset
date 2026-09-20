@@ -44,6 +44,7 @@ ověření na zařízení:
   (S11 v deníku)
 - #3 - pořadí cviků jde měnit v tréninku i v plánu, supersérie se hýbe celá
   (S13 v deníku)
+- #10 - z repozitáře zmizely zbytky po šabloně Expo (S14 v deníku)
 
 ## Co je dál
 
