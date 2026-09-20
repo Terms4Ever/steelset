@@ -625,3 +625,28 @@ aby odsazení platilo hned při prvním vykreslení a neposkočilo.
 tlačítkem a lištou 46 px, překryv žádný. Bez běžícího tréninku zůstává odsazení
 40 px, tedy jako dřív.
 
+---
+
+## S23 - Keypad sjíždí dolů, lišta odpočtu se posune s ním (20. 9. 2026)
+
+**Stav.** `Animated.View` s keypadem měl jen `entering`, žádné `exiting`, takže při
+zavření zmizel skokem. Hláška o rekordu a lišta odpočtu navíc stály na
+`bottom: focus ? keypadH + 12 : 28`, což je změna rozvržení, ne animace: ve stejný
+snímek poskočily o celou výšku keypadu (#6).
+
+**Rozhodnutí.** Keypad má `exiting={SlideOutDown.duration(180)}`. Plovoucí prvky nad
+ním mají pevné `bottom: 28` a posouvají se přes `translateY` řízený sdílenou hodnotou
+s `withTiming(180)`.
+
+**Proč.** Posouvat `transform` je levnější než přepočítávat rozvržení na každý snímek
+a obě animace pak běží stejně dlouho, takže se keypad a lišta hýbou spolu.
+
+**Čím ověřeno.** Ve webovém náhledu měřeno v DOM: po ťuknutí na zavírací šipku je horní
+hrana keypadu po 60 ms na 772 px, po 140 ms na 1148 px a pak je prvek odpojený. Dřív
+zmizel hned. Se zapnutým odpočtem sedí lišta správně nad otevřeným keypadem.
+
+**Co zbývá.** Tažení za úchyt keypadem pořád nehýbe, jen na puštění vyhodnotí
+`dy > 40`. Zavření ťuknutím mimo buňky taky není. Obojí jde k přetahování hodnot
+(#13) do jednoho průchodu na `react-native-gesture-handler`, který je v závislostech
+a zatím nepoužitý.
+

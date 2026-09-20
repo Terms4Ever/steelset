@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, AppState, KeyboardAvoidingView, PanResponder, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
-import Animated, { SlideInDown, ZoomIn } from 'react-native-reanimated';
+import Animated, { SlideInDown, SlideOutDown, useAnimatedStyle, useSharedValue, withTiming, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AdBanner } from '@/components/AdBanner';
@@ -66,6 +66,10 @@ export default function Workout() {
   const [draftName, setDraftName] = useState('');
   // skutecna vyska keypadu - hlaska o rekordu i lista odpoctu nad ni sedi i kdyz keypad zmeni obsah
   const [keypadH, setKeypadH] = useState(322);
+  // hláška o rekordu a lišta odpočtu sedí nad keypadem. Posun se animuje, jinak při zavření
+  // keypadu přeskočí o jeho celou výšku ve stejný snímek, ve kterém keypad mizí (#6)
+  const keypadShift = useSharedValue(0);
+  const aboveKeypad = useAnimatedStyle(() => ({ transform: [{ translateY: keypadShift.value }] }));
   // po přesunu cviku v tréninku spuštěném z plánu nabídneme uložení pořadí do plánu
   const [orderDirty, setOrderDirty] = useState(false);
   // nabídky na zvýšení váhy odmítnuté v tomhle tréninku (jen do jeho konce)
@@ -111,6 +115,9 @@ export default function Workout() {
     const id = setTimeout(() => setPr(null), 2800);
     return () => clearTimeout(id);
   }, [pr]);
+  useEffect(() => {
+    keypadShift.value = withTiming(focus ? -(keypadH - 16) : 0, { duration: 180 });
+  }, [focus, keypadH, keypadShift]);
   // Live Activity (Dynamic Island / lock screen): start for live workouts, keep sets + rest in sync
   useEffect(() => {
     if (!active || active.manual) return;
@@ -780,7 +787,7 @@ export default function Workout() {
       </ScrollView>
 
       {pr && (
-        <Animated.View key={pr} entering={ZoomIn.duration(280)} style={{ position: 'absolute', left: space.xl, right: space.xl, bottom: focus ? keypadH + 12 : 28, backgroundColor: palette.accent, borderRadius: radius.md, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <Animated.View key={pr} entering={ZoomIn.duration(280)} style={[aboveKeypad, { position: 'absolute', left: space.xl, right: space.xl, bottom: 28, backgroundColor: palette.accent, borderRadius: radius.md, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }]}>
           <Ionicons name="trophy" size={20} color={palette.bg} />
           <Txt size={type.body} weight="bold" color={palette.bg}>
             {pr}
@@ -789,7 +796,7 @@ export default function Workout() {
       )}
 
       {restLeft !== null && restLeft > 0 && !pr && (
-        <Animated.View entering={SlideInDown.duration(220)} style={{ position: 'absolute', left: space.xl, right: space.xl, bottom: focus ? keypadH + 12 : 28, backgroundColor: palette.surface2, borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: palette.hairline }}>
+        <Animated.View entering={SlideInDown.duration(220)} style={[aboveKeypad, { position: 'absolute', left: space.xl, right: space.xl, bottom: 28, backgroundColor: palette.surface2, borderRadius: radius.pill, paddingVertical: 10, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: palette.hairline }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Ionicons name="timer-outline" size={18} color={palette.accent} />
             <Txt size={type.body} weight="bold" num>
@@ -805,7 +812,7 @@ export default function Workout() {
       )}
 
       {focus && (
-        <Animated.View entering={SlideInDown.duration(180)} onLayout={(e) => setKeypadH(e.nativeEvent.layout.height)}>
+        <Animated.View entering={SlideInDown.duration(180)} exiting={SlideOutDown.duration(180)} onLayout={(e) => setKeypadH(e.nativeEvent.layout.height)}>
           <Keypad onKey={key} onStep={step} onNext={next} onClose={closeKeypad} inc={focus.field === 'reps' ? { full: 5, half: 1 } : unitIncrement(unit, increment, incrementLb)} />
         </Animated.View>
       )}
