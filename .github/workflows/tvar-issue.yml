@@ -1,0 +1,16 @@
+name: Tvar issue
+
+# Tvar se pozná hned, jak issue vznikne nebo se změní, ne až u nejbližšího
+# pushe. Pravidla žijí v Terms4Ever/nastroje.
+on:
+  issues:
+    types: [opened, edited, closed]
+
+# Kontrola štítkuje a píše komentář, proto zápis do issues.
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  tvar:
+    uses: Terms4Ever/nastroje/.github/workflows/issue-tvar.yml@main
