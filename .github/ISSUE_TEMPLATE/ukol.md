@@ -6,6 +6,9 @@ labels: ''
 assignees: ''
 ---
 
+<!-- Sekce se nepřidávají ani nepřejmenovávají, nepotřebné se smažou.
+     Tělo do 40 řádků: rozbor, SQL a odhady patří do docs/, ne sem. -->
+
 ## Problém
 
 Co je špatně nebo co chybí. Jedna až tři věty, bez úvodu. U chyby napiš, co se

@@ -18,12 +18,14 @@ TestFlight build 19, verze 1.0.0. Aplikace není veřejně v App Store.
 
 ## Issues
 
-Jeden tvar pro chybu i novou funkci: `## Problém` (nebo `## Cíl`)
-a `## Hotovo, když` s odškrtávacím seznamem, šablona je
+Sekce jsou dané a jiné se nepřidávají: `## Problém` (nebo `## Cíl`),
+`## Jak to poznat`, `## Hotovo, když`, `## Kde to žije`, `## Snímky`. Jeden
+checklist pod „Hotovo, když", tělo do 40 řádků, šablona je
 v `.github/ISSUE_TEMPLATE/ukol.md`. Zavřené issue má checklist odškrtaný,
 komentáře mají do pěti řádků a snímky před a po leží
-v `docs/snimky/<číslo issue>-<název>/`. Hlídá to kontrola z `nastroje`, která
-běží při pushi a jednou denně.
+v `docs/snimky/<číslo issue>-<název>/`. Syrový nápad bez nadpisů kontrolu
+neshodí, tvar mu dodá agent. Hlídá to kontrola z `nastroje`, která běží
+při pushi a jednou denně.
 
 ## Co je hotové
 
