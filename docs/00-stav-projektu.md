@@ -26,6 +26,7 @@ komentáře mají do pěti řádků a snímky před a po leží
 v `docs/snimky/<číslo issue>-<název>/`. Syrový nápad bez nadpisů kontrolu
 neshodí, tvar mu dodá agent. Hlídá to kontrola z `nastroje`: hned při zakládání
 a změně issue (štítek `tvar nesedí` a komentář, co chybí) a znovu při pushi.
+Běží jen nad issue od vlastníka a spolupracovníků, ne nad cizím hlášením.
 
 ## Co je hotové
 
