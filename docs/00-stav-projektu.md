@@ -45,12 +45,12 @@ Běží jen nad issue od vlastníka a spolupracovníků, ne nad cizím hlášen�
 
 ## Co se dělá
 
-Plní se otevřené issues z GitHubu (#1 až #10). Hotové v kódu a čekající na
+Plní se otevřené issues z GitHubu (#1 až #14). Hotové v kódu a čekající na
 ověření na zařízení:
 
 - #2 a #6 - číselná klávesnice v tréninku: neotevírá se při odškrtávání
-  předvyplněných sérií a jde zavřít křížkem, tažením dolů i ťuknutím mimo
-  buňky (S8 v deníku)
+  předvyplněných sérií a jde zavřít křížkem i tažením dolů (S8 v deníku).
+  Zbývá plynulé sjetí dolů a zavření ťuknutím mimo buňky, to zatím nefunguje
 - #4 - hodnoty s jednotkou se nezalamují, objemy mají oddělovač tisíců
   (S9 v deníku)
 - #5 - z odcvičeného tréninku jde udělat plán, včetně supersérií
@@ -65,6 +65,13 @@ ověření na zařízení:
 - #8 - hodnotu jde přetáhnout prstem z jedné série do druhé (S16 v deníku)
 - #7 - šikmé břišní jsou na mapě vlastní partie s vlastním sheetem a přibyly
   čtyři cviky, které na ně padají (S17 v deníku)
+- #12 - ze sheetu Nastavení cviku vede cesta ven křížkem, obsah roluje a sheet
+  ustoupí klávesnici; stejně i sheet přejmenování (S21 v deníku)
+- #14 - plovoucí lišta běžícího tréninku už nesedí na tlačítkách, výšku hlásí
+  sama a ťuknutí vedle ní projde na obsah (S22 v deníku)
+
+Z testu na zařízení zbývá neopravené: #13 (přetahování hodnot mezi sériemi)
+a plynulost zavírání keypadu z #6.
 
 ## Co je dál
 

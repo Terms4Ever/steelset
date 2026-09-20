@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { Alert, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useMiniBarSpace } from '@/components/MiniWorkoutBar';
 import { Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { dayName, fmtDateShort, NBSP } from '@/lib/format';
@@ -14,6 +15,8 @@ const DAY = 86_400_000;
 
 export default function Trash() {
   const router = useRouter();
+  // plovoucí lišta běžícího tréninku leží nad obsahem, tohle jí drží místo dole
+  const barSpace = useMiniBarSpace();
   const trashed = useStore((s) => s.trashedWorkouts);
   const restoreTrashedWorkout = useStore((s) => s.restoreTrashedWorkout);
   const deleteTrashedForever = useStore((s) => s.deleteTrashedForever);
@@ -49,7 +52,7 @@ export default function Trash() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: space.xl, paddingTop: 6, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: space.xl, paddingTop: 6, paddingBottom: 40 + barSpace }} showsVerticalScrollIndicator={false}>
         {items.length === 0 ? (
           <View style={{ alignItems: 'center', marginTop: space.xxl }}>
             <Ionicons name="trash-outline" size={40} color={palette.surface3} />

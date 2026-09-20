@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AdBanner } from '@/components/AdBanner';
 import { heatColor, MuscleMapChart, MuscleMapLegend, MuscleRegion } from '@/components/MuscleMapChart';
+import { useMiniBarSpace } from '@/components/MiniWorkoutBar';
 import { Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import {
@@ -30,6 +31,8 @@ const PERIODS = [
 
 export default function MuscleMap() {
   const router = useRouter();
+  // plovoucí lišta běžícího tréninku leží nad obsahem, tohle jí drží místo dole
+  const barSpace = useMiniBarSpace();
   // frozen at mount so the window is stable and the memos below actually hold between renders
   const [now] = useState(() => Date.now());
   const workouts = useStore((s) => s.workouts);
@@ -89,7 +92,7 @@ export default function MuscleMap() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: space.xl, paddingTop: 6, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: space.xl, paddingTop: 6, paddingBottom: 40 + barSpace }} showsVerticalScrollIndicator={false}>
         {/* period chips */}
         <View style={{ flexDirection: 'row', gap: 8 }}>
           {PERIODS.map((p) => (

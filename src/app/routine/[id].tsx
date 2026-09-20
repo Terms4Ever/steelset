@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useMiniBarSpace } from '@/components/MiniWorkoutBar';
 import { PrimaryButton, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { haptic } from '@/lib/haptic';
@@ -12,6 +13,8 @@ import { useExercisesById, useStore } from '@/store/useStore';
 
 export default function RoutineEditor() {
   const router = useRouter();
+  // plovoucí lišta běžícího tréninku leží nad obsahem, tohle jí drží místo dole
+  const barSpace = useMiniBarSpace();
   const { id } = useLocalSearchParams<{ id: string }>();
   const routines = useStore((s) => s.routines);
   const updateRoutine = useStore((s) => s.updateRoutine);
@@ -82,7 +85,7 @@ export default function RoutineEditor() {
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: space.xl, paddingBottom: 40 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: space.xl, paddingBottom: 40 + barSpace }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <TextInput
           value={routine.name}
           onChangeText={(t) => updateRoutine(routine.id, { name: t })}

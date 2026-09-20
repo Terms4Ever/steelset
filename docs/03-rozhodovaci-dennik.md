@@ -577,3 +577,51 @@ o čísle issue v nadpisu commitu. Pryč je sekce se stavem z července, protož
 `.claude/launch.json` a `.claude/settings.json` v gitu zůstávají, přibyl jen
 zákaz osobního `.claude/settings.local.json` v `.gitignore`. Společný standard
 je v deníku nastroje pod N23.
+
+---
+
+## S21 - Sheety nejsou absolutně umístěné, klávesnice je vytlačí nahoru (20. 9. 2026)
+
+**Stav.** Sheet Nastavení cviku i sheet přejmenování ve výběru cviků byly
+`position: absolute` přilepené ke spodní hraně, bez `ScrollView` a bez
+`KeyboardAvoidingView`. Ven vedlo jedině ťuknutí na podklad. S otevřenou
+klávesnicí tedy tlačítko Uložit zmizelo pod ní, obsah nešel odrolovat a podklad
+byl taky pod klávesnicí: aplikace se zasekla a rozdělaná úprava se ztratila (#12).
+
+**Rozhodnutí.** Sheet je normální prvek na konci sloupce (`justifyContent: flex-end`),
+obalený `KeyboardAvoidingView`. Obsah leží v `ScrollView`
+s `keyboardShouldPersistTaps="handled"`, výška je zastropovaná na 92 procent
+obrazovky a v hlavičce je křížek.
+
+**Proč.** Absolutně umístěný prvek klávesnice nevytlačí, protože ho drží spodní
+hrana okna. Cesta ven navíc nesmí záviset na trefení podkladu, ten klávesnice
+zakryje jako první. Křížek je vždy na stejném místě a je vidět.
+
+**Čím ověřeno.** Ve webovém náhledu: sheet roluje, tlačítko Uložit je dosažitelné,
+křížek zavírá. Chování s otevřenou klávesnicí ověřit až na zařízení, ve webu se
+klávesnice chová jinak.
+
+---
+
+## S22 - Výšku plovoucí lišty hlásí lišta sama, ne každá obrazovka zvlášť (20. 9. 2026)
+
+**Stav.** `FloatingWorkoutBar` v kořenovém layoutu je absolutní pruh nad obsahem
+a obrazovky pod ním o něm nevěděly. Všechny měly `paddingBottom: 40`, což je míň
+než výška lišty, takže lišta sedla na poslední tlačítko. V detailu tréninku tím
+znepřístupnila „Aktualizovat plán" (#14). Pruh má navíc pozadí barvy stránky,
+takže nebylo poznat, kde končí, a bral ťuknutí v celé své výšce.
+
+**Rozhodnutí.** `MiniWorkoutBar` vystavuje `MINI_BAR_HEIGHT` a hook
+`useMiniBarSpace()`, který vrací výšku i se spodním insetem, nebo nulu, když
+žádný trénink neběží. Obrazovky mimo taby si o tu hodnotu zvětší spodní odsazení.
+Pruh dostal `pointerEvents="box-none"`, takže ťuknutí vedle samotné lišty projde
+na obsah pod ní.
+
+**Proč.** Opravovat mezeru po jedné obrazovce je past: další obrazovka na to
+zapomene. Výšku zná lišta, tak ji má hlásit ona. Konstanta je daná, ne měřená,
+aby odsazení platilo hned při prvním vykreslení a neposkočilo.
+
+**Čím ověřeno.** Ve webovém náhledu na 375 × 812: při plném odrolování je mezi
+tlačítkem a lištou 46 px, překryv žádný. Bez běžícího tréninku zůstává odsazení
+40 px, tedy jako dřív.
+

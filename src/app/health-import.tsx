@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useMiniBarSpace } from '@/components/MiniWorkoutBar';
 import { Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { fmtClock, NBSP, relativeDay } from '@/lib/format';
@@ -12,6 +13,8 @@ import { localCoversWindow, useStore } from '@/store/useStore';
 
 export default function HealthImport() {
   const router = useRouter();
+  // plovoucí lišta běžícího tréninku leží nad obsahem, tohle jí drží místo dole
+  const barSpace = useMiniBarSpace();
   const workouts = useStore((s) => s.workouts);
   const importHealthWorkout = useStore((s) => s.importHealthWorkout);
   const healthEnabled = useStore((s) => s.settings.healthEnabled);
@@ -88,7 +91,7 @@ export default function HealthImport() {
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: space.xl, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: space.xl, paddingBottom: 40 + barSpace }} showsVerticalScrollIndicator={false}>
         <Txt size={type.body} weight="medium" color={palette.textMute} style={{ marginBottom: space.lg }}>
           Tréninky z hodinek / Kondice za posledních 30 dní. Ťukni pro přidání do Steelsetu i s tepem.
         </Txt>

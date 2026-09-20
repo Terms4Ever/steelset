@@ -34,7 +34,8 @@ function FloatingWorkoutBar() {
   const HIDDEN = ['/workout', '/onboarding', '/', '/plany', '/pokrok', '/kalendar', '/profil', '/exercises', '/exercise-new'];
   if (!hasActive || HIDDEN.includes(pathname)) return null;
   return (
-    <View style={{ position: 'absolute', left: 0, right: 0, bottom: Math.max(insets.bottom, 10) }}>
+    /* box-none: ťuknutí vedle samotné lišty musí projít na obsah pod ní, ne se ztratit */
+    <View pointerEvents="box-none" style={{ position: 'absolute', left: 0, right: 0, bottom: Math.max(insets.bottom, 10) }}>
       <MiniWorkoutBar />
     </View>
   );

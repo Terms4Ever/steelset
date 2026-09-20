@@ -2,11 +2,34 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { fmtClock } from '@/lib/format';
 import { activeWorkout, useStore } from '@/store/useStore';
+
+/**
+ * Výška lišty: 6 px odsazení nahoře + rámeček 1 + 9 svisle + 34 obsah + 9 + rámeček 1.
+ * Je daná, ne měřená, aby obrazovky pod plovoucí lištou věděly, o kolik se mají odsadit,
+ * ještě než se lišta vůbec vykreslí.
+ */
+export const MINI_BAR_HEIGHT = 60;
+
+/**
+ * Kolik místa si má obrazovka nechat dole, aby jí plovoucí lišta nesedla na obsah.
+ * Vrací nulu, když žádný trénink neběží, takže bez tréninku se mezera nezvětší.
+ *
+ * Používají to jen obrazovky mimo taby (`FloatingWorkoutBar` v `src/app/_layout.tsx`).
+ * Na tabech je lišta součástí `TabBar`, tam si obsah odsazuje sám.
+ */
+export function useMiniBarSpace() {
+  const insets = useSafeAreaInsets();
+  const workouts = useStore((s) => s.workouts);
+  const activeId = useStore((s) => s.activeWorkoutId);
+  const hasActive = !!activeId && workouts.some((w) => w.id === activeId);
+  return hasActive ? MINI_BAR_HEIGHT + Math.max(insets.bottom, 10) : 0;
+}
 
 /** Persistent "workout in progress" bar shown above the tab bar on every tab. */
 export function MiniWorkoutBar() {
@@ -29,7 +52,7 @@ export function MiniWorkoutBar() {
   const elapsed = active.manual ? null : Math.floor((Date.now() - active.startedAt) / 1000);
 
   return (
-    <View style={{ backgroundColor: palette.bg, paddingHorizontal: space.lg, paddingTop: 6 }}>
+    <View pointerEvents="box-none" style={{ backgroundColor: palette.bg, paddingHorizontal: space.lg, paddingTop: 6 }}>
       <Pressable
         onPress={() => router.push('/workout')}
         style={{

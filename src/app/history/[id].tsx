@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AdBanner } from '@/components/AdBanner';
 import { HrChart } from '@/components/HrChart';
+import { useMiniBarSpace } from '@/components/MiniWorkoutBar';
 import { PrimaryButton, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { e1rm, exerciseVolumeFor, hrWindow, perExerciseHr, summarizeSets, workoutVolumeEx } from '@/lib/calc';
@@ -29,6 +30,8 @@ function bestSetLabel(le: any, ex: any, w: any, unit: any): string {
 
 export default function WorkoutDetail() {
   const router = useRouter();
+  // plovoucí lišta běžícího tréninku leží nad obsahem, tohle jí drží místo dole
+  const barSpace = useMiniBarSpace();
   const { id } = useLocalSearchParams<{ id: string }>();
   const workouts = useStore((s) => s.workouts);
   const unit = useStore((s) => s.settings.unit);
@@ -161,7 +164,7 @@ export default function WorkoutDetail() {
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: space.xl, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ padding: space.xl, paddingBottom: 40 + barSpace }} showsVerticalScrollIndicator={false}>
         {renaming ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <TextInput
