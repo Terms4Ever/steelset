@@ -77,6 +77,11 @@ a po pushi se ověřuje, že běh doopravdy prošel (S12 v deníku).
 
 Nativní části se z Windows otestovat nedají. TestFlight je test.
 
+Dokud v prostředí chybí klíč RevenueCatu, nejde si Pro koupit, a tedy ani ověřit,
+jak aplikace vypadá bez reklam. Na to je v Profilu skrytý přepínač: sedm ťuknutí
+na řádek s verzí odemkne sekci Jen pro testování. Objeví se jen tehdy, když
+nákupy nejsou dostupné, takže po zapojení obchodu zmizí sám.
+
 Reklamy ani nákupy se v prohlížeči nespustí. Balíčky mají varianty `.web`, které
 se tváří jako neplatící uživatel bez reklam, takže náhled zůstává použitelný,
 ale chování reklam se ověřuje jen na zařízení.

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, Platform, Pressable, View } from 'react-native';
 
 import { Card, Screen, Txt } from '@/components/ui';
@@ -10,6 +10,7 @@ import { workoutsToCsv } from '@/lib/csv';
 import { exportCsv } from '@/lib/export';
 import { deleteMyHealthWorkouts, healthSelfTest, latestBodyweightKg, requestHealth } from '@/lib/health';
 import { fmtNum, fromDisplayWeight, toDisplayWeight } from '@/lib/format';
+import { purchasesAvailable } from '@/lib/purchases';
 import { useExercisesById, useStore } from '@/store/useStore';
 
 export default function Profil() {
@@ -18,6 +19,7 @@ export default function Profil() {
   const workouts = useStore((s) => s.workouts);
   const trashedCount = useStore((s) => s.trashedWorkouts.length);
   const isPro = useStore((s) => s.isPro);
+  const setPro = useStore((s) => s.setPro);
   const setUnit = useStore((s) => s.setUnit);
   const setSetting = useStore((s) => s.setSetting);
   const wipeAll = useStore((s) => s.wipeAll);
@@ -41,6 +43,11 @@ export default function Profil() {
       if (e?.code !== 'ERR_REQUEST_CANCELED') Alert.alert('Přihlášení selhalo', 'Zkus to prosím znovu.');
     }
   };
+
+  // Bez klíče RevenueCatu si Pro nejde koupit, takže by se ad-free verze nedala otestovat.
+  // Sedm ťuknutí na řádek s verzí odemkne ruční přepínač. Jakmile obchod ožije, zmizí sám.
+  const [versionTaps, setVersionTaps] = useState(0);
+  const testerUnlocked = versionTaps >= 7 && !purchasesAvailable();
 
   const finishedCount = workouts.filter((w) => w.finishedAt).length;
 
@@ -233,9 +240,40 @@ export default function Profil() {
         </Pressable>
       </Section>
 
-      <Txt size={type.caption} color={palette.textMute} style={{ textAlign: 'center', marginTop: space.xl }}>
-        Steelset · v1.0.0 · data zůstávají v telefonu
-      </Txt>
+      {testerUnlocked && (
+        <Section title="JEN PRO TESTOVÁNÍ">
+          <Pressable
+            onPress={() => setPro(!isPro)}
+            style={{ flexDirection: 'row', alignItems: 'center', gap: 14, padding: space.lg }}>
+            <Ionicons name="construct-outline" size={20} color={palette.amber} />
+            <View style={{ flex: 1 }}>
+              <Txt size={type.body} weight="medium">
+                Předstírat předplatné
+              </Txt>
+              <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ marginTop: 1 }}>
+                {isPro ? 'Zapnuto - reklamy skryté' : 'Vypnuto - reklamy se zobrazují'}
+              </Txt>
+            </View>
+            <View
+              style={{
+                width: 48,
+                height: 28,
+                borderRadius: 14,
+                padding: 3,
+                backgroundColor: isPro ? palette.accent : palette.surface3,
+                alignItems: isPro ? 'flex-end' : 'flex-start',
+              }}>
+              <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: palette.bg }} />
+            </View>
+          </Pressable>
+        </Section>
+      )}
+
+      <Pressable onPress={() => setVersionTaps((n) => n + 1)}>
+        <Txt size={type.caption} color={palette.textMute} style={{ textAlign: 'center', marginTop: space.xl }}>
+          Steelset · v1.0.0 · data zůstávají v telefonu
+        </Txt>
+      </Pressable>
     </Screen>
   );
 }
