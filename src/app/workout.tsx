@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, AppState, PanResponder, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { Alert, AppState, KeyboardAvoidingView, PanResponder, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 import Animated, { SlideInDown, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -812,20 +812,37 @@ export default function Workout() {
 
       {/* muscle-reassignment sheet */}
       {muscleEdit && (
-        <Pressable
-          onPress={() => setMuscleEdit(null)}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)' }}>
-          <Pressable
-            onPress={(e) => e.stopPropagation()}
-            style={{ position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: palette.surface, borderTopLeftRadius: 22, borderTopRightRadius: 22, padding: space.xl, paddingBottom: 34, borderWidth: 1, borderColor: palette.hairline }}>
-            <View style={{ width: 38, height: 4, borderRadius: 2, backgroundColor: palette.surface3, alignSelf: 'center', marginBottom: 12 }} />
-            <Txt size={type.h1} weight="bold">
-              Nastavení cviku
-            </Txt>
-            <Txt size={type.label} weight="medium" color={palette.textMute} style={{ marginTop: 2 }}>
-              Změna platí všude - i v historii, v plánech a na svalové mapě
-            </Txt>
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' }}>
+          {/* podklad zavírá sheet; sheet sám není absolutní, aby ho klávesnice mohla vytlačit nahoru */}
+          <Pressable onPress={() => setMuscleEdit(null)} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)' }} />
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ maxHeight: '92%' }}>
+            <View
+              style={{ flexShrink: 1, backgroundColor: palette.surface, borderTopLeftRadius: 22, borderTopRightRadius: 22, borderWidth: 1, borderColor: palette.hairline }}>
+              <View style={{ paddingHorizontal: space.xl, paddingTop: 12 }}>
+                <View style={{ width: 38, height: 4, borderRadius: 2, backgroundColor: palette.surface3, alignSelf: 'center', marginBottom: 12 }} />
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
+                  <View style={{ flex: 1 }}>
+                    <Txt size={type.h1} weight="bold">
+                      Nastavení cviku
+                    </Txt>
+                    <Txt size={type.label} weight="medium" color={palette.textMute} style={{ marginTop: 2 }}>
+                      Změna platí všude - i v historii, v plánech a na svalové mapě
+                    </Txt>
+                  </View>
+                  {/* cesta ven nesmí záviset na trefení podkladu, ten klávesnice zakryje */}
+                  <Pressable
+                    onPress={() => setMuscleEdit(null)}
+                    hitSlop={10}
+                    style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: palette.surface2, alignItems: 'center', justifyContent: 'center' }}>
+                    <Ionicons name="close" size={20} color={palette.textDim} />
+                  </Pressable>
+                </View>
+              </View>
 
+              <ScrollView
+                contentContainerStyle={{ paddingHorizontal: space.xl, paddingBottom: 34 }}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: space.lg, marginBottom: 8 }}>
               <Txt size={type.caption} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5 }}>
                 NÁZEV
@@ -928,8 +945,10 @@ export default function Workout() {
                 Uložit nastavení cviku
               </Txt>
             </Pressable>
-          </Pressable>
-        </Pressable>
+              </ScrollView>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
       )}
     </View>
   );
