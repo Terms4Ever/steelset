@@ -36,3 +36,7 @@ yarn-error.*
 
 # macOS
 .DS_Store
+
+# Osobní nastavení Claude Code je věc stroje, ne projektu. Sdílené
+# .claude/launch.json a .claude/settings.json v gitu naopak patří.
+.claude/settings.local.json

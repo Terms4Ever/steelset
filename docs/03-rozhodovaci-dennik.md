@@ -569,3 +569,11 @@ Obsah zůstal: názvosloví po přejmenováních, sedm doménových pravidel o d
 brány `tsc`, `jest` a `expo export`, postup pro EAS a TestFlight i pravidlo
 o čísle issue v nadpisu commitu. Pryč je sekce se stavem z července, protože
 živý stav patří do `docs/00-stav-projektu.md` a dvakrát se neudržuje.
+
+---
+
+## S22 - Osobní nastavení Claude Code mimo git (20. 9. 2026)
+
+`.claude/launch.json` a `.claude/settings.json` v gitu zůstávají, přibyl jen
+zákaz osobního `.claude/settings.local.json` v `.gitignore`. Společný standard
+je v deníku nastroje pod N23.
