@@ -47,6 +47,7 @@ ověření na zařízení:
 - #10 - z repozitáře zmizely zbytky po šabloně Expo (S14 v deníku)
 - #9 - plán už váhu sám nenavyšuje, místo toho nabídne zvýšení při zaseknutí
   (S15 v deníku)
+- #8 - hodnotu jde přetáhnout prstem z jedné série do druhé (S16 v deníku)
 
 ## Co je dál
 

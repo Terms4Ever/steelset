@@ -13,6 +13,7 @@ import { isPR, lastPerformance, lastSession, MS, summarizeSets } from '@/lib/cal
 import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtNum, fmtWeight, fromDisplayWeight, relativeDay, toDisplayWeight, unitIncrement } from '@/lib/format';
 import { focusAfterSetRemoved, KeypadFocus } from '@/lib/keypad';
 import { canMove, moveBlock, remapIndex, stableKeys } from '@/lib/reorder';
+import { canCopy, CopyField, dropIndex, valueToCopy } from '@/lib/copyValue';
 import { detectStall } from '@/lib/stall';
 import { showInterstitial } from '@/lib/ads';
 import { haptic } from '@/lib/haptic';
@@ -69,6 +70,9 @@ export default function Workout() {
   const [orderDirty, setOrderDirty] = useState(false);
   // nabídky na zvýšení váhy odmítnuté v tomhle tréninku (jen do jeho konce)
   const [stallHidden, setStallHidden] = useState<string[]>([]);
+  // přetahování hodnoty mezi sériemi: co se táhne a kam to zrovna míří
+  const [drag, setDrag] = useState<{ ex: number; field: CopyField; from: number; to: number } | null>(null);
+  const [rowH, setRowH] = useState(0);
   // stabilni reference: PanResponder keypadu se vytvari jen jednou
   const closeKeypad = useCallback(() => setFocus(null), []);
   // rest is timestamp-based so it keeps counting real time across backgrounding
@@ -279,6 +283,45 @@ export default function Workout() {
 
   // přírůstek v kg: nastavení je zvlášť pro kg a lb, detekce zaseknutí počítá vždy v kg
   const incKg = unit === 'lb' ? fromDisplayWeight(incrementLb, unit) : increment;
+
+  // přetažení hodnoty z jedné série do druhé (src/lib/copyValue.ts)
+  const dragStart = (ex: number, field: CopyField, from: number) => {
+    haptic.tap();
+    setFocus(null); // ať se nepíše do buňky, která se zrovna přetahuje
+    setDrag({ ex, field, from, to: from });
+  };
+  const dragMove = (ex: number, field: CopyField, from: number, dy: number) => {
+    const count = active.exercises[ex]?.sets.length ?? 0;
+    setDrag((d) => {
+      const to = dropIndex(from, dy, rowH, count);
+      return d && d.to === to ? d : { ex, field, from, to };
+    });
+  };
+  const dragEnd = (ex: number, field: CopyField, from: number, dy: number) => {
+    const sets = active.exercises[ex]?.sets ?? [];
+    const to = dropIndex(from, dy, rowH, sets.length);
+    const v = valueToCopy(sets, from, to, field);
+    if (v != null) {
+      haptic.tap();
+      updateSet(ex, to, { [field]: v });
+    }
+    setDrag(null);
+  };
+
+  const dragFor = (ex: number, field: CopyField, from: number) => ({
+    onStart: () => dragStart(ex, field, from),
+    onMove: (dy: number) => dragMove(ex, field, from, dy),
+    onEnd: (dy: number) => dragEnd(ex, field, from, dy),
+    onCancel: () => setDrag(null),
+  });
+  const isDragSource = (ex: number, field: CopyField, si: number) =>
+    !!drag && drag.ex === ex && drag.field === field && drag.from === si;
+  const isDropTarget = (ex: number, field: CopyField, si: number) =>
+    !!drag &&
+    drag.ex === ex &&
+    drag.field === field &&
+    drag.to === si &&
+    canCopy(active.exercises[ex].sets, drag.from, si, field);
 
   // přijetí nabídky: vyšší váha se předvyplní do všech nedokončených pracovních sérií cviku
   const acceptStall = (ex: number, nextKg: number) => {
@@ -611,6 +654,11 @@ export default function Workout() {
                   return (
                     <View
                       key={si}
+                      onLayout={(e) => {
+                        // výška řádku i s mezerou - z ní se počítá, na kterou sérii přetažení míří
+                        const h = e.nativeEvent.layout.height + 8;
+                        setRowH((cur) => (Math.abs(cur - h) > 1 ? h : cur));
+                      }}
                       style={{
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -633,9 +681,30 @@ export default function Workout() {
                       </Pressable>
 
                       {showW && (
-                        <Cell focused={isFocus(focus, ex, si, 'weight')} value={cellValue(ex, si, 'weight')} ghost={p?.weight != null ? fmtNum(toDisplayWeight(isBw(le.exerciseId) ? p.weight - bwKg : p.weight, unit), 2).replace(',', '.') : ''} done={s.done} delta={dW} onPress={() => focusCell(ex, si, 'weight')} />
+                        <Cell
+                          focused={isFocus(focus, ex, si, 'weight')}
+                          value={cellValue(ex, si, 'weight')}
+                          ghost={p?.weight != null ? fmtNum(toDisplayWeight(isBw(le.exerciseId) ? p.weight - bwKg : p.weight, unit), 2).replace(',', '.') : ''}
+                          done={s.done}
+                          delta={dW}
+                          onPress={() => focusCell(ex, si, 'weight')}
+                          drag={dragFor(ex, 'weight', si)}
+                          dragging={isDragSource(ex, 'weight', si)}
+                          target={isDropTarget(ex, 'weight', si)}
+                        />
                       )}
-                      <Cell focused={isFocus(focus, ex, si, 'reps')} value={cellValue(ex, si, 'reps')} ghost={p?.reps != null ? String(p.reps) : ''} done={s.done} delta={dR} deltaInt onPress={() => focusCell(ex, si, 'reps')} />
+                      <Cell
+                        focused={isFocus(focus, ex, si, 'reps')}
+                        value={cellValue(ex, si, 'reps')}
+                        ghost={p?.reps != null ? String(p.reps) : ''}
+                        done={s.done}
+                        delta={dR}
+                        deltaInt
+                        onPress={() => focusCell(ex, si, 'reps')}
+                        drag={dragFor(ex, 'reps', si)}
+                        dragging={isDragSource(ex, 'reps', si)}
+                        target={isDropTarget(ex, 'reps', si)}
+                      />
 
                       <Pressable onLongPress={() => removeSetAt(ex, si)} onPress={() => commit(ex, si)} style={{ width: 48, alignItems: 'center' }}>
                         <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: s.done ? palette.accent : 'transparent', borderWidth: s.done ? 0 : 2, borderColor: palette.surface3, alignItems: 'center', justifyContent: 'center' }}>
@@ -875,6 +944,17 @@ function cycleType(updateSet: any, ex: number, si: number, s: SetEntry) {
   updateSet(ex, si, { type: nextType });
 }
 
+/**
+ * Buňka s hodnotou. Kromě ťuknutí (fokus + keypad) umí přetáhnout svoji hodnotu
+ * do jiné série stejného sloupce.
+ *
+ * Gesto se ozbrojí až podržením prstu (`HOLD_MS`). Do té doby se buňka chová jako
+ * obyčejné tlačítko a svislé tažení patří rolování stránky - jinak by se přetahování
+ * pralo s rolováním, protože série jsou pod sebou. Jakmile se gesto chytne,
+ * `onPanResponderTerminationRequest` ho odmítne pustit, aby ho ScrollView nesebral.
+ */
+const HOLD_MS = 260;
+
 function Cell({
   focused,
   value,
@@ -883,6 +963,9 @@ function Cell({
   onPress,
   delta,
   deltaInt,
+  drag,
+  dragging,
+  target,
 }: {
   focused: boolean;
   value: string;
@@ -891,23 +974,81 @@ function Cell({
   onPress: () => void;
   delta?: number | null;
   deltaInt?: boolean;
+  drag?: { onStart: () => void; onMove: (dy: number) => void; onEnd: (dy: number) => void; onCancel: () => void };
+  dragging?: boolean;
+  target?: boolean;
 }) {
   // vs-last-session delta shown under the number once the set is done (+5 / -2,5)
   const showDelta = done && delta != null && Math.abs(delta) > 0.004;
+  const armed = useRef(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // PanResponder se smí vyrobit jen jednou: při přetahování se rodič překresluje na každý
+  // posun a nová instance by měla vlastní prázdný gestureState, takže by puštění hlásilo dy 0
+  const dragRef = useRef(drag);
+  dragRef.current = drag;
+  const disarm = () => {
+    armed.current = false;
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+  };
+  useEffect(() => disarm, []);
+
+  const pan = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => false, // ťuknutí i rolování ať fungují jako dosud
+        onMoveShouldSetPanResponder: (_e, g) => !!dragRef.current && armed.current && Math.abs(g.dy) > 3,
+        onPanResponderTerminationRequest: () => false, // rozjeté přetažení si ScrollView nevezme
+        onPanResponderGrant: () => dragRef.current?.onStart(),
+        onPanResponderMove: (_e, g) => dragRef.current?.onMove(g.dy),
+        onPanResponderRelease: (_e, g) => {
+          disarm();
+          dragRef.current?.onEnd(g.dy);
+        },
+        onPanResponderTerminate: () => {
+          disarm();
+          dragRef.current?.onCancel();
+        },
+      }),
+    [],
+  );
+
   return (
-    <Pressable onPress={onPress} style={{ flex: 1, alignItems: 'center' }}>
-      <View style={{ minWidth: 64, paddingVertical: 6, borderRadius: 10, alignItems: 'center', backgroundColor: focused ? palette.surface3 : 'transparent', borderWidth: focused ? 1 : 0, borderColor: palette.accent }}>
-        <Txt size={20} weight="bold" num color={value ? (done ? palette.accent : palette.text) : palette.textGhost}>
-          {value || ghost || '-'}
-        </Txt>
-        {showDelta && (
-          <Txt size={10} weight="bold" num color={delta! > 0 ? palette.accent : palette.red} style={{ marginTop: -1 }}>
-            {delta! > 0 ? '+' : ''}
-            {deltaInt ? String(Math.round(delta!)) : fmtNum(delta!, 2)}
+    <View
+      {...pan.panHandlers}
+      onTouchStart={() => {
+        if (!dragRef.current) return;
+        disarm();
+        timer.current = setTimeout(() => (armed.current = true), HOLD_MS);
+      }}
+      onTouchEnd={disarm}
+      onTouchCancel={disarm}
+      style={{ flex: 1, alignItems: 'center' }}>
+      <Pressable onPress={onPress} disabled={dragging} style={{ width: '100%', alignItems: 'center' }}>
+        <View
+          style={{
+            minWidth: 64,
+            paddingVertical: 6,
+            borderRadius: 10,
+            alignItems: 'center',
+            backgroundColor: target ? palette.accentDeep : focused ? palette.surface3 : 'transparent',
+            borderWidth: focused || dragging || target ? 1 : 0,
+            borderColor: dragging ? palette.textMute : palette.accent,
+            borderStyle: dragging ? 'dashed' : 'solid',
+            opacity: dragging ? 0.5 : 1,
+          }}>
+          <Txt size={20} weight="bold" num color={value ? (done ? palette.accent : palette.text) : palette.textGhost}>
+            {value || ghost || '-'}
           </Txt>
-        )}
-      </View>
-    </Pressable>
+          {showDelta && (
+            <Txt size={10} weight="bold" num color={delta! > 0 ? palette.accent : palette.red} style={{ marginTop: -1 }}>
+              {delta! > 0 ? '+' : ''}
+              {deltaInt ? String(Math.round(delta!)) : fmtNum(delta!, 2)}
+            </Txt>
+          )}
+        </View>
+      </Pressable>
+    </View>
   );
 }
 

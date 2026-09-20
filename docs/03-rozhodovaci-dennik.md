@@ -389,3 +389,45 @@ výchozí hodnotu sám.
 které se počítá i tělesná váha z `Workout.bodyweightKg`. Když si uživatel změní
 tělesnou váhu, série se rozejdou a zaseknutí se nenajde. Radši nic nenabídnout
 než nabídnout blbost, takže to zůstává.
+
+---
+
+## S16 - Hodnota se přetáhne prstem z jedné série do druhé (20. 9. 2026)
+
+**Stav.** Buňka uměla jen ťuknutí: fokus a keypad. Opsat 60 kg z první série do
+druhé znamenalo ťuknout a přepsat ručně.
+
+**Rozhodnutí: podržet a táhnout.** Gesto se ozbrojí až po 260 ms držení prstu.
+Do té doby je buňka obyčejné tlačítko a svislé tažení patří rolování stránky.
+Bez téhle prodlevy by se přetahování s rolováním pralo, protože série jsou pod
+sebou a obě gesta jsou svislá. Jakmile se gesto chytne, `onPanResponderTerminationRequest`
+vrací false, takže ho ScrollView nemůže sebrat.
+
+**Proč PanResponder a ne gesture-handler.** `react-native-gesture-handler` má na
+tohle `activateAfterLongPress`, ale chtěl by `GestureHandlerRootView` kolem celé
+aplikace. To je zásah do kořene, který se z Windows neověří. PanResponder stačí
+a je to stejná volba jako u zavírání klávesnice (S8).
+
+**Cíl se počítá, neměří.** `dropIndex` dělí svislý posun výškou řádku (měří se
+přes `onLayout`, všechny řádky jsou stejné) a výsledek ořízne na rozsah sérií.
+Odpadá měření jednotlivých buněk během gesta. Vedlejší efekt je užitečný: táhne
+se jen uvnitř jednoho sloupce jednoho cviku, takže váha nemůže skončit
+v opakováních ani u jiného cviku - ne proto, že by to kontrola zakázala, ale
+protože na to gesto nedosáhne.
+
+**Co se kopíruje.** Hodnota tak, jak je uložená, tedy u váhy celkové kilogramy.
+U cviků s vlastní vahou je `Workout.bodyweightKg` pro celý trénink stejný, takže
+zkopírovaná celková váha dá v +KG sloupci přesně ten přídavek, který uživatel
+viděl u zdroje. Čistá část je `valueToCopy` v `src/lib/copyValue.ts`.
+
+**Dokončené série jdou přepsat.** Ťuknutím se dokončená série upravit dá už dnes,
+tak by bylo divné, aby zrovna přetažení couvlo. Zdroj se nikdy nemění.
+
+**Zpětná vazba.** Zdroj zešedne a orámuje se přerušovaně, cíl se zvýrazní zeleně.
+Haptika cvakne při chycení a při zapsání. Prázdná zdrojová buňka nemá co dát,
+takže se cíl nezvýrazní a puštění nic neudělá.
+
+**Past.** PanResponder se v buňce vyrábí jen jednou. Při tažení se rodič
+překresluje na každý posun a nová instance by měla vlastní prázdný `gestureState`,
+takže by puštění hlásilo posun 0 a hodnota by se zapsala zpátky do zdroje.
+Callbacky proto chodí přes ref.
