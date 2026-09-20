@@ -134,6 +134,7 @@ export interface Settings {
   healthEnabled: boolean; // propojení s Apple Health
   bodyweightKg: number; // tělesná váha (pro cviky s vlastní vahou – shyby, kliky, dipy)
   defaultSets: number; // kolik sérií se předvyplní u nově přidaného cviku
+  stallAlerts: boolean; // nabízet zvýšení váhy, když se cvik zasekne na stejné váze
   onboarded: boolean;
 }
 

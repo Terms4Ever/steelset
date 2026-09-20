@@ -172,7 +172,7 @@ export default function Profil() {
         <Row icon="timer-outline" label="Výchozí odpočinek">
           <Stepper value={settings.restDefaultSec} step={15} min={15} suffix=" s" onChange={(v) => setSetting('restDefaultSec', v)} />
         </Row>
-        <Row icon="list-outline" label="Sérií u nového cviku" last>
+        <Row icon="list-outline" label="Sérií u nového cviku">
           <Stepper
             value={settings.defaultSets ?? 3}
             step={1}
@@ -181,6 +181,9 @@ export default function Profil() {
             suffix="×"
             onChange={(v) => setSetting('defaultSets', v)}
           />
+        </Row>
+        <Row icon="trending-up-outline" label="Nabízet zvýšení váhy" last>
+          <Switch label="Nabízet zvýšení váhy" value={settings.stallAlerts !== false} onChange={(v) => setSetting('stallAlerts', v)} />
         </Row>
       </Section>
 
@@ -283,6 +286,18 @@ function Toggle({ options, value, onChange }: { options: string[]; value: string
         </Pressable>
       ))}
     </View>
+  );
+}
+
+function Switch({ value, onChange, label }: { value: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <Pressable
+      accessibilityLabel={label}
+      onPress={() => onChange(!value)}
+      hitSlop={8}
+      style={{ width: 48, height: 28, borderRadius: 14, backgroundColor: value ? palette.accent : palette.surface3, justifyContent: 'center', padding: 3 }}>
+      <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: value ? palette.bg : palette.textMute, alignSelf: value ? 'flex-end' : 'flex-start' }} />
+    </Pressable>
   );
 }
 

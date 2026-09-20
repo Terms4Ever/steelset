@@ -349,3 +349,43 @@ upozorňovalo, už tam nejsou - vyřešil je rebrand (S7).
 
 **Ověřeno.** tsc čistý, 142 testů, web export projde. V prohlížeči všech devět
 obrazovek naběhne, konzole je čistá a nic si nesahá na chybějící obrázek.
+
+---
+
+## S15 - Plán váhu nenavyšuje, appka nabídne zvýšení při zaseknutí (20. 9. 2026)
+
+**Stav.** Plán s „automatickou progresí" si při spuštění sám přičetl `increment`,
+když minule všechny série splnily cílová opakování. Předvyplněná váha pak byla
+číslo, které uživatel nikdy nezvedl, a nikdo se ho neptal.
+
+**Rozhodnutí.** `buildPrefilledExercise` váhu jen opisuje z posledního výkonu.
+Přepínač v editoru plánu a odznak v seznamu plánů jsou pryč. Pole `autoProgress`
+v datech zůstává kvůli starým plánům a záloze na iCloud, jen ho nikdo nečte -
+hlídá to test, který ho nastaví na `true` a čeká, že se nic nenavýší.
+
+**Co je zaseknutí.** Stejná nejtěžší pracovní váha ve třech trénincích po sobě
+a opakování se za tu dobu nezlepšila. „Nezlepšila" se měří jen mezi krajními
+tréninky té trojice, takže jeden slabší den nabídku nezdrží a přidané opakování
+ji naopak hned ukončí. Zahřívací a nedokončené série se nepočítají. Čistá funkce
+je `detectStall` v `src/lib/stall.ts`, práh `STALL_SESSIONS = 3`.
+
+**Proč tři.** Dva tréninky ještě nejsou vzorec, čtyři už jsou zbytečně dlouhé
+čekání. Práh je konstanta a funkce ho bere i parametrem, takže se dá změnit bez
+zásahu do UI.
+
+**Kde se nabízí.** V živém tréninku u konkrétního cviku, nad sériemi: „3× po sobě
+100 kg. Zkusit 102,5 kg?" s akcí „Zvýšit" a křížkem. Ne jako upozornění na
+Dnešku - rozhodnutí o váze dává smysl ve chvíli, kdy člověk stojí u činky.
+„Zvýšit" předvyplní vyšší váhu do všech nedokončených pracovních sérií cviku.
+Odmítnutí platí do konce tréninku a nikam se neukládá; příště se nabídne znovu,
+protože zaseknutí pořád trvá.
+
+**Vypínač.** `settings.stallAlerts`, výchozí zapnuto, v Profilu jako „Nabízet
+zvýšení váhy". Do `merge` nebylo potřeba nic dopisovat - `settings` se slučují
+přes `{ ...current.settings, ...persisted.settings }`, takže nový klíč dostane
+výchozí hodnotu sám.
+
+**Past.** U cviků s vlastní vahou (shyby, dipy) se porovnává celková váha, do
+které se počítá i tělesná váha z `Workout.bodyweightKg`. Když si uživatel změní
+tělesnou váhu, série se rozejdou a zaseknutí se nenajde. Radši nic nenabídnout
+než nabídnout blbost, takže to zůstává.

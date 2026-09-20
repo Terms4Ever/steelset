@@ -13,6 +13,7 @@ import { isPR, lastPerformance, lastSession, MS, summarizeSets } from '@/lib/cal
 import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtNum, fmtWeight, fromDisplayWeight, relativeDay, toDisplayWeight, unitIncrement } from '@/lib/format';
 import { focusAfterSetRemoved, KeypadFocus } from '@/lib/keypad';
 import { canMove, moveBlock, remapIndex, stableKeys } from '@/lib/reorder';
+import { detectStall } from '@/lib/stall';
 import { showInterstitial } from '@/lib/ads';
 import { haptic } from '@/lib/haptic';
 import { heartRateFor } from '@/lib/health';
@@ -39,6 +40,7 @@ export default function Workout() {
   const bodyweightSetting = useStore((s) => s.settings.bodyweightKg);
   const { updateSet, addSet, toggleSetDone, removeSet, removeActiveExercise, moveActiveExercise, saveActiveOrderToRoutine, finishWorkout, discardWorkout, startWorkout, linkSuperset, setWorkoutDate, setWorkoutHr, setExerciseMuscles, setExerciseName, renameWorkout } = useStore();
   const healthEnabled = useStore((s) => s.settings.healthEnabled);
+  const stallAlerts = useStore((s) => s.settings.stallAlerts);
   const insets = useSafeAreaInsets();
 
   const active = useMemo(() => activeWorkout({ workouts, activeWorkoutId: activeId }), [workouts, activeId]);
@@ -65,6 +67,8 @@ export default function Workout() {
   const [keypadH, setKeypadH] = useState(322);
   // po přesunu cviku v tréninku spuštěném z plánu nabídneme uložení pořadí do plánu
   const [orderDirty, setOrderDirty] = useState(false);
+  // nabídky na zvýšení váhy odmítnuté v tomhle tréninku (jen do jeho konce)
+  const [stallHidden, setStallHidden] = useState<string[]>([]);
   // stabilni reference: PanResponder keypadu se vytvari jen jednou
   const closeKeypad = useCallback(() => setFocus(null), []);
   // rest is timestamp-based so it keeps counting real time across backgrounding
@@ -273,6 +277,19 @@ export default function Workout() {
   // klíče pro React bez indexu - po přesunu by se stav komponent přilepil k jiné pozici
   const exKeys = stableKeys(active.exercises);
 
+  // přírůstek v kg: nastavení je zvlášť pro kg a lb, detekce zaseknutí počítá vždy v kg
+  const incKg = unit === 'lb' ? fromDisplayWeight(incrementLb, unit) : increment;
+
+  // přijetí nabídky: vyšší váha se předvyplní do všech nedokončených pracovních sérií cviku
+  const acceptStall = (ex: number, nextKg: number) => {
+    haptic.tap();
+    const le = active.exercises[ex];
+    le.sets.forEach((st, i) => {
+      if (!st.done && st.type !== 'W') updateSet(ex, i, { weight: nextKg });
+    });
+    setStallHidden((h) => [...h, le.exerciseId]);
+  };
+
   const onFinish = () => {
     const w = active;
     // don't silently discard: a live workout with no completed set stays put + asks the user
@@ -430,6 +447,12 @@ export default function Workout() {
                   hideWeight: !showW,
                 })
               : null;
+            // zaseknutí na váze: stejná nejtěžší váha ve třech trénincích po sobě bez přidaných opakování
+            const stall =
+              stallAlerts !== false && !stallHidden.includes(le.exerciseId)
+                ? detectStall(workouts, le.exerciseId, incKg, { excludeWorkoutId: active.id })
+                : null;
+            const stallWeight = (kg: number) => (isBw(le.exerciseId) ? fmtBwWeight(kg, bwKg, unit) : fmtWeight(kg, unit));
             const tag = supTag(le, ex);
             const grouped = !!le.supersetGroup;
             const contWithPrev = grouped && active.exercises[ex - 1]?.supersetGroup === le.supersetGroup;
@@ -528,6 +551,39 @@ export default function Workout() {
                     <Txt size={type.caption} weight="medium" num color={palette.textMute} style={{ flex: 1 }} numberOfLines={1}>
                       {prevSummary}
                     </Txt>
+                  </View>
+                )}
+
+                {/* zaseknutí na váze - plán sám nenavyšuje, rozhodnutí zůstává na uživateli */}
+                {stall && (
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 8,
+                      marginBottom: 10,
+                      backgroundColor: palette.surface,
+                      borderRadius: radius.sm,
+                      borderWidth: 1,
+                      borderColor: palette.amber,
+                      paddingHorizontal: 10,
+                      paddingVertical: 8,
+                    }}>
+                    <Ionicons name="trending-up" size={14} color={palette.amber} />
+                    <Txt size={type.caption} weight="medium" color={palette.textDim} style={{ flex: 1 }}>
+                      {stall.sessions}× po sobě {stallWeight(stall.weightKg)}. Zkusit {stallWeight(stall.nextKg)}?
+                    </Txt>
+                    <Pressable hitSlop={8} onPress={() => acceptStall(ex, stall.nextKg)}>
+                      <Txt size={type.caption} weight="bold" color={palette.accent}>
+                        Zvýšit
+                      </Txt>
+                    </Pressable>
+                    <Pressable
+                      accessibilityLabel="Zavřít nabídku na zvýšení váhy"
+                      hitSlop={8}
+                      onPress={() => setStallHidden((h) => [...h, le.exerciseId])}>
+                      <Ionicons name="close" size={15} color={palette.textMute} />
+                    </Pressable>
                   </View>
                 )}
 

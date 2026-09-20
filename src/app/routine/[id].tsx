@@ -91,22 +91,6 @@ export default function RoutineEditor() {
           style={{ backgroundColor: palette.surface2, borderRadius: radius.sm, color: palette.text, fontFamily: 'Inter_700Bold', fontSize: 20, paddingHorizontal: 14, paddingVertical: 14 }}
         />
 
-        <Pressable
-          onPress={() => updateRoutine(routine.id, { autoProgress: !routine.autoProgress })}
-          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: palette.surface, borderRadius: radius.sm, padding: space.lg, marginTop: space.md, borderWidth: 1, borderColor: palette.hairline }}>
-          <View style={{ flex: 1, marginRight: 12 }}>
-            <Txt size={type.body} weight="semibold">
-              Automatická progrese
-            </Txt>
-            <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ marginTop: 2 }}>
-              +{useStore.getState().settings.increment} kg, když všechny série dosáhnou cíle
-            </Txt>
-          </View>
-          <View style={{ width: 48, height: 28, borderRadius: 14, backgroundColor: routine.autoProgress ? palette.accent : palette.surface3, justifyContent: 'center', padding: 3 }}>
-            <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: routine.autoProgress ? palette.bg : palette.textMute, alignSelf: routine.autoProgress ? 'flex-end' : 'flex-start' }} />
-          </View>
-        </Pressable>
-
         <Txt size={type.label} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5, marginTop: space.xl, marginBottom: 10 }}>
           CVIKY ({routine.exercises.length})
         </Txt>

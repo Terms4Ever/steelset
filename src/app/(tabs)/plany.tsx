@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
-import { Card, Pill, Screen, Txt } from '@/components/ui';
+import { Card, Screen, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { STARTER_ROUTINES } from '@/data/exercises';
 import { useStore } from '@/store/useStore';
@@ -61,11 +61,6 @@ export default function Plany() {
                   <Txt size={type.h2} weight="bold">
                     {r.name}
                   </Txt>
-                  {r.autoProgress && (
-                    <Pill color={palette.accentDeep} textColor={palette.accent}>
-                      Auto-progrese
-                    </Pill>
-                  )}
                 </View>
                 <Txt size={type.label} weight="medium" color={palette.textMute} style={{ marginTop: 4 }}>
                   {r.folder ? `${r.folder} · ` : ''}

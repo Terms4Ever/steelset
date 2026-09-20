@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { bestE1rm } from '@/lib/calc';
 import { workoutsToCsv } from '@/lib/csv';
+import { detectStall } from '@/lib/stall';
 import { STORE_KEY } from '@/lib/storeKeys';
 import { activeWorkout, allExercises, exercisesById, history, localCoversWindow, useStore } from '@/store/useStore';
 
@@ -51,10 +52,10 @@ describe('store · full workout lifecycle', () => {
     expect(a.exercises[0].sets[0].done).toBe(false);
   });
 
-  it('auto-progresses weight when all target reps were hit', () => {
+  it('plán váhu sám nenavyšuje, ani když se cíl splnil (#9)', () => {
     const rid = s().addRoutine({
       name: 'AP',
-      autoProgress: true,
+      autoProgress: true, // staré záznamy příznak pořád mají, nesmí nic dělat
       exercises: [{ exerciseId: 'ohp', targetSets: 2, targetReps: 5 }],
     });
     s().startWorkout(rid);
@@ -64,7 +65,30 @@ describe('store · full workout lifecycle', () => {
 
     s().startWorkout(rid);
     const a = activeWorkout(s())!;
-    expect(a.exercises[0].sets[0].weight).toBe(42.5); // +increment
+    expect(a.exercises[0].sets[0].weight).toBe(40);
+    expect(a.exercises[0].sets[1].weight).toBe(40);
+  });
+
+  it('nabídne zvýšení až po třech trénincích na stejné váze (#9)', () => {
+    const rid = s().addRoutine({ name: 'Zaseknutý', exercises: [{ exerciseId: 'ohp', targetSets: 1, targetReps: 5 }] });
+    const session = () => {
+      s().startWorkout(rid);
+      s().updateSet(0, 0, { weight: 40, reps: 5, done: true });
+      s().finishWorkout();
+    };
+    session();
+    session();
+    expect(detectStall(s().workouts, 'ohp', s().settings.increment)).toBeNull();
+    session();
+    expect(detectStall(s().workouts, 'ohp', s().settings.increment)).toEqual({ weightKg: 40, sessions: 3, nextKg: 42.5 });
+  });
+
+  it('vypínač upozornění přežije uložení a načtení (#9)', async () => {
+    expect(s().settings.stallAlerts).toBe(true);
+    s().setSetting('stallAlerts', false);
+    await new Promise((r) => setTimeout(r, 0));
+    const saved = JSON.parse((await AsyncStorage.getItem(STORE_KEY)) ?? '{}');
+    expect(saved.state.settings.stallAlerts).toBe(false);
   });
 
   it('discards a session where nothing was completed', () => {

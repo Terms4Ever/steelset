@@ -96,7 +96,7 @@ interface Actions {
   }) => string | null;
 }
 
-const DEFAULT_SETTINGS: Settings = { unit: 'kg', restDefaultSec: 90, increment: 2.5, incrementLb: 5, healthEnabled: false, bodyweightKg: 80, defaultSets: 3, onboarded: false };
+const DEFAULT_SETTINGS: Settings = { unit: 'kg', restDefaultSec: 90, increment: 2.5, incrementLb: 5, healthEnabled: false, bodyweightKg: 80, defaultSets: 3, stallAlerts: true, onboarded: false };
 
 function patchActive(workouts: Workout[], activeId: string | null, fn: (w: Workout) => Workout): Workout[] {
   if (!activeId) return workouts;
@@ -245,7 +245,7 @@ export const useStore = create<State & Actions>()(
           if (r) {
             name = r.name;
             // supersérie z plánu se přenášejí; osamocená skupina (druhý cvik z ní už v plánu není) se zahodí
-            exercises = normalizeSupersets(r.exercises.map((re) => buildPrefilledExercise(re, ws, !!r.autoProgress, st.settings.increment)));
+            exercises = normalizeSupersets(r.exercises.map((re) => buildPrefilledExercise(re, ws)));
           }
         }
         const w: Workout = {

@@ -23,32 +23,37 @@ describe('prefillSets', () => {
   });
 });
 
-describe('buildPrefilledExercise auto-progress', () => {
+describe('buildPrefilledExercise', () => {
   const re = { exerciseId: 'squat', targetSets: 3, targetReps: 5 };
 
-  it('bumps weight by increment when all sets hit the target last time', () => {
+  it('zopakuje poslední výkon a váhu nenavyšuje', () => {
     const ws = [workout('w1', 10_000, 'squat', [done(100, 5), done(100, 5), done(100, 5)])];
-    const le = buildPrefilledExercise(re, ws, true, 2.5);
+    const le = buildPrefilledExercise(re, ws);
     expect(le.sets).toHaveLength(3);
-    expect(le.sets.every((s) => s.weight === 102.5)).toBe(true);
+    expect(le.sets.every((s) => s.weight === 100)).toBe(true);
     expect(le.sets.every((s) => s.reps === 5)).toBe(true);
   });
 
-  it('does NOT bump when a set missed the target', () => {
-    const ws = [workout('w1', 10_000, 'squat', [done(100, 5), done(100, 3)])];
-    const le = buildPrefilledExercise(re, ws, true, 2.5);
-    expect(le.sets[0].weight).toBe(100); // repeats last weight, no bump
+  it('nenavýší ani po splnění cíle ve všech sériích', () => {
+    const ws = [workout('w1', 10_000, 'squat', [done(120, 8), done(120, 8)])];
+    const le = buildPrefilledExercise({ ...re, targetReps: 8 }, ws);
+    expect(le.sets[0].weight).toBe(120);
   });
 
-  it('does NOT bump when auto-progress is off', () => {
-    const ws = [workout('w1', 10_000, 'squat', [done(100, 5), done(100, 5), done(100, 5)])];
-    const le = buildPrefilledExercise(re, ws, false, 2.5);
-    expect(le.sets[0].weight).toBe(100);
-  });
-
-  it('falls back to target reps with no history', () => {
-    const le = buildPrefilledExercise(re, [], true, 2.5);
+  it('bez historie doplní cílová opakování a prázdnou váhu', () => {
+    const le = buildPrefilledExercise(re, []);
     expect(le.sets).toHaveLength(3);
     expect(le.sets[0]).toMatchObject({ weight: null, reps: 5 });
+  });
+
+  it('série bez předlohy dostane cílová opakování', () => {
+    const ws = [workout('w1', 10_000, 'squat', [done(100, 5)])];
+    const le = buildPrefilledExercise(re, ws);
+    expect(le.sets[1]).toMatchObject({ weight: null, reps: 5 });
+  });
+
+  it('supersérii z plánu přenese dál', () => {
+    const le = buildPrefilledExercise({ ...re, supersetGroup: 'ss1' }, []);
+    expect(le.supersetGroup).toBe('ss1');
   });
 });
