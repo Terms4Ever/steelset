@@ -26,7 +26,8 @@ export type MuscleGroup =
   | 'Horní záda'
   | 'Spodní záda'
   | 'Kvadricepsy'
-  | 'Hamstringy';
+  | 'Hamstringy'
+  | 'Šikmé břišní';
 
 /** Nabídka partií pro výběr u cviku (obecné + detailní). */
 export const MUSCLE_GROUP_OPTIONS: MuscleGroup[] = [
@@ -39,6 +40,7 @@ export const MUSCLE_GROUP_OPTIONS: MuscleGroup[] = [
   'Triceps',
   'Předloktí',
   'Břicho',
+  'Šikmé břišní',
   'Kvadricepsy',
   'Hamstringy',
   'Hýždě',

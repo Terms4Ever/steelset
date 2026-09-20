@@ -75,7 +75,7 @@ akcent `#00E07A`, Inter, tabulární číslice. Vizuály vznikají v Claude Desi
 
 ```
 npx tsc --noEmit                 # 0 chyb
-npx jest                         # všechny testy (aktuálně 142)
+npx jest                         # všechny testy (aktuálně 183)
 npx expo export --platform web   # bundling check
 ```
 
@@ -122,7 +122,7 @@ syntetickými eventy - ověřovat přes DOM text (preview_eval) a screenshoty.
 ## Stav (červenec 2026)
 
 TestFlight build 19 (v1.0.0). Hotové: zápis tréninků, plány, pokrok (skóre/1RM),
-anatomická svalová mapa (/muscle-map: 13 svalů, heat buckety, sheet s objemem/trendem/
+anatomická svalová mapa (/muscle-map: 14 svalů, heat buckety, sheet s objemem/trendem/
 top cviky, alerty; stará pill-mapa smazána), úprava partií u cviku (store.exerciseMuscles
 overrides, sheet ve workout), kalendář, Apple Health (čtení tepu, import, auto-detekce
 banner, úklid), HR grafy + per-cvik tep, +KG u shybů, Live Activity (Dynamic Island +

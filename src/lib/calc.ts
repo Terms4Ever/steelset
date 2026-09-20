@@ -151,8 +151,10 @@ export function muscleVolume(
 
 // ---- detailed muscle map ----------------------------------------------------------------------
 // The detailed map splits the coarse groups the exercises are tagged with:
-//   Záda → Trapézy / Horní záda / Spodní záda,  Nohy → Kvadricepsy / Hamstringy.
-// Per-exercise overrides below; anything unknown falls back to the group's default split.
+//   Záda → Trapézy / Horní záda / Spodní záda,  Nohy → Kvadricepsy / Hamstringy,
+//   Břicho → Břicho / Šikmé břišní (only for exercises that clearly train the sides).
+// Per-exercise overrides below; anything unknown falls back to the group's default split, so an
+// exercise tagged plain Břicho keeps landing on Břicho exactly like before.
 
 const DETAIL_DEFAULT: Record<string, string> = { Záda: 'Horní záda', Nohy: 'Kvadricepsy' };
 
@@ -166,6 +168,11 @@ const DETAIL_OVERRIDES: Record<string, Record<string, string>> = {
   hyperextension: { Záda: 'Spodní záda' },
   'good-morning': { Záda: 'Spodní záda', Nohy: 'Hamstringy' },
   shrug: { Záda: 'Trapézy' },
+  // cviky na šikmé mají v názvu klíčové slovo pro šikmé, takže by jim heuristika strhla
+  // i vedlejší Břicho - tady se říká natvrdo, že vedlejší partie zůstává přímý břišní sval
+  'russian-twist': { Břicho: 'Břicho' },
+  'cable-woodchop': { Břicho: 'Břicho' },
+  'side-plank': { Břicho: 'Břicho' },
 };
 
 /** Name-based fallback so CUSTOM exercises land on the right detailed muscle too. */
@@ -178,6 +185,10 @@ function detailByName(name: string, coarse: string): string | null {
   if (coarse === 'Záda') {
     if (/(shrug|trap[eé]z)/.test(n)) return 'Trapézy';
     if (/(hyperextenz|spodn[ií]|vzp[řr]imova|good ?morning|mrtv)/.test(n)) return 'Spodní záda';
+    return null;
+  }
+  if (coarse === 'Břicho') {
+    if (/(šikm|sikm|oblique|twist|d[řr]evorubec|woodchop|[úu]klon|side ?bend|bo[čc]n[ií])/.test(n)) return 'Šikmé břišní';
     return null;
   }
   return null;

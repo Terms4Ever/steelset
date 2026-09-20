@@ -49,6 +49,12 @@ export const SEED_EXERCISES: Exercise[] = [
   { id: 'hanging-leg-raise', name: 'Přednožování ve visu', primary: 'Břicho', equipment: 'Vlastní váha', tracking: 'bodyweight_reps' },
   { id: 'cable-crunch', name: 'Crunch na kladce', primary: 'Břicho', equipment: 'Kladka', tracking: 'weight_reps' },
 
+  // Šikmé břišní
+  { id: 'russian-twist', name: 'Ruský twist', primary: 'Šikmé břišní', secondary: ['Břicho'], equipment: 'Vlastní váha', tracking: 'bodyweight_reps' },
+  { id: 'cable-woodchop', name: 'Dřevorubec na kladce', primary: 'Šikmé břišní', secondary: ['Břicho'], equipment: 'Kladka', tracking: 'weight_reps', unilateral: true },
+  { id: 'side-bend-db', name: 'Úklony s jednoručkou', primary: 'Šikmé břišní', equipment: 'Jednoručky', tracking: 'weight_reps', unilateral: true },
+  { id: 'side-plank', name: 'Boční prkno', primary: 'Šikmé břišní', secondary: ['Břicho'], equipment: 'Vlastní váha', tracking: 'time', unilateral: true },
+
   // Hýždě
   { id: 'hip-thrust', name: 'Hip thrust', primary: 'Hýždě', secondary: ['Nohy'], equipment: 'Činka', tracking: 'weight_reps', defaultBar: 20 },
 

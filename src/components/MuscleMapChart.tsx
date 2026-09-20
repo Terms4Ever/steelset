@@ -20,6 +20,7 @@ export const MUSCLE_REGIONS = [
   'Triceps',
   'Předloktí',
   'Břicho',
+  'Šikmé břišní',
   'Horní záda',
   'Spodní záda',
   'Hýždě',
@@ -117,7 +118,7 @@ export function MuscleMapChart({ volumes, onPressMuscle, selected, height = 320 
               <Ellipse cx={33} cy={140} rx={8} ry={20} fill={fill('Předloktí')} stroke={stroke('Předloktí')} strokeWidth={sw('Předloktí')} />
               <Ellipse cx={137} cy={140} rx={8} ry={20} fill={fill('Předloktí')} stroke={stroke('Předloktí')} strokeWidth={sw('Předloktí')} />
             </G>
-            {/* břicho (6 bloků + spodní) + šikmé */}
+            {/* břicho (6 bloků + spodní) */}
             <G {...press('Břicho')}>
               <Rect x={72} y={100} width={12} height={15} rx={3.5} fill={fill('Břicho')} stroke={stroke('Břicho')} strokeWidth={sw('Břicho')} />
               <Rect x={86} y={100} width={12} height={15} rx={3.5} fill={fill('Břicho')} stroke={stroke('Břicho')} strokeWidth={sw('Břicho')} />
@@ -126,9 +127,29 @@ export function MuscleMapChart({ volumes, onPressMuscle, selected, height = 320 
               <Rect x={72} y={134} width={12} height={15} rx={3.5} fill={fill('Břicho')} stroke={stroke('Břicho')} strokeWidth={sw('Břicho')} />
               <Rect x={86} y={134} width={12} height={15} rx={3.5} fill={fill('Břicho')} stroke={stroke('Břicho')} strokeWidth={sw('Břicho')} />
               <Rect x={74} y={151} width={22} height={13} rx={6} fill={fill('Břicho')} stroke={stroke('Břicho')} strokeWidth={sw('Břicho')} />
-              {/* šikmé břišní (vizuálně patří k břichu) */}
-              <Rect x={58} y={104} width={11} height={46} rx={5} fill={fill('Břicho')} stroke={stroke('Břicho')} strokeWidth={sw('Břicho')} />
-              <Rect x={101} y={104} width={11} height={46} rx={5} fill={fill('Břicho')} stroke={stroke('Břicho')} strokeWidth={sw('Břicho')} />
+            </G>
+            {/* šikmé břišní (boky trupu) - vlastní partie, vlastní barva i sheet */}
+            <G {...press('Šikmé břišní')}>
+              <Rect
+                x={58}
+                y={104}
+                width={11}
+                height={46}
+                rx={5}
+                fill={fill('Šikmé břišní')}
+                stroke={stroke('Šikmé břišní')}
+                strokeWidth={sw('Šikmé břišní')}
+              />
+              <Rect
+                x={101}
+                y={104}
+                width={11}
+                height={46}
+                rx={5}
+                fill={fill('Šikmé břišní')}
+                stroke={stroke('Šikmé břišní')}
+                strokeWidth={sw('Šikmé břišní')}
+              />
             </G>
             {/* kvadricepsy (2 hlavy) + adduktory */}
             <G {...press('Kvadricepsy')}>

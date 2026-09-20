@@ -19,7 +19,7 @@ TestFlight build 19, verze 1.0.0. Aplikace není veřejně v App Store.
 
 - Zápis tréninků: série, opakování, váhy, odpočet mezi sériemi, supersérie
 - Plány a pokrok, skóre a odhad 1RM
-- Anatomická svalová mapa, třináct svalů, sheet s objemem a trendem
+- Anatomická svalová mapa, čtrnáct svalů, sheet s objemem a trendem
 - Kalendář odcvičených dnů
 - Apple Health: čtení tepu, import tréninků, automatická detekce, úklid
 - Grafy tepu a tep po jednotlivých cvicích
@@ -48,6 +48,8 @@ ověření na zařízení:
 - #9 - plán už váhu sám nenavyšuje, místo toho nabídne zvýšení při zaseknutí
   (S15 v deníku)
 - #8 - hodnotu jde přetáhnout prstem z jedné série do druhé (S16 v deníku)
+- #7 - šikmé břišní jsou na mapě vlastní partie s vlastním sheetem a přibyly
+  čtyři cviky, které na ně padají (S17 v deníku)
 
 ## Co je dál
 

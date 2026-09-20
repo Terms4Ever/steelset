@@ -434,3 +434,41 @@ takže se cíl nezvýrazní a puštění nic neudělá.
 překresluje na každý posun a nová instance by měla vlastní prázdný `gestureState`,
 takže by puštění hlásilo posun 0 a hodnota by se zapsala zpátky do zdroje.
 Callbacky proto chodí přes ref.
+
+---
+
+## S17 - Šikmé břišní jsou vlastní partie na svalové mapě (20. 9. 2026)
+
+**Stav.** Mapa znala třináct oblastí. Šikmé břišní byly na siluetě nakreslené,
+ale patřily do skupiny `Břicho`, takže se barvily jeho číslem a ťuknutí otevřelo
+sheet břicha. Objem z úklonů a rotací spadl do jednoho pytle s crunchi.
+
+**Rozhodnutí: přidat jen šikmé břišní, ne adduktory ani dělení ramen.** Uživatel
+si ze tří nabídek vybral tuhle. Mapa má tedy čtrnáct oblastí. Adduktory zůstávají
+nakreslené pod kvadricepsy a ramena jedna oblast; kdyby se to později mělo měnit,
+postup je stejný jako tady.
+
+**Stará data se nehnou.** `DETAIL_DEFAULT` pro `Břicho` žádný záznam nemá, takže
+cvik uložený s partií `Břicho` pořád vychází jako `Břicho`. Nic se nemigruje a
+žádný existující záznam se nepřepisuje.
+
+**Vlastní cviky se poznají podle názvu.** `detailByName` umí u skupiny `Břicho`
+klíčová slova šikmé, oblique, twist, dřevorubec, woodchop, úklon, side bend a
+boční. Vlastní cvik pojmenovaný „Úklony s jednoručkou" a uložený pod břichem tak
+spadne na šikmé sám, stejně jako to dělá mrtvý tah u zad a nohou.
+
+**Past, na kterou se přišlo při testech.** Heuristika podle názvu platí i pro
+vedlejší partie. Nový cvik „Dřevorubec na kladce" má vedlejší `Břicho`, ale název
+obsahuje klíčové slovo, takže by i tahle půlka spadla na šikmé a přímý břišní sval
+by z rotací neměl nic. Proto mají `russian-twist`, `cable-woodchop` a `side-plank`
+v `DETAIL_OVERRIDES` natvrdo `Břicho: 'Břicho'` - konkrétní cvik vyhrává nad
+heuristikou.
+
+**Přibyly čtyři cviky do katalogu.** Ruský twist, Dřevorubec na kladce, Úklony
+s jednoručkou a Boční prkno. Bez nich by nová oblast neměla z čeho svítit a
+uživatel by si musel každý cvik na šikmé založit ručně.
+
+**Nová pojistka v testech.** `muscleMap.test.ts` hlídá dvě věci, které se dají
+snadno porušit: každá oblast mapy musí jít u cviku vybrat, a každá partie
+z katalogu cviků musí mít na mapě své místo. Cvik s partií, kterou mapa nezná,
+by jinak mlčky zmizel z objemu.
