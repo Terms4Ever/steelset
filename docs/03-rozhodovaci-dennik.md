@@ -498,3 +498,44 @@ aplikace půjde do veřejného prodeje. To platí nezávisle na tomhle přepína
 jinak by v obchodě viselo předplatné, které nejde koupit. Kdyby se to pořadí
 obrátilo, přepínač se stane skutečnou dírou a musí z kódu pryč.
 
+---
+
+## S18 - Postup vydání žije v `docs/`, kořen repozitáře zůstává holý (20. 9. 2026)
+
+**Stav.** V kořeni ležely `SHIP.md` a `TESTFLIGHT.md`, dva návody na vydání psané
+v době prvního buildu. Oba zastaraly: mluvily o 41 testech, o buildu číslo 1,
+o Google Play, o `eas init` a o klíči k App Store Connect API uloženém v repozitáři.
+Vedle nich `.vscode/` ze šablony Expo, `src/global.css`, na který nevedl jediný
+odkaz, a složka `__tests__/` v kořeni.
+
+**Rozhodnutí.** Oba návody nahradil jeden `docs/02-vydani.md`, přepsaný podle
+skutečnosti. `.vscode/` a `src/global.css` jsou pryč, testy se přestěhovaly do
+`src/__tests__/`. V kořeni zůstává jen to, co tam patří: konfigurace nástrojů,
+`README.md`, `AGENTS.md`, `CLAUDE.md` a `LICENSE`.
+
+**Proč.** Zastaralý návod je horší než žádný, protože se mu věří. Návod uložený
+mimo `docs/` navíc obchází pravidlo, že dávka, která sáhne na kód, sáhne i na
+dokumentaci, takže neměl kdo hlídat, že zestárl. Kořen repozitáře je první, co
+kdokoli uvidí.
+
+**Co se nezměnilo.** `CLAUDE.md` s jedním řádkem `@AGENTS.md` a složka `.claude/`
+zůstávají. `.claude/launch.json` drží konfiguraci webového náhledu, `CLAUDE.md`
+je jen ukazatel, aby stejný text četly nástroje, které hledají `AGENTS.md`,
+i ty, které hledají `CLAUDE.md`. Zadavatel si jejich úklid výslovně odložil.
+
+---
+
+## S19 - App Privacy už nesmí hlásit „Data Not Collected" (20. 9. 2026)
+
+**Stav.** Oba smazané návody radily vyplnit v App Store Connectu App Privacy jako
+„Data Not Collected". V době, kdy vznikly, to byla pravda: aplikace neměla účet,
+server ani analytiku.
+
+**Rozhodnutí.** Od verze s monetizací se přiznává, co se sbírá: AdMob identifikátor
+pro reklamy a údaje o užívání, RevenueCat identifikátor nákupu a stav předplatného.
+Tréninková data zůstávají v telefonu a v iCloudu uživatele, Apple Health se jen čte.
+
+**Proč.** Deklarace, která neodpovídá skutečnosti, je vůči Applu nepravdivá.
+Reklamní SDK v aplikaci je přesně ten případ, který Apple kontroluje, a zamítnutí
+z tohoto důvodu se týká celého účtu, ne jen jednoho buildu.
+

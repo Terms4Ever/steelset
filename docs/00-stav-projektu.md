@@ -40,6 +40,8 @@ Běží jen nad issue od vlastníka a spolupracovníků, ne nad cizím hlášen�
 - Přihlášení přes Apple, záloha na iCloud, export do CSV
 - Onboarding
 - Monetizace: aplikace zdarma s reklamami, předplatné Steelset Pro je vypne
+- Uklizený kořen repozitáře: postup vydání je v `02-vydani.md`, testy v
+  `src/__tests__/`, zbytky po šabloně Expo jsou pryč (S18 v deníku)
 
 ## Co se dělá
 
@@ -89,6 +91,10 @@ na `docs/`. Dokumentace tedy patří do stejné dávky jako změna, ne až za ni
 a po pushi se ověřuje, že běh doopravdy prošel (S12 v deníku).
 
 Nativní části se z Windows otestovat nedají. TestFlight je test.
+
+App Privacy v App Store Connectu se už nesmí vyplnit jako „Data Not Collected".
+Aplikace má reklamy a předplatné, takže se přiznává AdMob i RevenueCat. Staré
+návody radily opak a byly proto smazané (S19 v deníku).
 
 Dokud v prostředí chybí klíč RevenueCatu, nejde si Pro koupit, a tedy ani ověřit,
 jak aplikace vypadá bez reklam. Na to je v Profilu skrytý přepínač: sedm ťuknutí

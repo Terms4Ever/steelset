@@ -108,7 +108,7 @@ syntetickými eventy - ověřovat přes DOM text (preview_eval) a screenshoty.
 - Po nasazení na TestFlight mu napsat CO otestovat (číslovaný seznam).
 - Po jeho device-testu opravit nahlášené + pustit adversariální review fleet
   (Workflow: review dimenze → verify každý nález) - opakovaně našel reálné bugy.
-- Commitovat po každém celku; **pushovat na GitHub** (origin = Terms4Ever/steelset, privátní).
+- Commitovat po každém celku; **pushovat na GitHub** (origin = Terms4Ever/steelset, veřejný).
 - **Nadpis commitu končí číslem issue v závorce**: `Popis změny (#4)`, u víc issues
   `(#2, #6)`. Bez čísla jen commity, které k žádnému issue nepatří. Klíčová slova
   `Closes`/`Fixes` se NEPOUŽÍVAJÍ - issue zavírá uživatel, až změnu ověří na TestFlightu.

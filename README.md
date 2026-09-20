@@ -66,9 +66,8 @@ načtou ze starého klíče.
 | `AGENTS.md` | kompletní kontext pro vývoj: názvosloví, doménová pravidla, brány před buildem, stav |
 | `docs/00-stav-projektu.md` | živý stav: co je hotové, co se dělá, co je dál a na co si dát pozor |
 | `docs/01-todo.md` | rozdělaná práce s postupem: účty a klíče pro monetizaci, zásady soukromí, watchOS |
+| `docs/02-vydani.md` | vydání: brány, build, TestFlight, App Privacy a podklady pro App Store |
 | `docs/03-rozhodovaci-dennik.md` | co bylo kdy rozhodnuto a proč. Nové rozhodnutí je nový záznam |
-| `SHIP.md` | postup vydání |
-| `TESTFLIGHT.md` | poznámky k TestFlightu |
 
 ---
 
@@ -103,8 +102,8 @@ npm i -g eas-cli && eas login
 eas build --platform ios --profile production --non-interactive --auto-submit
 ```
 
-Profily buildů jsou v [eas.json](eas.json), postup vydání v [SHIP.md](SHIP.md)
-a poznámky k TestFlightu v [TESTFLIGHT.md](TESTFLIGHT.md).
+Profily buildů jsou v [eas.json](eas.json), celý postup vydání včetně kreditů,
+capabilities a App Privacy v [docs/02-vydani.md](docs/02-vydani.md).
 
 **Kompletní kontext pro vývoj**, včetně pravidel a stavu projektu, je
 v [AGENTS.md](AGENTS.md).
