@@ -3,6 +3,9 @@ name: Kontroly
 on:
   push:
   pull_request:
+  # Issues se mění i bez pushe, proto se kontrolují i jednou denně.
+  schedule:
+    - cron: '0 6 * * *'
 
 # Token nesmi vic, nez je potreba ke cteni repozitare. Volany workflow
 # zije v Terms4Ever/nastroje a odkazuje se na nej vetvi, ne otiskem —
@@ -10,6 +13,7 @@ on:
 # pojistka pro pripad, ze by se ta vetev zmenila.
 permissions:
   contents: read
+  issues: read
 
 jobs:
   readme:

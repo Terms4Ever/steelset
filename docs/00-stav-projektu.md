@@ -15,6 +15,16 @@ hlavní větev:     main
 
 TestFlight build 19, verze 1.0.0. Aplikace není veřejně v App Store.
 
+
+## Issues
+
+Jeden tvar pro chybu i novou funkci: `## Problém` (nebo `## Cíl`)
+a `## Hotovo, když` s odškrtávacím seznamem, šablona je
+v `.github/ISSUE_TEMPLATE/ukol.md`. Zavřené issue má checklist odškrtaný,
+komentáře mají do pěti řádků a snímky před a po leží
+v `docs/snimky/<číslo issue>-<název>/`. Hlídá to kontrola z `nastroje`, která
+běží při pushi a jednou denně.
+
 ## Co je hotové
 
 - Zápis tréninků: série, opakování, váhy, odpočet mezi sériemi, supersérie
