@@ -555,3 +555,17 @@ jako dosud.
 jen odlišují jeden projekt od zbytku. Výchozí konvenci nástroje nepotřebujeme,
 když si cestu stejně píšeme sami.
 
+
+---
+
+## S21 - AGENTS.md srovnaný do společné kostry (20. 9. 2026)
+
+Pokyny pro agenty měly vlastní členění a část textu opakovala globální pravidla
+(pomlčky, dokumentace u každé dávky). Nově drží společnou kostru z `nastroje`
+(`sablony/agents.md`): stack a struktura, doménová pravidla, brány před
+commitem, nasazení, jak se domlouváme.
+
+Obsah zůstal: názvosloví po přejmenováních, sedm doménových pravidel o datech,
+brány `tsc`, `jest` a `expo export`, postup pro EAS a TestFlight i pravidlo
+o čísle issue v nadpisu commitu. Pryč je sekce se stavem z července, protože
+živý stav patří do `docs/00-stav-projektu.md` a dvakrát se neudržuje.
