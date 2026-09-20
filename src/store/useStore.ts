@@ -6,6 +6,7 @@ import { SEED_EXERCISES, STARTER_ROUTINES } from '@/data/exercises';
 import { Exercise, HrSample, LoggedExercise, MuscleGroup, Routine, SetEntry, Settings, Unit, Workout } from '@/data/types';
 import { isCountable, lastPerformance } from '@/lib/calc';
 import { buildPrefilledExercise, prefillSets } from '@/lib/prefill';
+import { moveBlock } from '@/lib/reorder';
 import { persistedStoreStorage, STORE_KEY } from '@/lib/storeKeys';
 
 let _c = 0;
@@ -71,6 +72,8 @@ interface Actions {
   toggleSetDone: (exIndex: number, setIndex: number) => void;
   removeSet: (exIndex: number, setIndex: number) => void;
   removeActiveExercise: (exIndex: number) => void;
+  moveActiveExercise: (exIndex: number, dir: -1 | 1) => void;
+  saveActiveOrderToRoutine: () => void;
   linkSuperset: (exIndex: number) => void;
   finishWorkout: () => void;
   discardWorkout: () => void;
@@ -341,6 +344,34 @@ export const useStore = create<State & Actions>()(
             exercises: normalizeSupersets(w.exercises.filter((_, i) => i !== exIndex)),
           })),
         })),
+
+      // posun cviku o jedno místo; supersérie se hýbe jako blok (src/lib/reorder.ts)
+      moveActiveExercise: (exIndex, dir) =>
+        set((s) => ({
+          workouts: patchActive(s.workouts, s.activeWorkoutId, (w) => ({
+            ...w,
+            exercises: normalizeSupersets(moveBlock(w.exercises, exIndex, dir).items),
+          })),
+        })),
+
+      // přepíše pořadí cviků v plánu podle běžícího tréninku. Cviky, které v tréninku
+      // nejsou, zůstanou na konci ve svém pořadí; přidané se do plánu nedoplňují -
+      // tlačítko slibuje jen pořadí.
+      saveActiveOrderToRoutine: () =>
+        set((s) => {
+          const w = s.workouts.find((x) => x.id === s.activeWorkoutId);
+          const r = w?.routineId ? s.routines.find((x) => x.id === w.routineId) : undefined;
+          if (!w || !r) return {};
+          const rank = new Map<string, number>();
+          w.exercises.forEach((le, i) => {
+            if (!rank.has(le.exerciseId)) rank.set(le.exerciseId, i);
+          });
+          const exercises = r.exercises
+            .map((re, i) => ({ re, i, rank: rank.get(re.exerciseId) ?? Number.MAX_SAFE_INTEGER }))
+            .sort((a, b) => a.rank - b.rank || a.i - b.i)
+            .map((x) => x.re);
+          return { routines: s.routines.map((x) => (x.id === r.id ? { ...x, exercises } : x)) };
+        }),
 
       linkSuperset: (exIndex) =>
         set((s) => ({

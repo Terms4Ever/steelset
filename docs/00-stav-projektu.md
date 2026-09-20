@@ -42,6 +42,8 @@ ověření na zařízení:
   (S10 v deníku)
 - #1 - cviky jdou přejmenovat (i vestavěné) a nové jméno platí všude
   (S11 v deníku)
+- #3 - pořadí cviků jde měnit v tréninku i v plánu, supersérie se hýbe celá
+  (S13 v deníku)
 
 ## Co je dál
 

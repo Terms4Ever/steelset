@@ -416,3 +416,104 @@ describe('store · export do CSV bere přejmenované cviky', () => {
     expect(csv).not.toContain('Dřep s činkou');
   });
 });
+
+describe('store · pořadí cviků', () => {
+  it('přesune cvik a série zůstanou u svého cviku', () => {
+    s().startWorkout(null);
+    s().addExerciseToActive('squat');
+    s().addExerciseToActive('bench-barbell');
+    s().updateSet(1, 0, { weight: 80, reps: 5, done: true });
+
+    s().moveActiveExercise(1, -1);
+    const a = activeWorkout(s())!;
+    expect(a.exercises.map((e) => e.exerciseId)).toEqual(['bench-barbell', 'squat']);
+    expect(a.exercises[0].sets[0]).toMatchObject({ weight: 80, reps: 5, done: true });
+  });
+
+  it('supersérii přesune celou', () => {
+    s().startWorkout(null);
+    s().addExerciseToActive('squat');
+    s().addExerciseToActive('bench-barbell');
+    s().addExerciseToActive('ohp');
+    s().linkSuperset(1); // bench + ohp do supersérie
+
+    s().moveActiveExercise(1, -1);
+    const a = activeWorkout(s())!;
+    expect(a.exercises.map((e) => e.exerciseId)).toEqual(['bench-barbell', 'ohp', 'squat']);
+    expect(a.exercises[0].supersetGroup).toBe(a.exercises[1].supersetGroup);
+  });
+
+  it('na kraji se nic nestane', () => {
+    s().startWorkout(null);
+    s().addExerciseToActive('squat');
+    s().addExerciseToActive('bench-barbell');
+    const before = activeWorkout(s())!.exercises.map((e) => e.exerciseId);
+
+    s().moveActiveExercise(0, -1);
+    s().moveActiveExercise(1, 1);
+    expect(activeWorkout(s())!.exercises.map((e) => e.exerciseId)).toEqual(before);
+  });
+
+  it('uloží nové pořadí do plánu a další spuštění ho použije', () => {
+    const rid = s().addRoutine({
+      name: 'Pořadí',
+      exercises: [
+        { exerciseId: 'squat', targetSets: 1, targetReps: 5 },
+        { exerciseId: 'bench-barbell', targetSets: 1, targetReps: 5 },
+        { exerciseId: 'ohp', targetSets: 1, targetReps: 5 },
+      ],
+    });
+    s().startWorkout(rid);
+    s().moveActiveExercise(2, -1); // ohp před bench
+
+    s().saveActiveOrderToRoutine();
+    expect(s().routines.find((r) => r.id === rid)!.exercises.map((e) => e.exerciseId)).toEqual([
+      'squat',
+      'ohp',
+      'bench-barbell',
+    ]);
+
+    s().updateSet(0, 0, { weight: 100, reps: 5, done: true });
+    s().finishWorkout();
+    s().startWorkout(rid);
+    expect(activeWorkout(s())!.exercises.map((e) => e.exerciseId)).toEqual(['squat', 'ohp', 'bench-barbell']);
+  });
+
+  it('cvik přidaný v tréninku se do plánu nedoplní a chybějící zůstane na konci', () => {
+    const rid = s().addRoutine({
+      name: 'Pořadí',
+      exercises: [
+        { exerciseId: 'squat', targetSets: 1, targetReps: 5 },
+        { exerciseId: 'bench-barbell', targetSets: 1, targetReps: 5 },
+      ],
+    });
+    s().startWorkout(rid);
+    s().removeActiveExercise(0); // squat v tréninku necvičím
+    s().addExerciseToActive('ohp'); // a přidám si jiný
+
+    s().saveActiveOrderToRoutine();
+    expect(s().routines.find((r) => r.id === rid)!.exercises.map((e) => e.exerciseId)).toEqual([
+      'bench-barbell',
+      'squat',
+    ]);
+  });
+
+  it('volný trénink bez plánu nemá co ukládat', () => {
+    const rid = s().addRoutine({
+      name: 'Nedotčený',
+      exercises: [
+        { exerciseId: 'squat', targetSets: 1, targetReps: 5 },
+        { exerciseId: 'bench-barbell', targetSets: 1, targetReps: 5 },
+      ],
+    });
+    s().startWorkout(null);
+    s().addExerciseToActive('bench-barbell');
+    s().addExerciseToActive('squat');
+
+    s().saveActiveOrderToRoutine();
+    expect(s().routines.find((r) => r.id === rid)!.exercises.map((e) => e.exerciseId)).toEqual([
+      'squat',
+      'bench-barbell',
+    ]);
+  });
+});

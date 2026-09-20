@@ -6,6 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PrimaryButton, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
+import { haptic } from '@/lib/haptic';
+import { canMove, moveBlock, stableKeys } from '@/lib/reorder';
 import { useExercisesById, useStore } from '@/store/useStore';
 
 export default function RoutineEditor() {
@@ -49,6 +51,13 @@ export default function RoutineEditor() {
     });
   const removeEx = (index: number) =>
     updateRoutine(routine.id, { exercises: routine.exercises.filter((_, i) => i !== index) });
+  // posun cviku o jedno místo; supersérie se hýbe jako blok (src/lib/reorder.ts)
+  const moveEx = (index: number, dir: -1 | 1) => {
+    if (!canMove(routine.exercises, index, dir)) return;
+    haptic.tap();
+    updateRoutine(routine.id, { exercises: moveBlock(routine.exercises, index, dir).items });
+  };
+  const exKeys = stableKeys(routine.exercises);
 
   const del = () => {
     deleteRoutine(routine.id);
@@ -103,7 +112,7 @@ export default function RoutineEditor() {
         </Txt>
 
         {routine.exercises.map((re, i) => (
-          <View key={i} style={{ backgroundColor: palette.surface, borderRadius: radius.sm, padding: space.lg, marginBottom: 10, borderWidth: 1, borderColor: palette.hairline }}>
+          <View key={exKeys[i]} style={{ backgroundColor: palette.surface, borderRadius: radius.sm, padding: space.lg, marginBottom: 10, borderWidth: 1, borderColor: palette.hairline }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
               <View style={{ flex: 1 }}>
                 {supTag(re, i) && (
@@ -115,6 +124,22 @@ export default function RoutineEditor() {
                   {exById[re.exerciseId]?.name ?? 'Cvik'}
                 </Txt>
               </View>
+              <Pressable
+                accessibilityLabel="Posunout cvik nahoru"
+                disabled={!canMove(routine.exercises, i, -1)}
+                onPress={() => moveEx(i, -1)}
+                hitSlop={6}
+                style={{ paddingHorizontal: 6, opacity: canMove(routine.exercises, i, -1) ? 1 : 0.3 }}>
+                <Ionicons name="chevron-up" size={20} color={palette.textDim} />
+              </Pressable>
+              <Pressable
+                accessibilityLabel="Posunout cvik dolů"
+                disabled={!canMove(routine.exercises, i, 1)}
+                onPress={() => moveEx(i, 1)}
+                hitSlop={6}
+                style={{ paddingHorizontal: 6, marginRight: 4, opacity: canMove(routine.exercises, i, 1) ? 1 : 0.3 }}>
+                <Ionicons name="chevron-down" size={20} color={palette.textDim} />
+              </Pressable>
               <Pressable onPress={() => removeEx(i)} hitSlop={8}>
                 <Ionicons name="close-circle" size={20} color={palette.textMute} />
               </Pressable>

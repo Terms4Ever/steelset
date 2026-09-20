@@ -282,3 +282,40 @@ push projde i s dávkou bez dokumentace a chyba se ukáže až v Akcích na GitH
 Po každém pushi se proto kouká na výsledek běhu, ne jen na to, že push prošel.
 Křížek na `02d2468` už zůstane: kontrola porovnává rozsah toho jednoho pushe
 a opravit by to šlo jen přepisem historie.
+
+---
+
+## S13 - Pořadí cviků se mění šipkami a supersérie se hýbe jako blok (20. 9. 2026)
+
+**Stav.** Trénink i plán ukazovaly cviky v pořadí z plánu a měnit se nedalo.
+Cvik šel jen odebrat nebo přidat na konec. Když je v posilovně obsazený stroj,
+uživatel nemá co dělat.
+
+**Rozhodnutí: šipky, ne tažení.** Issue nabízelo i režim „Seřadit" s tažením.
+Šipky nahoru a dolů vyhrály: tažení by se v živém tréninku pralo se svislým
+rolováním a s gestem na zavření klávesnice, a na jeden přesun o místo je to
+zbytečně jemná práce. Na obou obrazovkách vypadají stejně.
+
+**Supersérie je blok.** Souvislý úsek cviků se stejným `supersetGroup` se hýbe
+celý a přeskakuje celý sousední blok. Jinak by se supersérie roztrhla na dva
+kusy přerušené cizím cvikem, což je stav, který `linkSuperset` neumí vyrobit.
+Logika je v `src/lib/reorder.ts` (`blockAt`, `canMove`, `moveBlock`), čistá
+a otestovaná, a používá ji trénink i editor plánu.
+
+**Fokus klávesnice.** Fokus drží index cviku, takže by po přesunu psaní mířilo
+jinam. `moveBlock` vrací i `order` (na novém indexu původní index) a obrazovka
+si přes `remapIndex` posune fokus s cvikem.
+
+**Klíče bez indexu.** `key` byl index, po přesunu by se stav komponent přilepil
+k jiné pozici. `stableKeys` dává klíč z `exerciseId` a pořadí výskytu - stejný
+cvik může být v tréninku dvakrát.
+
+**Uložení pořadí do plánu.** Po přesunu v tréninku spuštěném z plánu se nahoře
+nabídne „Uložit do plánu". Ukládá se jen pořadí: cvik přidaný v tréninku se do
+plánu nedoplní a cvik, který se necvičil, z něj nezmizí, jen spadne na konec.
+Tlačítko neslibuje víc, než dělá.
+
+**Past.** Tři tlačítka vedle sebe (nahoru, dolů, křížek) sebrala názvu cviku
+tolik místa, že se „Tlak nad hlavu (OHP)" zalomil na dva řádky. Šipky jsou
+proto nad sebou v jednom sloupci širokém 32 px. Souvisí s S9 - dlouhý název
+vedle pružného bloku je v téhle appce opakovaný zdroj ošklivého zalomení.

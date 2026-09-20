@@ -12,6 +12,7 @@ import { LoggedExercise, MUSCLE_GROUP_OPTIONS, MuscleGroup, SetEntry, SetType } 
 import { isPR, lastPerformance, lastSession, MS, summarizeSets } from '@/lib/calc';
 import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtNum, fmtWeight, fromDisplayWeight, relativeDay, toDisplayWeight, unitIncrement } from '@/lib/format';
 import { focusAfterSetRemoved, KeypadFocus } from '@/lib/keypad';
+import { canMove, moveBlock, remapIndex, stableKeys } from '@/lib/reorder';
 import { showInterstitial } from '@/lib/ads';
 import { haptic } from '@/lib/haptic';
 import { heartRateFor } from '@/lib/health';
@@ -36,7 +37,7 @@ export default function Workout() {
   const restDefault = useStore((s) => s.settings.restDefaultSec);
   const unit = useStore((s) => s.settings.unit);
   const bodyweightSetting = useStore((s) => s.settings.bodyweightKg);
-  const { updateSet, addSet, toggleSetDone, removeSet, removeActiveExercise, finishWorkout, discardWorkout, startWorkout, linkSuperset, setWorkoutDate, setWorkoutHr, setExerciseMuscles, setExerciseName, renameWorkout } = useStore();
+  const { updateSet, addSet, toggleSetDone, removeSet, removeActiveExercise, moveActiveExercise, saveActiveOrderToRoutine, finishWorkout, discardWorkout, startWorkout, linkSuperset, setWorkoutDate, setWorkoutHr, setExerciseMuscles, setExerciseName, renameWorkout } = useStore();
   const healthEnabled = useStore((s) => s.settings.healthEnabled);
   const insets = useSafeAreaInsets();
 
@@ -62,6 +63,8 @@ export default function Workout() {
   const [draftName, setDraftName] = useState('');
   // skutecna vyska keypadu - hlaska o rekordu i lista odpoctu nad ni sedi i kdyz keypad zmeni obsah
   const [keypadH, setKeypadH] = useState(322);
+  // po přesunu cviku v tréninku spuštěném z plánu nabídneme uložení pořadí do plánu
+  const [orderDirty, setOrderDirty] = useState(false);
   // stabilni reference: PanResponder keypadu se vytvari jen jednou
   const closeKeypad = useCallback(() => setFocus(null), []);
   // rest is timestamp-based so it keeps counting real time across backgrounding
@@ -256,6 +259,20 @@ export default function Workout() {
     removeSet(ex, si);
   };
 
+  // fokus klávesnice drží index cviku - po přesunu ho posuneme s ním, ať psaní
+  // nemíří do jiného cviku
+  const moveExercise = (ex: number, dir: -1 | 1) => {
+    if (!canMove(active.exercises, ex, dir)) return;
+    haptic.tap();
+    const { order } = moveBlock(active.exercises, ex, dir);
+    setFocus((f) => (f ? { ...f, ex: remapIndex(order, f.ex) } : f));
+    moveActiveExercise(ex, dir);
+    if (active.routineId) setOrderDirty(true);
+  };
+
+  // klíče pro React bez indexu - po přesunu by se stav komponent přilepil k jiné pozici
+  const exKeys = stableKeys(active.exercises);
+
   const onFinish = () => {
     const w = active;
     // don't silently discard: a live workout with no completed set stays put + asks the user
@@ -365,6 +382,41 @@ export default function Workout() {
             </Txt>
           )}
 
+          {orderDirty && !!active.routineId && (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 10,
+                marginTop: 12,
+                backgroundColor: palette.surface,
+                borderRadius: radius.sm,
+                borderWidth: 1,
+                borderColor: palette.accent,
+                paddingHorizontal: 12,
+                paddingVertical: 10,
+              }}>
+              <Ionicons name="swap-vertical" size={15} color={palette.accent} />
+              <Txt size={type.caption} weight="medium" color={palette.textDim} style={{ flex: 1 }}>
+                Pořadí cviků se liší od plánu.
+              </Txt>
+              <Pressable
+                hitSlop={8}
+                onPress={() => {
+                  haptic.tap();
+                  saveActiveOrderToRoutine();
+                  setOrderDirty(false);
+                }}>
+                <Txt size={type.caption} weight="bold" color={palette.accent}>
+                  Uložit do plánu
+                </Txt>
+              </Pressable>
+              <Pressable hitSlop={8} onPress={() => setOrderDirty(false)}>
+                <Ionicons name="close" size={15} color={palette.textMute} />
+              </Pressable>
+            </View>
+          )}
+
           {active.exercises.map((le, ex) => {
             const exDef = exById[le.exerciseId];
             const showW = showsW(le.exerciseId);
@@ -383,7 +435,7 @@ export default function Workout() {
             const contWithPrev = grouped && active.exercises[ex - 1]?.supersetGroup === le.supersetGroup;
             return (
               <View
-                key={`${le.exerciseId}-${ex}`}
+                key={exKeys[ex]}
                 style={{
                   marginTop: ex === 0 ? 8 : contWithPrev ? 8 : 22,
                   borderLeftWidth: grouped ? 3 : 0,
@@ -420,6 +472,27 @@ export default function Workout() {
                       </Txt>
                     )}
                   </Pressable>
+                  {/* přesun cviku; supersérie se hýbe celá (blok), ne po kusech. Šipky jsou
+                      nad sebou v jednom sloupci, aby na název cviku zbylo místo */}
+                  <View style={{ width: 32, height: 44, borderRadius: radius.sm, backgroundColor: palette.surface2, marginRight: 6, overflow: 'hidden' }}>
+                    <Pressable
+                      accessibilityLabel="Posunout cvik nahoru"
+                      disabled={!canMove(active.exercises, ex, -1)}
+                      onPress={() => moveExercise(ex, -1)}
+                      hitSlop={{ left: 8, right: 8, top: 4 }}
+                      style={{ flex: 1, alignItems: 'center', justifyContent: 'center', opacity: canMove(active.exercises, ex, -1) ? 1 : 0.3 }}>
+                      <Ionicons name="chevron-up" size={15} color={palette.textMute} />
+                    </Pressable>
+                    <View style={{ height: 1, backgroundColor: palette.bg }} />
+                    <Pressable
+                      accessibilityLabel="Posunout cvik dolů"
+                      disabled={!canMove(active.exercises, ex, 1)}
+                      onPress={() => moveExercise(ex, 1)}
+                      hitSlop={{ left: 8, right: 8, bottom: 4 }}
+                      style={{ flex: 1, alignItems: 'center', justifyContent: 'center', opacity: canMove(active.exercises, ex, 1) ? 1 : 0.3 }}>
+                      <Ionicons name="chevron-down" size={15} color={palette.textMute} />
+                    </Pressable>
+                  </View>
                   <Pressable
                     hitSlop={6}
                     onPress={() =>
