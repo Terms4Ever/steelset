@@ -13,7 +13,11 @@ hlavní větev:     main
 
 ## Kde to stojí
 
-TestFlight build 19, verze 1.0.0. Aplikace není veřejně v App Store.
+TestFlight build 27, verze 1.0.0. Aplikace není veřejně v App Store.
+
+Build 27 nese opravy z testu na zařízení (#6, #12, #13, #14) a správu cviků (#11).
+Čeká na ověření na zařízení: oba sheety s klávesnicí, plovoucí lišta, přetahování
+hodnot a tažení keypadu. Gesta a klávesnice se z Windows ověřit nedají.
 
 
 ## Issues
