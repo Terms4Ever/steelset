@@ -4,35 +4,48 @@ import { canCopy, dropIndex, ROW_HEIGHT_FALLBACK, valueToCopy } from '@/lib/copy
 const set = (weight: number | null, reps: number | null): SetEntry => ({ type: 'R', weight, reps, done: false });
 
 describe('copyValue · dropIndex', () => {
+  // rovnoměrné řádky po 65 px: středy 32, 97, 162, 227
+  const even = [32, 97, 162, 227];
+
   it('bez posunu míří na zdroj', () => {
-    expect(dropIndex(1, 0, 60, 4)).toBe(1);
+    expect(dropIndex(1, 0, even, 4)).toBe(1);
   });
 
   it('posun o řádek dolů míří o sérii níž', () => {
-    expect(dropIndex(0, 60, 60, 4)).toBe(1);
-    expect(dropIndex(0, 125, 60, 4)).toBe(2);
+    expect(dropIndex(0, 65, even, 4)).toBe(1);
+    expect(dropIndex(0, 130, even, 4)).toBe(2);
   });
 
   it('posun nahoru míří výš', () => {
-    expect(dropIndex(3, -60, 60, 4)).toBe(2);
+    expect(dropIndex(3, -65, even, 4)).toBe(2);
   });
 
   it('půlka řádku ještě nepřepne, přes půlku ano', () => {
-    expect(dropIndex(0, 29, 60, 4)).toBe(0);
-    expect(dropIndex(0, 31, 60, 4)).toBe(1);
+    expect(dropIndex(0, 31, even, 4)).toBe(0);
+    expect(dropIndex(0, 34, even, 4)).toBe(1);
   });
 
   it('za krajem se drží na krajní sérii', () => {
-    expect(dropIndex(0, -500, 60, 3)).toBe(0);
-    expect(dropIndex(0, 500, 60, 3)).toBe(2);
+    expect(dropIndex(0, -500, even, 4)).toBe(0);
+    expect(dropIndex(0, 500, even, 4)).toBe(3);
   });
 
-  it('nezměřená výška řádku spadne na náhradní hodnotu', () => {
-    expect(dropIndex(0, ROW_HEIGHT_FALLBACK, 0, 3)).toBe(1);
+  it('počítá s tím, že dokončená série je vyšší', () => {
+    // 2. série je dokončená a nese rozdíl proti minule, takže je o 11 px vyšší
+    const mixed = [32, 100, 176, 241];
+    expect(dropIndex(0, 68, mixed, 4)).toBe(1);
+    expect(dropIndex(0, 144, mixed, 4)).toBe(2);
+    // se starým dělením jednou výškou by 144 px spadlo ještě na druhou sérii
+    expect(dropIndex(0, 144, even, 4)).toBe(2);
+  });
+
+  it('nezměřené pozice spadnou na náhradní výšku', () => {
+    expect(dropIndex(0, ROW_HEIGHT_FALLBACK, [], 3)).toBe(1);
+    expect(dropIndex(0, ROW_HEIGHT_FALLBACK, [32, 97], 3)).toBe(1); // neúplné měření
   });
 
   it('cvik bez sérií vrátí zdroj', () => {
-    expect(dropIndex(0, 200, 60, 0)).toBe(0);
+    expect(dropIndex(0, 200, [], 0)).toBe(0);
   });
 });
 

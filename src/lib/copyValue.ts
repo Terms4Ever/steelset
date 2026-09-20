@@ -5,21 +5,40 @@ import { SetEntry } from '@/data/types';
  *
  * Táhne se svisle uvnitř jednoho sloupce, takže váha může skončit jen ve váze
  * a opakování jen v opakováních - kříž mezi sloupci nejde udělat ani omylem.
- * Cíl se počítá z posunu prstu a výšky řádku, ne z měření jednotlivých buněk:
- * řádky série jsou stejně vysoké a tahle cesta nepotřebuje nic doměřovat během gesta.
+ * Cíl se hledá podle změřených pozic řádků, ne podle jedné výšky: dokončená série
+ * je o rozdíl proti minule vyšší, takže by dělení jednou výškou u delších cviků minulo.
  */
 
 export type CopyField = 'weight' | 'reps';
 
-/** Kdyby se výšku řádku nepodařilo změřit, ať se dělí něčím rozumným. */
-export const ROW_HEIGHT_FALLBACK = 60;
+/** Náhradní výška řádku, kdyby se pozice sérií nestihly změřit. */
+export const ROW_HEIGHT_FALLBACK = 65;
 
-/** Na kterou sérii prst ukazuje. Za posledním řádkem se drží na posledním. */
-export function dropIndex(from: number, dy: number, rowHeight: number, count: number): number {
+/**
+ * Na kterou sérii prst ukazuje.
+ *
+ * `centers` jsou svislé středy řádků v rámci cviku (z `onLayout`). Řádky nejsou
+ * stejně vysoké - dokončená série si pod číslem nese ještě rozdíl proti minule -,
+ * takže dělit posun jednou výškou by u delších cviků minulo o řádek. Hledá se proto
+ * nejbližší skutečný střed. Dokud se pozice nezměří, jede se podle náhradní výšky.
+ */
+export function dropIndex(from: number, dy: number, centers: number[], count: number): number {
   if (count <= 0) return from;
-  const h = rowHeight > 0 ? rowHeight : ROW_HEIGHT_FALLBACK;
-  const raw = from + Math.round(dy / h);
-  return Math.min(count - 1, Math.max(0, raw));
+  const clamp = (i: number) => Math.min(count - 1, Math.max(0, i));
+  if (centers.length !== count || !centers.every((c) => Number.isFinite(c)) || centers[from] == null) {
+    return clamp(from + Math.round(dy / ROW_HEIGHT_FALLBACK));
+  }
+  const y = centers[from] + dy;
+  let best = from;
+  let bestDist = Infinity;
+  centers.forEach((c, i) => {
+    const d = Math.abs(c - y);
+    if (d < bestDist) {
+      bestDist = d;
+      best = i;
+    }
+  });
+  return clamp(best);
 }
 
 /**

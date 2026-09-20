@@ -408,12 +408,15 @@ tohle `activateAfterLongPress`, ale chtěl by `GestureHandlerRootView` kolem cel
 aplikace. To je zásah do kořene, který se z Windows neověří. PanResponder stačí
 a je to stejná volba jako u zavírání klávesnice (S8).
 
-**Cíl se počítá, neměří.** `dropIndex` dělí svislý posun výškou řádku (měří se
-přes `onLayout`, všechny řádky jsou stejné) a výsledek ořízne na rozsah sérií.
-Odpadá měření jednotlivých buněk během gesta. Vedlejší efekt je užitečný: táhne
-se jen uvnitř jednoho sloupce jednoho cviku, takže váha nemůže skončit
-v opakováních ani u jiného cviku - ne proto, že by to kontrola zakázala, ale
-protože na to gesto nedosáhne.
+**Cíl se hledá podle změřených řádků.** `dropIndex` bere svislé středy řádků
+(každý řádek si je hlásí přes `onLayout`) a vybírá ten nejbližší k místu, kam
+prst dotáhl. První verze dělila posun jednou společnou výškou, což je špatně:
+dokončená série si pod číslem nese ještě rozdíl proti minule, takže je o kus
+vyšší a u delších cviků by se cíl minul o řádek. Dokud se pozice nezměří, jede
+se podle náhradní výšky. Vedlejší efekt téhle cesty je užitečný: táhne se jen
+uvnitř jednoho sloupce jednoho cviku, takže váha nemůže skončit v opakováních
+ani u jiného cviku - ne proto, že by to kontrola zakázala, ale protože na to
+gesto nedosáhne.
 
 **Co se kopíruje.** Hodnota tak, jak je uložená, tedy u váhy celkové kilogramy.
 U cviků s vlastní vahou je `Workout.bodyweightKg` pro celý trénink stejný, takže

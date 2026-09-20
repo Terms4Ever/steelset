@@ -72,7 +72,8 @@ export default function Workout() {
   const [stallHidden, setStallHidden] = useState<string[]>([]);
   // přetahování hodnoty mezi sériemi: co se táhne a kam to zrovna míří
   const [drag, setDrag] = useState<{ ex: number; field: CopyField; from: number; to: number } | null>(null);
-  const [rowH, setRowH] = useState(0);
+  // svislé středy řádků série pro každý cvik (z onLayout) - podle nich se hledá cíl přetažení
+  const rowCenters = useRef<Record<number, number[]>>({});
   // stabilni reference: PanResponder keypadu se vytvari jen jednou
   const closeKeypad = useCallback(() => setFocus(null), []);
   // rest is timestamp-based so it keeps counting real time across backgrounding
@@ -293,13 +294,13 @@ export default function Workout() {
   const dragMove = (ex: number, field: CopyField, from: number, dy: number) => {
     const count = active.exercises[ex]?.sets.length ?? 0;
     setDrag((d) => {
-      const to = dropIndex(from, dy, rowH, count);
+      const to = dropIndex(from, dy, rowCenters.current[ex] ?? [], count);
       return d && d.to === to ? d : { ex, field, from, to };
     });
   };
   const dragEnd = (ex: number, field: CopyField, from: number, dy: number) => {
     const sets = active.exercises[ex]?.sets ?? [];
-    const to = dropIndex(from, dy, rowH, sets.length);
+    const to = dropIndex(from, dy, rowCenters.current[ex] ?? [], sets.length);
     const v = valueToCopy(sets, from, to, field);
     if (v != null) {
       haptic.tap();
@@ -655,9 +656,13 @@ export default function Workout() {
                     <View
                       key={si}
                       onLayout={(e) => {
-                        // výška řádku i s mezerou - z ní se počítá, na kterou sérii přetažení míří
-                        const h = e.nativeEvent.layout.height + 8;
-                        setRowH((cur) => (Math.abs(cur - h) > 1 ? h : cur));
+                        // střed řádku v rámci cviku - podle něj se hledá cíl přetažení.
+                        // Dokončená série je o rozdíl proti minule vyšší, takže jedna
+                        // společná výška by nestačila.
+                        const { y, height } = e.nativeEvent.layout;
+                        const list = (rowCenters.current[ex] ??= []);
+                        list[si] = y + height / 2;
+                        list.length = le.sets.length;
                       }}
                       style={{
                         flexDirection: 'row',
