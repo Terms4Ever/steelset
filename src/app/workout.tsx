@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, AppState, KeyboardAvoidingView, PanResponder, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
+import { Alert, AppState, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 import Animated, { SlideInDown, SlideOutDown, useAnimatedStyle, useSharedValue, withTiming, ZoomIn } from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AdBanner } from '@/components/AdBanner';
@@ -78,7 +79,7 @@ export default function Workout() {
   const [drag, setDrag] = useState<{ ex: number; field: CopyField; from: number; to: number } | null>(null);
   // svislé středy řádků série pro každý cvik (z onLayout) - podle nich se hledá cíl přetažení
   const rowCenters = useRef<Record<number, number[]>>({});
-  // stabilni reference: PanResponder keypadu se vytvari jen jednou
+  // stabilní reference: gesto keypadu se vyrábí jen jednou
   const closeKeypad = useCallback(() => setFocus(null), []);
   // rest is timestamp-based so it keeps counting real time across backgrounding
   const restLeft = restEndAt != null ? Math.max(0, Math.ceil((restEndAt - Date.now()) / 1000)) : null;
@@ -979,12 +980,12 @@ function cycleType(updateSet: any, ex: number, si: number, s: SetEntry) {
  * Buňka s hodnotou. Kromě ťuknutí (fokus + keypad) umí přetáhnout svoji hodnotu
  * do jiné série stejného sloupce.
  *
- * Gesto se ozbrojí až podržením prstu (`HOLD_MS`). Do té doby se buňka chová jako
- * obyčejné tlačítko a svislé tažení patří rolování stránky - jinak by se přetahování
- * pralo s rolováním, protože série jsou pod sebou. Jakmile se gesto chytne,
- * `onPanResponderTerminationRequest` ho odmítne pustit, aby ho ScrollView nesebral.
+ * Gesto drží `react-native-gesture-handler`, ne ruční `PanResponder`. `activateAfterLongPress`
+ * řeší přesně tenhle případ: dokud prst nepodrží, patří svislý tah rolování stránky, a jakmile
+ * se gesto aktivuje, rolování se ho už nedomáhá. Aktivace je zároveň chvíle, kdy se ozve
+ * haptika - uživatel tak pozná, že přetahování začalo, ještě než pohne prstem.
  */
-const HOLD_MS = 260;
+const HOLD_MS = 220;
 
 function Cell({
   focused,
@@ -1011,50 +1012,29 @@ function Cell({
 }) {
   // vs-last-session delta shown under the number once the set is done (+5 / -2,5)
   const showDelta = done && delta != null && Math.abs(delta) > 0.004;
-  const armed = useRef(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // PanResponder se smí vyrobit jen jednou: při přetahování se rodič překresluje na každý
-  // posun a nová instance by měla vlastní prázdný gestureState, takže by puštění hlásilo dy 0
+  // gesto se vyrábí jen jednou, ale rodič se při přetahování překresluje na každý posun.
+  // Callbacky proto sahají na aktuální handlery přes ref, ne na hodnotu zavřenou v closure.
   const dragRef = useRef(drag);
   dragRef.current = drag;
-  const disarm = () => {
-    armed.current = false;
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = null;
-  };
-  useEffect(() => disarm, []);
 
   const pan = useMemo(
     () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => false, // ťuknutí i rolování ať fungují jako dosud
-        onMoveShouldSetPanResponder: (_e, g) => !!dragRef.current && armed.current && Math.abs(g.dy) > 3,
-        onPanResponderTerminationRequest: () => false, // rozjeté přetažení si ScrollView nevezme
-        onPanResponderGrant: () => dragRef.current?.onStart(),
-        onPanResponderMove: (_e, g) => dragRef.current?.onMove(g.dy),
-        onPanResponderRelease: (_e, g) => {
-          disarm();
-          dragRef.current?.onEnd(g.dy);
-        },
-        onPanResponderTerminate: () => {
-          disarm();
-          dragRef.current?.onCancel();
-        },
-      }),
+      Gesture.Pan()
+        .runOnJS(true)
+        // dokud prst nepodrží, patří svislý tah rolování stránky
+        .activateAfterLongPress(HOLD_MS)
+        .onStart(() => dragRef.current?.onStart())
+        .onUpdate((e) => dragRef.current?.onMove(e.translationY))
+        .onEnd((e) => dragRef.current?.onEnd(e.translationY))
+        .onFinalize((_e, success) => {
+          if (!success) dragRef.current?.onCancel();
+        }),
     [],
   );
 
   return (
-    <View
-      {...pan.panHandlers}
-      onTouchStart={() => {
-        if (!dragRef.current) return;
-        disarm();
-        timer.current = setTimeout(() => (armed.current = true), HOLD_MS);
-      }}
-      onTouchEnd={disarm}
-      onTouchCancel={disarm}
-      style={{ flex: 1, alignItems: 'center' }}>
+    <GestureDetector gesture={pan}>
+      <View style={{ flex: 1, alignItems: 'center' }}>
       <Pressable onPress={onPress} disabled={dragging} style={{ width: '100%', alignItems: 'center' }}>
         <View
           style={{
@@ -1062,8 +1042,9 @@ function Cell({
             paddingVertical: 6,
             borderRadius: 10,
             alignItems: 'center',
-            backgroundColor: target ? palette.accentDeep : focused ? palette.surface3 : 'transparent',
-            borderWidth: focused || dragging || target ? 1 : 0,
+            // cíl nesmí splynout s pozadím hotové série, to je taky accentDeep
+            backgroundColor: target ? palette.surface3 : focused ? palette.surface3 : 'transparent',
+            borderWidth: target ? 2 : focused || dragging ? 1 : 0,
             borderColor: dragging ? palette.textMute : palette.accent,
             borderStyle: dragging ? 'dashed' : 'solid',
             opacity: dragging ? 0.5 : 1,
@@ -1079,7 +1060,8 @@ function Cell({
           )}
         </View>
       </Pressable>
-    </View>
+      </View>
+    </GestureDetector>
   );
 }
 
@@ -1095,20 +1077,31 @@ function RestBtn({ label, onPress }: { label: string; onPress: () => void }) {
 
 function Keypad({ onKey, onStep, onNext, onClose, inc }: { onKey: (k: string) => void; onStep: (d: number) => void; onNext: () => void; onClose: () => void; inc: { full: number; half: number } }) {
   const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'del'];
-  // tazeni za uchyt dolu keypad zavre; PanResponder staci a nevyzaduje GestureHandlerRootView
+  // tažení za úchyt: keypad jede za prstem a pustí se, až když ujede dost daleko.
+  // Zpátky se vrací animovaně, aby krátké šťouchnutí nevypadalo jako porucha.
+  const shift = useSharedValue(0);
+  const dragged = useAnimatedStyle(() => ({ transform: [{ translateY: shift.value }] }));
   const pan = useMemo(
     () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_e, g) => g.dy > 6 && Math.abs(g.dy) > Math.abs(g.dx),
-        onPanResponderRelease: (_e, g) => {
-          if (g.dy > 40) onClose();
-        },
-      }),
-    [onClose],
+      Gesture.Pan()
+        .runOnJS(true)
+        .onUpdate((e) => {
+          shift.value = Math.max(0, e.translationY);
+        })
+        .onEnd((e) => {
+          if (e.translationY > 40) {
+            shift.value = 0;
+            onClose();
+          } else {
+            shift.value = withTiming(0, { duration: 140 });
+          }
+        }),
+    [onClose, shift],
   );
   return (
-    <View style={{ backgroundColor: palette.surface, borderTopWidth: 1, borderTopColor: palette.hairline, paddingHorizontal: 12, paddingTop: 2, paddingBottom: 24 }}>
-      <View {...pan.panHandlers} style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 6 }}>
+    <Animated.View style={[dragged, { backgroundColor: palette.surface, borderTopWidth: 1, borderTopColor: palette.hairline, paddingHorizontal: 12, paddingTop: 2, paddingBottom: 24 }]}>
+      <GestureDetector gesture={pan}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 6 }}>
         <View style={{ width: 44 }} />
         <View style={{ flex: 1, alignItems: 'center' }}>
           <View style={{ width: 38, height: 4, borderRadius: 2, backgroundColor: palette.surface3 }} />
@@ -1117,6 +1110,7 @@ function Keypad({ onKey, onStep, onNext, onClose, inc }: { onKey: (k: string) =>
           <Ionicons name="chevron-down" size={24} color={palette.textMute} />
         </Pressable>
       </View>
+      </GestureDetector>
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 10 }}>
         <Stepper label={`-${fmtNum(inc.full, 2)}`} onPress={() => onStep(-inc.full)} />
         <Stepper label={`-${fmtNum(inc.half, 2)}`} onPress={() => onStep(-inc.half)} />
@@ -1137,7 +1131,7 @@ function Keypad({ onKey, onStep, onNext, onClose, inc }: { onKey: (k: string) =>
           </Txt>
         </Pressable>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 

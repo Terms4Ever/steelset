@@ -10,6 +10,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { MiniWorkoutBar } from '@/components/MiniWorkoutBar';
@@ -88,23 +89,26 @@ export default function RootLayout() {
   if (!ready) return <View style={{ flex: 1, backgroundColor: palette.bg }} />;
 
   return (
-    <SafeAreaProvider>
-      <StatusBar style="light" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: palette.bg },
-        }}>
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="onboarding" />
-        <Stack.Screen name="workout" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
-        <Stack.Screen name="exercises" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-        <Stack.Screen name="exercise-new" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-        <Stack.Screen name="paywall" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-        <Stack.Screen name="routine/[id]" options={{ animation: 'slide_from_right' }} />
-        <Stack.Screen name="history/[id]" options={{ animation: 'slide_from_right' }} />
-      </Stack>
-      <FloatingWorkoutBar />
-    </SafeAreaProvider>
+    // gesta z react-native-gesture-handler (přetahování hodnot, keypad) potřebují tenhle kořen
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <StatusBar style="light" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: palette.bg },
+          }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="onboarding" />
+          <Stack.Screen name="workout" options={{ presentation: 'fullScreenModal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="exercises" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="exercise-new" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="paywall" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="routine/[id]" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="history/[id]" options={{ animation: 'slide_from_right' }} />
+        </Stack>
+        <FloatingWorkoutBar />
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

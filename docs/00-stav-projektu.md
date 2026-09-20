@@ -49,9 +49,9 @@ Plní se otevřené issues z GitHubu (#1 až #14). Hotové v kódu a čekající
 ověření na zařízení:
 
 - #2 a #6 - číselná klávesnice v tréninku: neotevírá se při odškrtávání
-  předvyplněných sérií, jde zavřít křížkem i tažením dolů (S8 v deníku)
-  a při zavření sjede dolů i s lištou odpočtu (S23 v deníku). Zbývá, aby při
-  tažení jela za prstem, a zavření ťuknutím mimo buňky
+  předvyplněných sérií, jde zavřít křížkem, tažením dolů i ťuknutím mimo buňky
+  (S8 v deníku), při zavření sjede dolů i s lištou odpočtu (S23 v deníku)
+  a při tažení jede za prstem (S24 v deníku)
 - #4 - hodnoty s jednotkou se nezalamují, objemy mají oddělovač tisíců
   (S9 v deníku)
 - #5 - z odcvičeného tréninku jde udělat plán, včetně supersérií
@@ -71,9 +71,13 @@ ověření na zařízení:
 - #14 - plovoucí lišta běžícího tréninku už nesedí na tlačítkách, výšku hlásí
   sama a ťuknutí vedle ní projde na obsah (S22 v deníku)
 
-Z testu na zařízení zbývá neopravené #13, přetahování hodnot mezi sériemi.
-Půjde k němu i zbytek #6: obojí je gesto a oboje se přepíše na
-`react-native-gesture-handler`, který je v závislostech a zatím nepoužitý.
+- #13 - přetahování hodnot mezi sériemi stojí na `react-native-gesture-handler`
+  místo ručního `PanResponder`, haptika se ozve už při aktivaci a cíl je vidět
+  i na hotové sérii (S24 v deníku)
+
+Gesta jsou jediná část, kterou z Windows neověřím: syntetické pointer eventy
+gesture-handler na webu neřídí. Přetahování i tažení keypadu tedy čekají na
+TestFlight.
 
 ## Co je dál
 

@@ -650,3 +650,36 @@ zmizel hned. Se zapnutým odpočtem sedí lišta správně nad otevřeným keypa
 (#13) do jednoho průchodu na `react-native-gesture-handler`, který je v závislostech
 a zatím nepoužitý.
 
+---
+
+## S24 - Gesta drží react-native-gesture-handler, ne ruční PanResponder (20. 9. 2026)
+
+**Stav.** Přetahování hodnot mezi sériemi (#13) i tažení keypadu dolů (#6) stálo
+na ručním `PanResponder`. U přetahování to nefungovalo: ozbrojení podržením se
+nedalo poznat, protože haptika se ozvala až po prvních třech pixelech pohybu,
+a ozbrojený prst pak sebral rolování celé stránky. Keypad za prstem nejel vůbec,
+jen na puštění vyhodnotil `dy > 40`.
+
+**Rozhodnutí.** Obojí přechází na `react-native-gesture-handler`, který je
+v závislostech už dlouho a nic ho nepoužívalo. Buňka má
+`Gesture.Pan().activateAfterLongPress(220)`, keypad `Gesture.Pan()` s posunem
+řízeným sdílenou hodnotou. Kořen aplikace dostal `GestureHandlerRootView`.
+
+**Proč.** Souboj gesta s rolováním uvnitř `ScrollView` je přesně ten problém, který
+tahle knihovna řeší, a ruční `PanResponder` na něj nestačí. Aktivace po podržení je
+navíc konkrétní okamžik, na který jde pověsit haptiku, takže uživatel pozná, že
+přetahování začalo, ještě než pohne prstem.
+
+**Zároveň.** Zvýrazněný cíl přetažení měl pozadí `palette.accentDeep`, což je přesně
+barva pozadí hotové série, takže na hotové sérii nebyl vidět. Teď má `surface3`
+a dvoupixelový akcentový rámeček.
+
+**Čím ověřeno.** Ve webovém náhledu: aplikace s `GestureHandlerRootView` naběhne,
+konzole bez chyb, ťuknutí do buňky dál otevírá keypad. **Samotný tah prstem ověřený
+není** - syntetické pointer eventy gesture-handler na webu neřídí, stejně jako
+neřídí `Pressable`. Ověřit až na zařízení.
+
+**Co se ukázalo mimochodem.** Zavírání keypadu ťuknutím mimo buňky funguje už dřív,
+obaluje obsah `Pressable` s `closeKeypad` (`src/app/workout.tsx:447`). Dřívější
+tvrzení v komentáři u #6, že chybí, bylo špatně.
+
