@@ -38,6 +38,11 @@ propojit ho s App Store Connectem, vytvořit:
 
 Veřejný klíč pro App Store patří do `EXPO_PUBLIC_REVENUECAT_IOS_KEY`.
 
+Tenhle bod musí být hotový **dřív, než aplikace půjde do veřejného prodeje**.
+Do té doby je v Profilu skrytý přepínač předplatného pro testování, který se
+schovává právě podmínkou na chybějící klíč (rozhodnutí S7). Ve veřejné verzi
+bez klíče by z něj byla skutečná díra.
+
 ### [ ] App Store Connect: skupina předplatného a produkty
 
 Vytvořit skupinu předplatného a v ní dva produkty, měsíční a roční. Návrh cen,

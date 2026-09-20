@@ -472,3 +472,29 @@ uživatel by si musel každý cvik na šikmé založit ručně.
 snadno porušit: každá oblast mapy musí jít u cviku vybrat, a každá partie
 z katalogu cviků musí mít na mapě své místo. Cvik s partií, kterou mapa nezná,
 by jinak mlčky zmizel z objemu.
+
+---
+
+## S7 - Přepínač předplatného pro testera existuje jen bez zapojeného obchodu (20. 9. 2026)
+
+**Rozhodnutí.** Profil má skrytý přepínač, který přepne uložený stav předplatného
+a tím vypne reklamy. Odemkne se sedmi ťuknutími na řádek s verzí a vykreslí se
+jedině tehdy, když `purchasesAvailable()` vrací false, tedy dokud v prostředí
+chybí klíč RevenueCatu.
+
+**Proč.** Reklamy v aplikaci běží, ale Pro si koupit nejde, protože obchod ještě
+není zapojený. Bez přepínače by verze bez reklam nešla vůbec vyzkoušet a zjistilo
+by se to až po vydání.
+
+**Proč to není díra.** Automatická bezpečnostní kontrola to označila za obejití
+autorizace a formálně má pravdu: stav předplatného jde přepnout z rozhraní bez
+ověření u obchodu. Prakticky ale není co obcházet. Dokud klíč chybí, předplatné
+neexistuje a paywall nenačte jedinou nabídku. Jakmile klíč přibude, podmínka
+přepínač schová a testuje se přes sandboxový účet. Uložená hodnota navíc nepřežije:
+`checkPro()` s funkčním klíčem vrátí false a cache přepíše.
+
+**Podmínka, která to drží.** Klíč RevenueCatu musí být v prostředí dřív, než
+aplikace půjde do veřejného prodeje. To platí nezávisle na tomhle přepínači, protože
+jinak by v obchodě viselo předplatné, které nejde koupit. Kdyby se to pořadí
+obrátilo, přepínač se stane skutečnou dírou a musí z kódu pryč.
+
