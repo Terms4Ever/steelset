@@ -63,6 +63,10 @@ Klíč uložených dat už `steelset-store-v1` je, starý `setly-store-v1` se je
 čte jako fallback (S7 v deníku). Všechno ostatní, co uživatel uvidí, Steelset
 je: název, schéma odkazů, jméno exportu i souboru zálohy.
 
+Kontrola „Kontroly" na GitHubu shodí každý push, který sáhne na kód a nesáhne
+na `docs/`. Dokumentace tedy patří do stejné dávky jako změna, ne až za ni,
+a po pushi se ověřuje, že běh doopravdy prošel (S12 v deníku).
+
 Nativní části se z Windows otestovat nedají. TestFlight je test.
 
 Reklamy ani nákupy se v prohlížeči nespustí. Balíčky mají varianty `.web`, které

@@ -112,6 +112,12 @@ syntetickými eventy - ověřovat přes DOM text (preview_eval) a screenshoty.
 - **Nadpis commitu končí číslem issue v závorce**: `Popis změny (#4)`, u víc issues
   `(#2, #6)`. Bez čísla jen commity, které k žádnému issue nepatří. Klíčová slova
   `Closes`/`Fixes` se NEPOUŽÍVAJÍ - issue zavírá uživatel, až změnu ověří na TestFlightu.
+- **Každý push, který sahá na kód, sahá i na `docs/`** - co se změnilo do
+  `docs/00-stav-projektu.md`, proč do `docs/03-rozhodovaci-dennik.md`. Jinak workflow
+  „Kontroly" push shodí; za kód se počítá cokoli mimo `docs/`, tedy i `AGENTS.md`.
+- **Po KAŽDÉM pushi ověřit běh „Kontroly" na GitHubu** (Actions / commit na main).
+  Místní hooky v tomhle klonu nainstalované nejsou, takže push projde i s chybou
+  a ta se ukáže až tam. Úspěšný push není totéž co zelená kontrola.
 
 ## Stav (červenec 2026)
 

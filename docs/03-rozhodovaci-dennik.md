@@ -258,3 +258,27 @@ u cviku ve výběru cviků. Prázdné jméno se neuloží.
 **Past.** `exerciseNames` musí být v `partialize` i ve `wipeAll`. Bez
 `partialize` by se přejmenování nedostalo ani do zálohy na iCloud, ta ukládá
 celý uložený stav. Hlídá to test, který po přejmenování čte uložená data.
+
+---
+
+## S12 - Nadpis commitu nese číslo issue a každá dávka sahá na docs (20. 9. 2026)
+
+**Stav.** Prvních pět commitů k issues mělo odkaz na issue až v těle zprávy
+(„Řeší #1."). Zadavatel to vytkl: v jeho ostatních repozitářích je číslo
+v nadpisu, v závorce na konci - „Web se ptá na měření návštěvnosti, dřív než
+cokoli načte (#3)".
+
+**Rozhodnutí.** Nadpis commitu končí číslem issue v závorce, u více issues
+`(#2, #6)`. Klíčová slova `Closes` a `Fixes` se nepoužívají: issue zavírá
+zadavatel, až změnu ověří na TestFlightu, a GitHub by ji zavřel už při pushi.
+
+**Co to odhalilo.** Commit, který tohle pravidlo zapsal do `AGENTS.md`, jako
+jediný z dávky neprošel kontrolou (běh 13, commit `02d2468`). Kontrola
+dokumentace z `Terms4Ever/nastroje` odmítne každou dávku, která sáhne na kód
+a nesáhne na `docs/`. Za kód se počítá cokoli mimo `docs/`, tedy i `AGENTS.md`.
+
+**Past.** V klonu, kde se tady pracuje, nejsou nainstalované místní hooky, takže
+push projde i s dávkou bez dokumentace a chyba se ukáže až v Akcích na GitHubu.
+Po každém pushi se proto kouká na výsledek běhu, ne jen na to, že push prošel.
+Křížek na `02d2468` už zůstane: kontrola porovnává rozsah toho jednoho pushe
+a opravit by to šlo jen přepisem historie.
