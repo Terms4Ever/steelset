@@ -723,3 +723,24 @@ detail ukáže všechna pole a u vestavěného cviku zamčené vybavení, schova
 zmizí z nabídky, objeví se v sekci Smazané a v detailu odcvičeného tréninku se dál
 ukazuje jeho jménem, ne jako „Cvik".
 
+
+---
+
+## S23 - Snímky „po" k issues #12 a #13 (21. 9. 2026)
+
+Zavřená issues měla snímek „před" od zadavatele a žádný „po", takže v nich
+nebylo vidět, co se změnilo. Kontrola z nastroje to od verze 1.3.0 hlásí.
+
+Snímky „po" jsou pořízené z webového náhledu (`npx expo start --web`, šířka
+375 bodů) přes Playwright, aby šly uložit do repozitáře:
+
+- **#12**: sheet Nastavení cviku má zavírací křížek a tlačítko Uložit zůstává
+  dosažitelné. Chování klávesnice web neukáže, to ověřil zadavatel na
+  TestFlightu; snímek dokládá obě změny ve stavbě sheetu.
+- **#13**: přetažení hodnoty mezi sériemi. Zdroj má přerušovaný rámeček, cíl
+  svítí zeleně, přesně jak to popisuje uzavírací komentář.
+
+**#14 zůstává bez snímku „po".** Stav „před" je detail hotového tréninku
+s lištou běžícího tréninku přes tlačítky. Poskládat totéž v náhledu znamená
+mít zároveň dokončený i běžící trénink a to se přes headless klikání
+nepodařilo. Snímek proto musí přijít ze zařízení.
