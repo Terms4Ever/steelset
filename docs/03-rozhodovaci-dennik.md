@@ -744,3 +744,13 @@ Snímky „po" jsou pořízené z webového náhledu (`npx expo start --web`, š
 s lištou běžícího tréninku přes tlačítky. Poskládat totéž v náhledu znamená
 mít zároveň dokončený i běžící trénink a to se přes headless klikání
 nepodařilo. Snímek proto musí přijít ze zařízení.
+
+## S26 - Testy běží i na GitHubu (23. 9. 2026)
+
+**Podnět.** Nezávislý audit společných kontrol (nastroje, N32): steelset má
+Jest testy, ale v CI se nepouštěly. Jediný job na GitHubu byla kontrola
+README a dokumentace, takže rozbitý výpočet nebo řazení by prošly zeleně.
+
+**Co se změnilo.** Workflow `Kontroly` má job `testy`: Node 24, `npm ci`,
+`npm test`. Před zapojením ověřeno lokálně, 14 sad a 196 testů prošlo.
+Workflow issues nově reaguje i na změnu štítků, odpovědného a znovuotevření.
