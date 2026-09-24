@@ -106,6 +106,7 @@ eas build --platform ios --profile production --non-interactive --auto-submit
 - **Nadpis commitu končí číslem issue v závorce**: `Popis změny (#4)`, u více
   issues `(#2, #6)`. Bez čísla jen commity, které k žádnému issue nepatří.
   `Closes` a `Fixes` se nepoužívají, issue zavírá zadavatel po testu.
-- **Po každém pushi ověř běh Kontroly na GitHubu.** V tomhle klonu nejsou
-  nainstalované místní hooky, takže push projde i s chybou. Úspěšný push není
-  totéž co zelená kontrola.
+- **Po každém pushi ověř běh Kontroly na GitHubu.** Místní hook z
+  `~/.git-hooks` pustí jen společné kontroly, testy ne; ty běží až v jobu
+  `testy`. Úspěšný push proto není totéž co zelená kontrola
+  (`docs/04-overeni.md`).
