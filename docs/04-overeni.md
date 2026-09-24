@@ -32,7 +32,7 @@ Běh 24. 9. 2026: 14 sad, 196 testů, všechny prošly.
 
 | Místo | Co běží | Co ne |
 |---|---|---|
-| CI, job `testy` v Kontrolách | `npm test` na Node 24 po každém pushi (od S26) | typy a web export |
+| CI, job `testy` ve workflow `Pravidla / nastroje` | `npm test` na Node 24 po každém pushi (od S26) | typy a web export |
 | pre-push hook z `~/.git-hooks` | pravidla commitů, README, dokumentace | testy ani typy |
 | ručně před commitem | brány z `AGENTS.md`: `npx tsc --noEmit`, `npx jest`, `npx expo export --platform web` | |
 
