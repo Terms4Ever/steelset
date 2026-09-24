@@ -32,6 +32,13 @@ neshodí, tvar mu dodá agent. Hlídá to kontrola z `nastroje`: hned při zakl�
 a změně issue (štítek `tvar nesedí` a komentář, co chybí) a znovu při pushi.
 Běží jen nad issue od vlastníka a spolupracovníků, ne nad cizím hlášením.
 
+## Sada pravidel
+
+Primární sadu `nastroje` určuje `.pravidla.json`. Stejnou příslušnost
+uvádí odznak v README, začátek `AGENTS.md` a workflow `Pravidla / nastroje`.
+Společné kontroly se dál načítají z `Terms4Ever/nastroje` přes `@main`.
+GitHub topic pro tuto sadu je `pravidla-nastroje` (S27).
+
 ## Co je hotové
 
 - Zápis tréninků: série, opakování, váhy, odpočet mezi sériemi, supersérie
@@ -107,7 +114,7 @@ Klíč uložených dat už `steelset-store-v1` je, starý `setly-store-v1` se je
 čte jako fallback (S7 v deníku). Všechno ostatní, co uživatel uvidí, Steelset
 je: název, schéma odkazů, jméno exportu i souboru zálohy.
 
-Kontrola „Kontroly" na GitHubu shodí každý push, který sáhne na kód a nesáhne
+Workflow `Pravidla / nastroje` na GitHubu shodí každý push, který sáhne na kód a nesáhne
 na `docs/`. Dokumentace tedy patří do stejné dávky jako změna, ne až za ni,
 a po pushi se ověřuje, že běh doopravdy prošel (S12 v deníku).
 

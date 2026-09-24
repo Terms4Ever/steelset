@@ -1,5 +1,8 @@
 # Steelset - pokyny pro agenty
 
+Sada pravidel: `nastroje` (určuje `.pravidla.json`).
+Zdroj pravidel: https://github.com/Terms4Ever/nastroje.
+
 Česká mobilní appka na zapisování tréninků v posilovně: série, opakování, váhy,
 pokrok, Apple Health a Watch, Live Activity. Cíl je App Store, jazyk rozhraní
 čeština.
@@ -106,7 +109,7 @@ eas build --platform ios --profile production --non-interactive --auto-submit
 - **Nadpis commitu končí číslem issue v závorce**: `Popis změny (#4)`, u více
   issues `(#2, #6)`. Bez čísla jen commity, které k žádnému issue nepatří.
   `Closes` a `Fixes` se nepoužívají, issue zavírá zadavatel po testu.
-- **Po každém pushi ověř běh Kontroly na GitHubu.** Místní hook z
+- **Po každém pushi ověř běh Pravidla / nastroje na GitHubu.** Místní hook z
   `~/.git-hooks` pustí jen společné kontroly, testy ne; ty běží až v jobu
   `testy`. Úspěšný push proto není totéž co zelená kontrola
   (`docs/04-overeni.md`).

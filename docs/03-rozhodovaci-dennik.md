@@ -754,3 +754,19 @@ README a dokumentace, takže rozbitý výpočet nebo řazení by prošly zeleně
 **Co se změnilo.** Workflow `Kontroly` má job `testy`: Node 24, `npm ci`,
 `npm test`. Před zapojením ověřeno lokálně, 14 sad a 196 testů prošlo.
 Workflow issues nově reaguje i na změnu štítků, odpovědného a znovuotevření.
+
+## S27 - Jednoznačné označení sady pravidel (24. 9. 2026)
+
+**Podnět.** Vlastník schválil rozlišení osobní sady `nastroje` a pracovní
+sady `nastroje-prace`. Z označení projektu má být poznat, která platí.
+Issue #17.
+
+**Rozhodnutí.** Tento projekt má jedinou primární sadu `nastroje` zapsanou
+v `.pravidla.json`. Odkazující odznak v README, začátek `AGENTS.md`,
+název workflow `Pravidla / nastroje` a topic `pravidla-nastroje` mají
+odpovídat této volbě. Sdílené kontroly zůstávají na `@main`; názvy souborů
+workflow a jejich jobů se nemění.
+
+**Ověření.** Změna se ověřuje společnými kontrolami README a dokumentace
+a kontrolou příslušnosti k sadě. Výsledky a snímky README před a po patří
+do issue #17.

@@ -10,6 +10,7 @@ a kalendář odcvičených dnů.
 ![React Native](https://img.shields.io/badge/React%20Native-0.85-61DAFB?logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white)
 ![License](https://img.shields.io/badge/license-proprietary-red)
+[![Pravidla: nastroje](https://img.shields.io/badge/pravidla-nastroje-0969da)](https://github.com/Terms4Ever/nastroje)
 
 ---
 
