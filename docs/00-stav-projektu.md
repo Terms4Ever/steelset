@@ -32,6 +32,11 @@ neshodí, tvar mu dodá agent. Hlídá to kontrola z `nastroje`: hned při zakl�
 a změně issue (štítek `tvar nesedí` a komentář, co chybí) a znovu při pushi.
 Běží jen nad issue od vlastníka a spolupracovníků, ne nad cizím hlášením.
 
+Issue uzavírá agent po ověření všech podmínek dokončení a úspěšném CI
+předávaného commitu. Pouze ověření, které agent nemůže sám skutečně provést,
+předá zadavateli s důvodem a konkrétním postupem; takové issue uzavírá
+zadavatel po osobním testu (S28).
+
 ## Sada pravidel
 
 Primární sadu `nastroje` určuje `.pravidla.json`. Stejnou příslušnost

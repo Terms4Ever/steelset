@@ -108,7 +108,14 @@ eas build --platform ios --profile production --non-interactive --auto-submit
   našlo skutečné chyby.
 - **Nadpis commitu končí číslem issue v závorce**: `Popis změny (#4)`, u více
   issues `(#2, #6)`. Bez čísla jen commity, které k žádnému issue nepatří.
-  `Closes` a `Fixes` se nepoužívají, issue zavírá zadavatel po testu.
+  `Closes` a `Fixes` se nepoužívají; issue se uzavírá až po ověření výsledku.
+- **Osobní test zadavatele je nutný pouze pro ověření, které agent nemůže
+  sám skutečně provést.** Agent nejprve provede dostupné kontroly a do issue
+  napíše, co zbývá otestovat, proč to nemůže ověřit a přesný postup testu.
+  Takové issue zůstává otevřené a uzavře ho zadavatel po svém testu.
+  Pokud agent ověří všechny podmínky dokončení a CI předávaného commitu
+  projde, uzavře issue sám. Platí to i pro změny aplikace, které umí plně
+  ověřit; dokumentace ani technický úkol samy o sobě osobní test nevyžadují.
 - **Po každém pushi ověř běh Pravidla / nastroje na GitHubu.** Místní hook z
   `~/.git-hooks` pustí jen společné kontroly, testy ne; ty běží až v jobu
   `testy`. Úspěšný push proto není totéž co zelená kontrola

@@ -775,3 +775,21 @@ do issue #17.
 README jsou ve složce `docs/snimky/17-sada-pravidel`. Nový odznak byl ověřen přímo
 na GitHubu. Výsledek kontrol na konkrétním commitu a čitelné srovnání
 před a po jsou doloženy v issue.
+
+## S28 - Osobní převzetí jen pro testy nedostupné agentovi (24. 9. 2026)
+
+**Podnět.** Issue #17 zůstalo po úspěšném ověření otevřené kvůli příliš
+širokému výkladu pravidla o uzavírání zadavatelem. Vlastník upřesnil,
+že osobně přebírá jen ověření, které agent nemůže sám provést.
+Toto rozhodnutí upřesňuje dřívější plošné pravidlo ze S12.
+
+**Rozhodnutí.** Agent uzavírá issue po ověření všech podmínek dokončení
+a úspěšném CI předávaného commitu, i když jde o změnu aplikace. Pokud
+konkrétní ověření nedokáže provést, nejprve dokončí dostupné kontroly,
+popíše překážku a postup osobního testu a ponechá uzavření zadavateli.
+Samotný druh úkolu není důvodem čekat na osobní test. Zákaz automatického
+uzavírání přes slova v commitu zůstává, aby se počkalo na výsledek CI.
+
+**Použití na #17.** Označení pravidel, skutečné napojení, metadata a snímky
+README agent ověřil. Úkol neobsahuje zbývající test na zařízení; po kontrole
+tohoto dokumentačního upřesnění a jeho CI jej může uzavřít agent.
