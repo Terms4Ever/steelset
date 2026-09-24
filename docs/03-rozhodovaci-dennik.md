@@ -770,3 +770,8 @@ workflow a jejich jobů se nemění.
 **Ověření.** Změna se ověřuje společnými kontrolami README a dokumentace
 a kontrolou příslušnosti k sadě. Výsledky a snímky README před a po patří
 do issue #17.
+
+**Doklad k issue #17.** Skutečné snímky původního a změněného
+README jsou ve složce `docs/snimky/17-sada-pravidel`. Nový odznak byl ověřen přímo
+na GitHubu. Výsledek kontrol na konkrétním commitu a čitelné srovnání
+před a po jsou doloženy v issue.
