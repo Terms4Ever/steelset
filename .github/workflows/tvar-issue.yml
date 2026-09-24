@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   tvar:
+    name: Kontrola
     # Jen issue od vlastníka a spolupracovníků. Cizí hlášení z internetu se
     # neštítkuje ani nekomentuje a hlavně: běh, který smí zapisovat do issues,
     # nejde spustit zvenčí. Repozitáře jsou zčásti veřejné.

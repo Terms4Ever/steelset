@@ -1,4 +1,4 @@
-name: Pravidla / nastroje
+name: Kontroly
 
 on:
   push:
@@ -14,11 +14,13 @@ permissions:
 
 jobs:
   readme:
+    name: Pravidla nastroje
     uses: Terms4Ever/nastroje/.github/workflows/readme.yml@main
 
   # Jest testy (tests/*.test.ts). Do 23. 9. 2026 existovaly, ale v CI
   # neběžely, takže rozbitý výpočet by si nikdo nevšiml (audit, S26).
   testy:
+    name: Testy aplikace
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4

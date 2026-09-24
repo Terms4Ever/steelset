@@ -40,7 +40,8 @@ zadavatel po osobním testu (S28).
 ## Sada pravidel
 
 Primární sadu `nastroje` určuje `.pravidla.json`. Stejnou příslušnost
-uvádí odznak v README, začátek `AGENTS.md` a workflow `Pravidla / nastroje`.
+uvádí odznak v README, začátek `AGENTS.md` a název společné kontroly
+`Pravidla nastroje` ve workflow `Kontroly`.
 Společné kontroly se dál načítají z `Terms4Ever/nastroje` přes `@main`.
 GitHub topic pro tuto sadu je `pravidla-nastroje` (S27).
 
@@ -119,7 +120,7 @@ Klíč uložených dat už `steelset-store-v1` je, starý `setly-store-v1` se je
 čte jako fallback (S7 v deníku). Všechno ostatní, co uživatel uvidí, Steelset
 je: název, schéma odkazů, jméno exportu i souboru zálohy.
 
-Workflow `Pravidla / nastroje` na GitHubu shodí každý push, který sáhne na kód a nesáhne
+Workflow `Kontroly` na GitHubu shodí každý push, který sáhne na kód a nesáhne
 na `docs/`. Dokumentace tedy patří do stejné dávky jako změna, ne až za ni,
 a po pushi se ověřuje, že běh doopravdy prošel (S12 v deníku).
 

@@ -793,3 +793,16 @@ uzavírání přes slova v commitu zůstává, aby se počkalo na výsledek CI.
 **Použití na #17.** Označení pravidel, skutečné napojení, metadata a snímky
 README agent ověřil. Úkol neobsahuje zbývající test na zařízení; po kontrole
 tohoto dokumentačního upřesnění a jeho CI jej může uzavřít agent.
+
+## S29 - Kontroly na GitHubu mají české názvy (24. 9. 2026)
+
+**Podnět.** Zadavateli se nelíbily názvy kontrol na GitHubu (nastroje N36):
+u commitu stálo `Pravidla / nastroje / readme / kontrola`.
+
+**Změna.** Workflow po pushi se jmenuje `Kontroly` a společná kontrola z nastroje
+`Pravidla nastroje`, takže je sada vidět u každého commitu. Testy mají
+job `Testy aplikace`. Mění označení z S27:
+sadu ukazuje název společné kontroly, ne název workflow.
+
+**Ověření.** Kontrola sady pravidel, README a dokumentace z nastroje prošla
+nad pracovním stromem; nové názvy se ověřují na prvním běhu po pushi.

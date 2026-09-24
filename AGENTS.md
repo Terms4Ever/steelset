@@ -116,7 +116,7 @@ eas build --platform ios --profile production --non-interactive --auto-submit
   Pokud agent ověří všechny podmínky dokončení a CI předávaného commitu
   projde, uzavře issue sám. Platí to i pro změny aplikace, které umí plně
   ověřit; dokumentace ani technický úkol samy o sobě osobní test nevyžadují.
-- **Po každém pushi ověř běh Pravidla / nastroje na GitHubu.** Místní hook z
+- **Po každém pushi ověř běh Kontroly na GitHubu.** Místní hook z
   `~/.git-hooks` pustí jen společné kontroly, testy ne; ty běží až v jobu
-  `testy`. Úspěšný push proto není totéž co zelená kontrola
+  `Testy aplikace`. Úspěšný push proto není totéž co zelená kontrola
   (`docs/04-overeni.md`).
