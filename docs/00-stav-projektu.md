@@ -16,7 +16,7 @@ hlavní větev:     main
 TestFlight build 27, verze 1.0.0. Aplikace není veřejně v App Store.
 
 Build 27 prošel testem na zařízení a issues #1 až #14 jsou zavřené. V kódu je
-navíc #16 (widgety), které čeká na build 28. **Ten se musí jednou pustit
+navíc #16 (widgety, výběr zadavatele v S31), které čeká na build 28. **Ten se musí jednou pustit
 interaktivně**: widgety potřebují App Group, což je nová capability pro
 aplikaci i pro rozšíření, a tu EAS neinteraktivně nedoregistruje (S30).
 
@@ -66,10 +66,10 @@ Všechno z toho ověřené na zařízení v buildu 27 (#1 až #14).
 
 ## Co se dělá
 
-- #16 - widgety: „Tento týden" na plochu i zamčenou obrazovku a „Další trénink",
-  který ťuknutím spustí plán na řadě. Data jim aplikace zapisuje do App Group,
-  odkaz `steelset://start` spouští trénink (S30). Hotové v kódu, logika a odkaz
-  ověřené, samotné widgety a App Group jen na zařízení.
+- #16 - widgety podle výběru zadavatele (S31): Tento týden, Týdenní cíl, Poslední
+  trénink, Kalendář měsíce, Tělesná váha, Plány tento týden a Série po partiích.
+  Data jim aplikace zapisuje do App Group, cíl se nastavuje v Profilu a váha se
+  čte z Apple Health. Hotové v kódu a ověřená logika, samotné widgety jen na zařízení.
 
 ## Co je dál
 

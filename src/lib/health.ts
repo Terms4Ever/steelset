@@ -198,6 +198,28 @@ export async function latestBodyweightKg(): Promise<number | null> {
   }
 }
 
+/**
+ * Vážení z Health od `sinceMs` do teď, nejstarší první. Pro widget tělesné váhy (#16).
+ * Stejný tvar dotazu jako u tepu: `limit` je povinný (0 = vše) a okno patří do `filter.date`.
+ */
+export async function bodyweightHistoryKg(sinceMs: number): Promise<{ at: number; kg: number }[]> {
+  const m = hk();
+  if (!m?.queryQuantitySamples) return [];
+  try {
+    const samples = await m.queryQuantitySamples(BODYMASS, {
+      unit: 'kg',
+      limit: 0,
+      filter: { date: { startDate: new Date(sinceMs), endDate: new Date() } },
+    });
+    return (samples ?? [])
+      .map((s: any) => ({ at: new Date(s?.startDate).getTime(), kg: Math.round(s?.quantity * 10) / 10 }))
+      .filter((x: { at: number; kg: number }) => Number.isFinite(x.at) && Number.isFinite(x.kg) && x.kg > 0)
+      .sort((a: { at: number }, b: { at: number }) => a.at - b.at);
+  } catch {
+    return [];
+  }
+}
+
 /** Run every Health step and report exactly what worked / failed — for on-device diagnosis. */
 export async function healthSelfTest(): Promise<string> {
   if (Platform.OS !== 'ios') return 'Apple Health je dostupné jen na iPhonu.';

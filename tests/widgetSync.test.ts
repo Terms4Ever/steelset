@@ -30,41 +30,48 @@ const last = () => writes[writes.length - 1];
 describe('snímek pro widgety drží krok se store', () => {
   it('zapíše se hned po startu, bez čekání na první změnu', () => {
     expect(writes).toHaveLength(1);
-    expect(last().active).toBeNull();
-    expect(last().next).toBeNull();
+    expect(last().last).toBeNull();
+    expect(last().routines).toEqual([]);
   });
 
-  it('obnoví se po změně plánu, startu, dopsání série i ukončení tréninku', () => {
+  it('obnoví se po změně plánu, dokončení tréninku, změně cíle i novém vážení', () => {
     const rid = s().addRoutine({ name: 'Nohy', exercises: [{ exerciseId: 'squat', targetSets: 2, targetReps: 5 }] });
     settle();
-    expect(last().next?.name).toBe('Nohy');
+    expect(last().routines.map((r) => r.name)).toEqual(['Nohy']);
+    expect(last().next).toBe(rid);
 
     s().startWorkout(rid);
-    settle();
-    expect(last().active?.name).toBe('Nohy');
-
     s().updateSet(0, 0, { weight: 100, reps: 5, done: true });
     s().finishWorkout();
     settle();
-    expect(last().active).toBeNull();
     expect(last().recent).toHaveLength(1);
     expect(last().recent[0].volume).toBe(500);
-    expect(last().next?.lastAt).toBe(last().recent[0].at);
+    expect(last().last?.name).toBe('Nohy');
+    expect(last().routines[0].lastAt).toBe(last().recent[0].at);
+
+    s().setSetting('weeklyGoal', 3);
+    settle();
+    expect(last().goal).toBe(3);
+
+    const weighedAt = Date.now() - 1000;
+    s().setBodyweightLog([{ at: weighedAt, kg: 82.4 }]);
+    settle();
+    expect(last().weight).toEqual([{ at: weighedAt, value: 82.4 }]);
   });
 
   it('víc změn rychle za sebou je jeden zápis', () => {
-    const id = s().startWorkout(null);
+    const rid = s().addRoutine({ name: 'Nohy', exercises: [] });
     settle();
     const before = writes.length;
     // každé přejmenování snímek mění, takže bez odkládání by vznikly tři zápisy
-    s().renameWorkout(id, 'A');
+    s().updateRoutine(rid, { name: 'A' });
     jest.advanceTimersByTime(DEBOUNCE / 2);
-    s().renameWorkout(id, 'B');
+    s().updateRoutine(rid, { name: 'B' });
     jest.advanceTimersByTime(DEBOUNCE / 2);
-    s().renameWorkout(id, 'C');
+    s().updateRoutine(rid, { name: 'C' });
     settle();
     expect(writes.length).toBe(before + 1);
-    expect(last().active?.name).toBe('C');
+    expect(last().routines[0].name).toBe('C');
   });
 
   it('změna, která snímek nemění, nic nezapíše', () => {

@@ -194,6 +194,18 @@ export default function Profil() {
             onChange={(v) => setSetting('defaultSets', v)}
           />
         </Row>
+        {/* cíl pro widget týdenního cíle (#16); 0 = bez cíle, widget pak vyzve k nastavení */}
+        <Row icon="flag-outline" label="Týdenní cíl tréninků">
+          <Stepper
+            value={settings.weeklyGoal ?? 0}
+            step={1}
+            min={0}
+            max={7}
+            suffix="×"
+            zeroLabel="Vyp"
+            onChange={(v) => setSetting('weeklyGoal', v)}
+          />
+        </Row>
         <Row icon="trending-up-outline" label="Nabízet zvýšení váhy" last>
           <Switch label="Nabízet zvýšení váhy" value={settings.stallAlerts !== false} onChange={(v) => setSetting('stallAlerts', v)} />
         </Row>
@@ -344,15 +356,14 @@ function Switch({ value, onChange, label }: { value: boolean; onChange: (v: bool
   );
 }
 
-function Stepper({ value, step, min, max, suffix, onChange }: { value: number; step: number; min: number; max?: number; suffix: string; onChange: (v: number) => void }) {
+function Stepper({ value, step, min, max, suffix, zeroLabel, onChange }: { value: number; step: number; min: number; max?: number; suffix: string; zeroLabel?: string; onChange: (v: number) => void }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
       <Pressable onPress={() => onChange(Math.max(min, Math.round((value - step) * 100) / 100))} hitSlop={6}>
         <Ionicons name="remove-circle" size={26} color={palette.textDim} />
       </Pressable>
       <Txt size={type.body} weight="bold" num style={{ minWidth: 56, textAlign: 'center' }}>
-        {fmtNum(value, 2)}
-        {suffix}
+        {value === 0 && zeroLabel ? zeroLabel : `${fmtNum(value, 2)}${suffix}`}
       </Txt>
       <Pressable
         onPress={() => onChange(Math.min(max ?? Infinity, Math.round((value + step) * 100) / 100))}

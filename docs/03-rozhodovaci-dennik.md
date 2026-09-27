@@ -863,3 +863,59 @@ náhledu ve čtyřech případech (plán, běžící trénink, smazaný plán, v
 Swift z Windows zkompilovat nejde: ověřené jsou jen párové závorky a řetězce,
 zbytek ukáže build.
 
+---
+
+## S31 - Widgety vybral zadavatel podle náhledů, nahrazuje výběr z S30 (27. 9. 2026)
+
+**Stav.** V S30 jsem výběr widgetů rozhodl sám (Tento týden a Další trénink)
+a napsal je dřív, než je zadavatel viděl. To bylo špatně: výběr měl být jeho
+a v issue #16 byl vedený jako otevřená otázka. Nic z toho ještě nebylo v buildu.
+
+**Rozhodnutí zadavatele.** Z katalogu dvaceti náhledů v rozlišení jeho iPhonu
+vybral osm (čísla podle katalogu):
+
+- **1 Tento týden** - malý na plochu, kroužek a obdélník na zamčenou obrazovku
+- **5 Poslední trénink s tepem** - střední
+- **6 Týdenní cíl** - malý, a **18** jeho kroužek na zamčenou obrazovku
+- **8 Kalendář měsíce** - střední
+- **14 Tělesná váha** - malý
+- **15 Plány tento týden** - velký
+- **16 Série po partiích** - střední
+
+**Další trénink (2) nevybral**, takže je pryč i s obrazovkou `src/app/start.tsx`,
+na kterou z něj vedl odkaz. Nic jiného ji nepoužívalo.
+
+**Co jsem uvnitř schválených widgetů rozhodl sám** a jde to změnit před buildem:
+
+- **Týdenní cíl počítá kalendářní týden od pondělí**, ne klouzavých sedm dní jako
+  Tento týden. Od cíle se čeká, že se v pondělí vynuluje; klouzavé okno by jen
+  pomalu odtékalo. Důsledek: widgety 1 a 6 vedle sebe mohou ukázat různé počty,
+  protože měří jiné období.
+- **Cíl je v Profilu, 0 až 7 tréninků, výchozí stav vypnutý.** Bez cíle widget
+  vyzve k nastavení a ťuknutí vede do Profilu. Výchozí cíl by si aplikace jinak
+  vymýšlela za uživatele.
+- **Historie váhy z Apple Health za 60 dní** se načítá při spuštění a při návratu
+  do popředí, nejvýš jednou za hodinu, do `bodyweightLog` ve store. Do Health se
+  dál nezapisuje (pravidlo 2). Bez propojeného Health widget vyzve k propojení.
+  Prázdný výsledek uloženou historii nepřepíše, Health vrací prázdno i při chybě.
+- **Série po partiích mají barvy zón ze svalové mapy** (málo modrá, optimum zelená,
+  hodně oranžová, přetížení červená). V náhledu jsem je měl jinak, oranžovou
+  a červenou pro málo sérií, což by znamenalo opak než na mapě.
+- **Kalendář má menší čtverečky než náhled** (13 bodů místo 17), jinak se měsíc
+  na šest řádků do středního widgetu nevejde.
+- **Kam vede ťuknutí:** Tento týden a cíl na Dnešek (bez cíle do Profilu),
+  poslední trénink do jeho detailu, kalendář na Kalendář, váha do Profilu, plány na
+  Plány, série po partiích na svalovou mapu.
+
+**Technicky.** Snímek pro widgety má verzi 2: tréninky za 42 dní (pokryjí celý
+měsíc pro kalendář) i se sériemi po partiích, cíl, poslední trénink, nejvýš čtyři
+plány (ten na řadě vždy mezi nimi) a vážení za 30 dní. Swift má sedm druhů widgetů
+rozdělených do dvou `WidgetBundle` skupin, které hlavní bundle skládá přes `.body`;
+jeden blok unese jen omezený počet widgetů.
+
+**Čím ověřeno.** 26 testů v `widgetSnapshot.test.ts` a `widgetSync.test.ts`:
+shoda s Dneškem, Pokrokem a svalovou mapou i ze zastaralého snímku, týden od
+pondělí, přechod přes konec měsíce, shoda tvaru se Swiftem. Řádek cíle v Profilu
+ve webovém náhledu: výchozí „Vyp", strop 7, návrat na „Vyp", hodnota se uloží,
+a stará data dostala cíl 0 z výchozího nastavení. Swift z Windows zkompilovat nejde.
+

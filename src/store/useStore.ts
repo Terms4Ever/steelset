@@ -34,6 +34,11 @@ interface State {
    * takže detail odcvičeného tréninku i svalová mapa ho dál najdou podle `exerciseId`.
    */
   hiddenExercises: string[];
+  /**
+   * Vážení z Apple Health za posledních 60 dní, nejstarší první. Jen pro widget tělesné váhy;
+   * načítá se při spuštění, když je Health propojené. Váha pro výpočty dál žije v `settings.bodyweightKg`.
+   */
+  bodyweightLog: { at: number; kg: number }[];
   favoriteExercises: string[];
   routines: Routine[];
   workouts: Workout[];
@@ -67,6 +72,7 @@ interface Actions {
   deleteExercise: (id: string) => boolean;
   /** Vrátí schovaný cvik zpátky do nabídky. */
   restoreExercise: (id: string) => void;
+  setBodyweightLog: (log: { at: number; kg: number }[]) => void;
   setExerciseMuscles: (id: string, primary: MuscleGroup, secondary: MuscleGroup[], unilateral?: boolean) => void;
   /** Přejmenuje cvik. Prázdné jméno přepis zruší, takže vestavěný cvik dostane zpátky původní. */
   setExerciseName: (id: string, name: string) => void;
@@ -108,7 +114,7 @@ interface Actions {
   }) => string | null;
 }
 
-const DEFAULT_SETTINGS: Settings = { unit: 'kg', restDefaultSec: 90, increment: 2.5, incrementLb: 5, healthEnabled: false, bodyweightKg: 80, defaultSets: 3, stallAlerts: true, onboarded: false };
+const DEFAULT_SETTINGS: Settings = { unit: 'kg', restDefaultSec: 90, increment: 2.5, incrementLb: 5, healthEnabled: false, bodyweightKg: 80, defaultSets: 3, stallAlerts: true, weeklyGoal: 0, onboarded: false };
 
 function patchActive(workouts: Workout[], activeId: string | null, fn: (w: Workout) => Workout): Workout[] {
   if (!activeId) return workouts;
@@ -150,6 +156,7 @@ export const useStore = create<State & Actions>()(
       exerciseMuscles: {},
       exerciseNames: {},
       hiddenExercises: [],
+      bodyweightLog: [],
       favoriteExercises: [],
       routines: [],
       workouts: [],
@@ -188,6 +195,7 @@ export const useStore = create<State & Actions>()(
           exerciseMuscles: {},
           exerciseNames: {},
           hiddenExercises: [],
+          bodyweightLog: [],
           favoriteExercises: [],
           routines: [],
           workouts: [],
@@ -227,6 +235,7 @@ export const useStore = create<State & Actions>()(
         return false;
       },
       restoreExercise: (id) => set((s) => ({ hiddenExercises: s.hiddenExercises.filter((h) => h !== id) })),
+      setBodyweightLog: (log) => set({ bodyweightLog: log }),
 
       // reassign which muscles an exercise hits + unilateral flag (applies everywhere via selectors, incl. history)
       setExerciseMuscles: (id, primary, secondary, unilateral) =>
@@ -561,6 +570,7 @@ export const useStore = create<State & Actions>()(
         exerciseMuscles: s.exerciseMuscles,
         exerciseNames: s.exerciseNames,
         hiddenExercises: s.hiddenExercises,
+        bodyweightLog: s.bodyweightLog,
         favoriteExercises: s.favoriteExercises,
         routines: s.routines,
         workouts: s.workouts,

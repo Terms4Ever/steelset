@@ -22,7 +22,7 @@ widgety na plochu a zamčenou obrazovku a kalendář odcvičených dnů.
 - Kalendář odcvičených dnů
 - Apple Health a Apple Watch: tep, import tréninků, grafy tepu po cvicích
 - Živá aktivita na zamčené obrazovce a v Dynamic Island
-- Widgety: tréninky a objem za týden, série v řadě a další trénink, který se ťuknutím spustí
+- Widgety: tento týden, týdenní cíl, poslední trénink, kalendář, tělesná váha, plány a série po partiích
 - Záloha na iCloud, export do CSV
 
 ---

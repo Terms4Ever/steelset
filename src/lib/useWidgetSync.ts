@@ -11,7 +11,7 @@ const DEBOUNCE_MS = 800;
  * Drží snímek pro widgety v souladu se store (#16).
  *
  * Zapíše hned a pak po každé změně store, se zpožděním a jen když se snímek opravdu liší.
- * Tím se pokryje dopsání série, ukončení tréninku i úprava plánu, aniž by to každá obrazovka
+ * Tím se pokryje ukončení tréninku, úprava plánu, změna cíle i nové vážení, aniž by to každá obrazovka
  * musela hlídat sama. Klouzavé okno „tento týden" si widget posouvá sám, na to zápis netřeba.
  *
  * Vrací funkci, která synchronizaci zastaví. Mimo hook ji volá test.
@@ -28,8 +28,9 @@ export function startWidgetSync(write: (json: string) => void = writeWidgetSnaps
         {
           workouts: s.workouts,
           routines: s.routines,
-          activeWorkoutId: s.activeWorkoutId,
           unit: s.settings.unit,
+          weeklyGoal: s.settings.weeklyGoal ?? 0,
+          bodyweightLog: s.bodyweightLog ?? [],
           exercisesById: exercisesById(s),
         },
         Date.now(),

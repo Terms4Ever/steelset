@@ -52,8 +52,8 @@ Klíčové soubory:
   `ActivityAttributes` musí být v obou místech shodná
 - `src/lib/widgetSnapshot.ts` - data pro widgety na ploše; tvar musí sedět 1:1 se
   `struct WidgetSnapshot` v `targets/widgets/HomeWidgets.swift` (hlídá to test),
-  zapisuje je `src/lib/useWidgetSync.ts`
-- `src/app/start.tsx` - cíl odkazu `steelset://start?routine=<id>` z widgetu
+  zapisuje je `src/lib/useWidgetSync.ts`, vážení z Health pro ně načítá
+  `src/lib/useBodyweightSync.ts`
 
 ## Doménová pravidla
 

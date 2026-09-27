@@ -22,8 +22,8 @@ struct SteelsetWidgets: WidgetBundle {
   var body: some Widget {
     SteelsetWorkoutLiveActivity()
     // widgety na plochu a zamčenou obrazovku, HomeWidgets.swift (#16)
-    SteelsetWeekWidget()
-    SteelsetNextWidget()
+    SteelsetHomeWidgetsA().body
+    SteelsetHomeWidgetsB().body
   }
 }
 
