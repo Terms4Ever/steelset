@@ -15,10 +15,10 @@ hlavní větev:     main
 
 TestFlight build 27, verze 1.0.0. Aplikace není veřejně v App Store.
 
-Build 27 nese opravy z testu na zařízení (#6, #12, #13, #14) a správu cviků (#11).
-Čeká na ověření na zařízení: oba sheety s klávesnicí, plovoucí lišta, přetahování
-hodnot a tažení keypadu. Gesta a klávesnice se z Windows ověřit nedají.
-
+Build 27 prošel testem na zařízení a issues #1 až #14 jsou zavřené. V kódu je
+navíc #16 (widgety), které čeká na build 28. **Ten se musí jednou pustit
+interaktivně**: widgety potřebují App Group, což je nová capability pro
+aplikaci i pro rozšíření, a tu EAS neinteraktivně nedoregistruje (S30).
 
 ## Issues
 
@@ -47,9 +47,12 @@ GitHub topic pro tuto sadu je `pravidla-nastroje` (S27).
 
 ## Co je hotové
 
-- Zápis tréninků: série, opakování, váhy, odpočet mezi sériemi, supersérie
-- Plány a pokrok, skóre a odhad 1RM
-- Anatomická svalová mapa, čtrnáct svalů, sheet s objemem a trendem
+- Zápis tréninků: série, opakování, váhy, odpočet mezi sériemi, supersérie,
+  přetahování hodnoty mezi sériemi, číselná klávesnice, která se nevnucuje
+- Plány a pokrok, skóre a odhad 1RM; plán z odcvičeného tréninku, pořadí cviků
+  v tréninku i plánu, nabídka zvýšení váhy při zaseknutí místo automatiky
+- Správa cviků i mimo trénink s měkkým mazáním, které nerozbije historii
+- Anatomická svalová mapa, čtrnáct svalů a šikmé břišní, sheet s objemem a trendem
 - Kalendář odcvičených dnů
 - Apple Health: čtení tepu, import tréninků, automatická detekce, úklid
 - Grafy tepu a tep po jednotlivých cvicích
@@ -57,48 +60,16 @@ GitHub topic pro tuto sadu je `pravidla-nastroje` (S27).
 - Přihlášení přes Apple, záloha na iCloud, export do CSV
 - Onboarding
 - Monetizace: aplikace zdarma s reklamami, předplatné Steelset Pro je vypne
-- Uklizený kořen repozitáře: postup vydání je v `02-vydani.md`, testy v `tests/`
-  jako v ostatních repozitářích, zbytky po šabloně Expo jsou pryč (S18, S20 v deníku)
+- Uklizený kořen repozitáře, postup vydání v `02-vydani.md`, testy v `tests/`
+
+Všechno z toho ověřené na zařízení v buildu 27 (#1 až #14).
 
 ## Co se dělá
 
-Plní se otevřené issues z GitHubu (#1 až #14). Hotové v kódu a čekající na
-ověření na zařízení:
-
-- #2 a #6 - číselná klávesnice v tréninku: neotevírá se při odškrtávání
-  předvyplněných sérií, jde zavřít křížkem, tažením dolů i ťuknutím mimo buňky
-  (S8 v deníku), při zavření sjede dolů i s lištou odpočtu (S23 v deníku)
-  a při tažení jede za prstem (S24 v deníku)
-- #4 - hodnoty s jednotkou se nezalamují, objemy mají oddělovač tisíců
-  (S9 v deníku)
-- #5 - z odcvičeného tréninku jde udělat plán, včetně supersérií
-  (S10 v deníku)
-- #1 - cviky jdou přejmenovat (i vestavěné) a nové jméno platí všude
-  (S11 v deníku)
-- #3 - pořadí cviků jde měnit v tréninku i v plánu, supersérie se hýbe celá
-  (S13 v deníku)
-- #10 - z repozitáře zmizely zbytky po šabloně Expo (S14 v deníku)
-- #9 - plán už váhu sám nenavyšuje, místo toho nabídne zvýšení při zaseknutí
-  (S15 v deníku)
-- #8 - hodnotu jde přetáhnout prstem z jedné série do druhé (S16 v deníku)
-- #7 - šikmé břišní jsou na mapě vlastní partie s vlastním sheetem a přibyly
-  čtyři cviky, které na ně padají (S17 v deníku)
-- #12 - ze sheetu Nastavení cviku vede cesta ven křížkem, obsah roluje a sheet
-  ustoupí klávesnici; stejně i sheet přejmenování (S21 v deníku)
-- #14 - plovoucí lišta běžícího tréninku už nesedí na tlačítkách, výšku hlásí
-  sama a ťuknutí vedle ní projde na obsah (S22 v deníku)
-
-- #13 - přetahování hodnot mezi sériemi stojí na `react-native-gesture-handler`
-  místo ručního `PanResponder`, haptika se ozve už při aktivaci a cíl je vidět
-  i na hotové sérii (S24 v deníku)
-
-- #11 - cviky jdou spravovat i mimo trénink: Profil otevře katalog v režimu správy,
-  detail umí jméno, partie, jednostrannost a u vlastních i vybavení a typ měření.
-  Mazání je měkké, takže smazaný cvik nezmizí z historie (S25 v deníku)
-
-Gesta jsou jediná část, kterou z Windows neověřím: syntetické pointer eventy
-gesture-handler na webu neřídí. Přetahování i tažení keypadu tedy čekají na
-TestFlight.
+- #16 - widgety: „Tento týden" na plochu i zamčenou obrazovku a „Další trénink",
+  který ťuknutím spustí plán na řadě. Data jim aplikace zapisuje do App Group,
+  odkaz `steelset://start` spouští trénink (S30). Hotové v kódu, logika a odkaz
+  ověřené, samotné widgety a App Group jen na zařízení.
 
 ## Co je dál
 
@@ -108,7 +79,8 @@ Rozepsané i s postupem v `01-todo.md`. Ve zkratce:
   a ceny v App Store Connectu. Do té doby běží testovací jednotky Googlu,
   které vydělávají nulu.
 - Stránka se zásadami ochrany soukromí, paywall na ni odkazuje.
-- Aplikace pro watchOS. Jediná cesta k tepu v reálném čase.
+- Aplikace pro watchOS (#15): spuštění tréninku i na hodinkách a jediná cesta
+  k tepu v reálném čase.
 - Podklady pro App Store: snímky obrazovek a popis, před veřejným vydáním.
 
 ## Na co si dát pozor

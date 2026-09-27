@@ -17,6 +17,7 @@ import { MiniWorkoutBar } from '@/components/MiniWorkoutBar';
 import { palette } from '@/constants/theme';
 import { scheduleBackup, syncFromCloud } from '@/lib/sync';
 import { useMonetization } from '@/lib/useMonetization';
+import { useWidgetSync } from '@/lib/useWidgetSync';
 import { useStore } from '@/store/useStore';
 
 /**
@@ -32,7 +33,7 @@ function FloatingWorkoutBar() {
   const hasActive = !!activeId && workouts.some((w) => w.id === activeId);
   // tabs render their own bar; workout is the target itself; the exercise picker/new-exercise modals
   // are part of the workout flow (and iOS native modals cover overlays anyway)
-  const HIDDEN = ['/workout', '/onboarding', '/', '/plany', '/pokrok', '/kalendar', '/profil', '/exercises', '/exercise-new'];
+  const HIDDEN = ['/workout', '/onboarding', '/', '/plany', '/pokrok', '/kalendar', '/profil', '/exercises', '/exercise-new', '/start'];
   if (!hasActive || HIDDEN.includes(pathname)) return null;
   return (
     /* box-none: ťuknutí vedle samotné lišty musí projít na obsah pod ní, ne se ztratit */
@@ -60,6 +61,9 @@ export default function RootLayout() {
 
   // subscription state + ads (no-op for Pro subscribers)
   useMonetization(ready);
+
+  // snímek dat pro widgety na ploše (#16); mimo iOS nic nedělá
+  useWidgetSync(ready);
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});
@@ -106,6 +110,8 @@ export default function RootLayout() {
           <Stack.Screen name="paywall" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="routine/[id]" options={{ animation: 'slide_from_right' }} />
           <Stack.Screen name="history/[id]" options={{ animation: 'slide_from_right' }} />
+          {/* cíl odkazu z widgetu: spustí trénink a hned přepne na něj */}
+          <Stack.Screen name="start" options={{ animation: 'none' }} />
         </Stack>
         <FloatingWorkoutBar />
       </SafeAreaProvider>

@@ -806,3 +806,60 @@ sadu ukazuje název společné kontroly, ne název workflow.
 
 **Ověření.** Kontrola sady pravidel, README a dokumentace z nastroje prošla
 nad pracovním stromem; nové názvy se ověřují na prvním běhu po pushi.
+
+---
+
+## S30 - Widgety: „Tento týden" a „Další trénink", data přes App Group (27. 9. 2026)
+
+**Stav.** Aplikace měla jen Live Activity. Issue #16 přišlo jako nápad
+„popřemýšlet, jaké widgety udělat" s tím, že se výběr rozhodne, až na něj dojde.
+
+**Rozhodnutí o výběru.** Dva widgety:
+
+- **Tento týden** (malý na plochu, kroužek a obdélník na zamčenou obrazovku):
+  tréninky a objem za klouzavých sedm dní a série týdnů v řadě. Stejná čísla jako
+  Pokrok a Dnešek.
+- **Další trénink** (malý a střední): plán, který čeká nejdéle, a ťuknutím se
+  spustí. Když trénink běží, ukazuje ho s živým časem a ťuknutí ho otevře.
+
+Silové skóre, poslední trénink s tepem a zaostávající partie zatím ne. Swift
+widgetu jde ověřit jen buildem za kredit, takže první verze drží plochu malou.
+„Další trénink" je jediný nápad, který ušetří kroky, ostatní jen ukazují čísla;
+proto šel mezi první dva. Přidat další widget je potom jen další pohled nad
+stejnými daty.
+
+**Rozhodnutí o datech.** Widget běží ve vlastním procesu a na AsyncStorage
+nedosáhne. Aplikace mu proto po každé změně store zapíše JSON snímek do App Group
+`group.cz.setly.app` přes `ExtensionStorage` z `@bacons/apple-targets`, který je
+v buildu kvůli widgetu tak jako tak, a zavolá `WidgetCenter.reloadAllTimelines()`.
+Vlastní Swift most v hlavní aplikaci nebyl potřeba.
+
+Snímek nese syrová data, ne hotová čísla: tréninky za 14 dní a týdny s tréninkem.
+Klouzavé okno si widget dopočítá v okamžiku vykreslení, takže čísla sedí, i když
+aplikaci několik dní nikdo neotevře. Výpočet má referenční verzi v TypeScriptu
+(`streakFromWeeks`, `weekFromRecent`), kterou test porovnává s `weekStreak`
+a `weeklyVolume` i pro zastaralý snímek; Swift ji opakuje řádek po řádku.
+
+**Odkaz z widgetu.** `steelset://start?routine=<id>` spustí plán, `steelset://start`
+volný trénink, obojí přes obrazovku `src/app/start.tsx`. Chová se jako tlačítko
+na Dnešku: běžící trénink jen otevře a druhý nezaloží, smazaný plán nespustí
+a pošle na Dnešek.
+
+**Důsledky.**
+
+- App Group je nová capability pro aplikaci i rozšíření. **Build 28 se musí
+  jednou pustit interaktivně**, neinteraktivně credentials selžou ještě před
+  nahráním (kredit se nespálí, číslo buildu ano).
+- Tvar snímku musí sedět 1:1 mezi `src/lib/widgetSnapshot.ts`
+  a `targets/widgets/HomeWidgets.swift`. Rozchod by znamenal tiše prázdný widget,
+  proto test porovnává jména polí přímo se zdrojákem Swiftu.
+- Doménové pravidlo 2 (do Health se nezapisuje) se to netýká, App Group je
+  sdílené úložiště aplikace, ne Health.
+
+**Čím ověřeno.** 14 testů v `tests/widgetSnapshot.test.ts`, mezi nimi shoda čísel
+s Dneškem a Pokrokem i ze zastaralého snímku a shoda tvaru se Swiftem; test tvaru
+prokazatelně spadne, když se pole ve Swiftu přejmenuje. Odkaz `/start` ve webovém
+náhledu ve čtyřech případech (plán, běžící trénink, smazaný plán, volný trénink).
+Swift z Windows zkompilovat nejde: ověřené jsou jen párové závorky a řetězce,
+zbytek ukáže build.
+

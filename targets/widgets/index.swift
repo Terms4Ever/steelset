@@ -21,6 +21,9 @@ let steelsetBg = Color(red: 0.039, green: 0.043, blue: 0.051) // #0A0B0D
 struct SteelsetWidgets: WidgetBundle {
   var body: some Widget {
     SteelsetWorkoutLiveActivity()
+    // widgety na plochu a zamčenou obrazovku, HomeWidgets.swift (#16)
+    SteelsetWeekWidget()
+    SteelsetNextWidget()
   }
 }
 

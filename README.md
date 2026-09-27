@@ -3,8 +3,8 @@
 **Česká iOS aplikace na zapisování tréninků v posilovně**
 
 Steelset vede série, opakování, váhy a pokrok v čase. Napojuje se na Apple
-Health a Apple Watch (tep, import tréninků), umí Live Activity během tréninku
-a kalendář odcvičených dnů.
+Health a Apple Watch (tep, import tréninků), umí Live Activity během tréninku,
+widgety na plochu a zamčenou obrazovku a kalendář odcvičených dnů.
 
 ![Expo](https://img.shields.io/badge/Expo-SDK%2056-000020?logo=expo&logoColor=white)
 ![React Native](https://img.shields.io/badge/React%20Native-0.85-61DAFB?logo=react&logoColor=black)
@@ -22,6 +22,7 @@ a kalendář odcvičených dnů.
 - Kalendář odcvičených dnů
 - Apple Health a Apple Watch: tep, import tréninků, grafy tepu po cvicích
 - Živá aktivita na zamčené obrazovce a v Dynamic Island
+- Widgety: tréninky a objem za týden, série v řadě a další trénink, který se ťuknutím spustí
 - Záloha na iCloud, export do CSV
 
 ---
@@ -32,7 +33,7 @@ a kalendář odcvičených dnů.
 |------------|------------------------------------|
 | Základ     | Expo SDK 56, React Native 0.85     |
 | Jazyk      | TypeScript 6.0                     |
-| Nativní    | HealthKit, Live Activity, iCloud   |
+| Nativní    | HealthKit, Live Activity, widgety, iCloud |
 | Build      | EAS Build, TestFlight              |
 
 ---
@@ -43,7 +44,7 @@ a kalendář odcvičených dnů.
 steelset/
 ├── src/              # obrazovky a logika
 ├── modules/          # nativní moduly
-├── targets/          # rozšíření pro Live Activity
+├── targets/          # widgety a Live Activity
 ├── assets/           # obrázky a ikony
 └── tests/            # testy
 ```

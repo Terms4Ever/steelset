@@ -53,6 +53,9 @@ ale build neproběhne.
 eas build --platform ios --profile production
 ```
 
+Poslední taková změna: **App Group `group.cz.setly.app` pro widgety (#16, S30)**.
+Build, který ji přináší poprvé, musí jet interaktivně.
+
 Na dotazy odpovědět: přidat capability do App ID ano, přegenerovat provisioning
 profil ano, certifikát znovu použít ano. Pak jede zase všechno neinteraktivně.
 

@@ -19,6 +19,7 @@ Jest přes `jest-expo`, soubory `tests/*.test.ts`, spouští se `npx jest`
 | `routineFromWorkout.test.ts` | 13 | plán z odcvičeného tréninku: nejčastější počet opakování, pořadí cviků |
 | `stall.test.ts` | 13 | stagnace: tři tréninky na stejné váze bez přidaných opakování |
 | `muscleMap.test.ts` | 9 | svalová mapa, šikmé břišní jako vlastní oblast |
+| `widgetSnapshot.test.ts` | 14 | snímek pro widgety: plán na řadě, týden a série v řadě sedí s Dneškem a Pokrokem i ze zastaralého snímku, jména polí sedí se `struct WidgetSnapshot` ve Swiftu |
 | `exerciseUsage.test.ts` | 7 | kde se cvik používá, cvik v koši se počítá jako použitý |
 | `prefill.test.ts` | 7 | předvyplnění sérií z minula, váha se sama nenavyšuje |
 | `keypad.test.ts` | 5 | fokus klávesnice po smazání série |
@@ -26,7 +27,7 @@ Jest přes `jest-expo`, soubory `tests/*.test.ts`, spouští se `npx jest`
 | `monetization.test.ts` | 3 | Pro bez spojení s obchodem nedostane reklamy, nákup bez obchodu selže bezpečně |
 | `csv.test.ts` | 2 | export do CSV: nedokončené tréninky vynechá, zvláštní znaky ošetří |
 
-Běh 24. 9. 2026: 14 sad, 196 testů, všechny prošly.
+Běh 27. 9. 2026: 15 sad, 210 testů, všechny prošly.
 
 ## Kde běží
 
@@ -48,6 +49,11 @@ po každém pushi ověřuje, že běh doopravdy prošel.
   `copyValue.test.ts`, samotné gesto jen TestFlight.
 - **Nativní části**: HealthKit, Live Activity a widget, záloha na iCloud,
   Sign in with Apple. Jen na zařízení, v Profilu je diagnostika Apple Health.
+- **Widgety na ploše (#16).** Swift z Windows nejde zkompilovat, chybu v něm
+  ukáže až build. Test hlídá jen to, že jména polí sedí s TypeScriptem, a JS
+  verzi výpočtů, kterou Swift opakuje. Zápis do App Group a překreslení
+  widgetu jen na zařízení. Odkaz `steelset://start` jde ověřit v náhledu na
+  webu otevřením `/start`.
 - **Reklamy a nákupy.** V prohlížeči se nespustí a dokud chybí klíč
   RevenueCatu, nejde Pro koupit ani na zařízení.
 - **Typy a web export mimo tenhle počítač.** V CI se nepouští, jen ručně

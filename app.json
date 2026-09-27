@@ -23,6 +23,9 @@
         "NSSupportsLiveActivities": true,
         "NSUserTrackingUsageDescription": "Steelset pomocí tohoto povolení zobrazuje relevantnější reklamy. Bez souhlasu uvidíš reklamy obecné - aplikace funguje stejně."
       },
+      "entitlements": {
+        "com.apple.security.application-groups": ["group.cz.setly.app"]
+      },
       "appleTeamId": "B5N5746R9W"
     },
     "android": {

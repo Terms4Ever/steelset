@@ -33,7 +33,8 @@ zelené pozadí, tmavá fajfka a čárky zápisníku, to se drží.
 | Složka projektu | `primed/` | historický název, nepřejmenovávat |
 | EAS slug | `setly` | vázaný na projekt v EAS, neměnit |
 | Bundle ID | `cz.setly.app` | provisioning a TestFlight, neměnit |
-| Widget bundle | `cz.setly.app.widget` | rozšíření pro Live Activity |
+| Widget bundle | `cz.setly.app.widget` | rozšíření pro widgety a Live Activity |
+| App Group | `group.cz.setly.app` | sdílené úložiště aplikace a widgetů, neměnit |
 | Klíč persistu | `steelset-store-v1` | od 19. 9. 2026; starý `setly-store-v1` se čte jako záloha (`src/lib/storeKeys.ts`) |
 | Stará jména | Pulse, Setly, Liftbook | mohou být v komentářích a v assetech |
 
@@ -49,6 +50,10 @@ Klíčové soubory:
 - `src/lib/health.ts` - obal HealthKitu, `src/lib/liveActivity.ts` - obal Live Activity
 - `modules/live-activity/` a `targets/widgets/` - Swift most a widget; struktura
   `ActivityAttributes` musí být v obou místech shodná
+- `src/lib/widgetSnapshot.ts` - data pro widgety na ploše; tvar musí sedět 1:1 se
+  `struct WidgetSnapshot` v `targets/widgets/HomeWidgets.swift` (hlídá to test),
+  zapisuje je `src/lib/useWidgetSync.ts`
+- `src/app/start.tsx` - cíl odkazu `steelset://start?routine=<id>` z widgetu
 
 ## Doménová pravidla
 
