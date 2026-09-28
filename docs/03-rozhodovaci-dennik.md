@@ -919,3 +919,31 @@ pondělí, přechod přes konec měsíce, shoda tvaru se Swiftem. Řádek cíle 
 ve webovém náhledu: výchozí „Vyp", strop 7, návrat na „Vyp", hodnota se uloží,
 a stará data dostala cíl 0 z výchozího nastavení. Swift z Windows zkompilovat nejde.
 
+---
+
+## S32 - App Group je v konfiguraci widgetu výslovně (28. 9. 2026)
+
+**Stav.** Build 29 prošel, ale všechny widgety na telefonu hlásily „Otevři Steelset"
+a Týdenní cíl radil nastavit cíl, i když nastavený byl. Rozbor staženého buildu:
+aplikace měla oprávnění k `group.cz.setly.app` v profilu i v podpisu, rozšíření
+s widgety ho nemělo vůbec. Aplikace tedy zapisovala do sdíleného úložiště, kam widget
+nesměl, a ten četl své prázdné.
+
+**Příčina.** V S30 jsem se spolehl na to, že `@bacons/apple-targets` App Group od
+aplikace převezme sám („appGroupsByDefault"). Kód pluginu (`with-widget.js`) to ale
+dělá jen tehdy, když konfigurace targetu obsahuje klíč `entitlements`; naše ho
+neměla. Popis jsem četl, kód ne.
+
+**Rozhodnutí.** App Group je v `targets/widgets/expo-target.config.json` zapsaná
+výslovně, ne převzatá. Test v `widgetSnapshot.test.ts` hlídá, že aplikace, konfigurace
+widgetu, Swift i TypeScript používají stejnou skupinu a stejný klíč; bez klíče
+`entitlements` v targetu prokazatelně spadne.
+
+**Zároveň.** Týdenní cíl bez jakýchkoli dat radil nastavit cíl, což mátlo. Teď bez
+dat hlásí totéž co ostatní widgety.
+
+**Čím ověřeno.** `npx expo config --type introspect` před opravou pro rozšíření
+nepředával EAS žádná oprávnění, po opravě `group.cz.setly.app`. Samotné čtení
+widgetem ukáže až build. Další build znamená novou capability pro rozšíření, takže
+možná znovu interaktivně.
+

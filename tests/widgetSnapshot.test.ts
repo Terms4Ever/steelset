@@ -13,6 +13,8 @@ import {
   weekFromRecent,
   weekStartMonday,
   weightTrend,
+  WIDGET_APP_GROUP,
+  WIDGET_SNAPSHOT_KEY,
   WIDGET_SNAPSHOT_VERSION,
   workoutsThisMonth,
 } from '@/lib/widgetSnapshot';
@@ -246,5 +248,30 @@ describe('tvar snímku sedí se Swiftem', () => {
     walk(full);
 
     expect([...swiftFields].sort()).toEqual([...keys].sort());
+  });
+});
+
+describe('App Group je stejná všude', () => {
+  // Build 29 měl oprávnění k App Group jen v aplikaci, rozšíření s widgety ne: aplikace
+  // zapisovala, widget nesměl číst a na telefonu hlásil „Otevři Steelset". Z Windows se to
+  // nepozná, proto se hlídá konfigurace, ze které EAS a Xcode oprávnění skládají.
+  const fs = require('fs') as typeof import('fs');
+  const path = require('path') as typeof import('path');
+  const root = path.join(__dirname, '..');
+  const KEY = 'com.apple.security.application-groups';
+
+  it('aplikace i rozšíření s widgety mají v konfiguraci stejnou App Group', () => {
+    const app = JSON.parse(fs.readFileSync(path.join(root, 'app.json'), 'utf8'));
+    const target = JSON.parse(fs.readFileSync(path.join(root, 'targets', 'widgets', 'expo-target.config.json'), 'utf8'));
+    expect(app.expo.ios.entitlements[KEY]).toEqual([WIDGET_APP_GROUP]);
+    // plugin @bacons/apple-targets App Group od aplikace převezme, jen když má target
+    // vlastní klíč `entitlements`; bez něj rozšíření nedostane nic, proto výslovně
+    expect(target.entitlements?.[KEY]).toEqual([WIDGET_APP_GROUP]);
+  });
+
+  it('Swift čte ze stejné App Group a pod stejným klíčem, kam aplikace zapisuje', () => {
+    const swift = fs.readFileSync(path.join(root, 'targets', 'widgets', 'HomeWidgets.swift'), 'utf8');
+    expect(swift).toContain(`private let steelsetAppGroup = "${WIDGET_APP_GROUP}"`);
+    expect(swift).toContain(`private let steelsetSnapshotKey = "${WIDGET_SNAPSHOT_KEY}"`);
   });
 });

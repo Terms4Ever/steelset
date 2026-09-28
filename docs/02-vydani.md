@@ -122,6 +122,7 @@ Až před veřejným vydáním, na TestFlight nejsou potřeba. Návrh, který č
 | „Bundle identifier is not available" | identifikátor zabral někdo jiný, nemá nastat, `cz.setly.app` je náš |
 | Submit hlásí missing compliance | vyřešeno v `app.json` přes `ITSAppUsesNonExemptEncryption: false` |
 | Ikona zamítnutá kvůli alfa kanálu | vyřešeno, ikona je bez alfa kanálu |
+| Widgety na telefonu jen hlásí „Otevři Steelset", i když aplikace běží | rozšíření s widgety nemá oprávnění k App Group. `@bacons/apple-targets` ji převezme od aplikace, jen když má `targets/widgets/expo-target.config.json` vlastní klíč `entitlements`; proto je tam výslovně. Ověřit jde bez buildu: `npx expo config --type introspect` musí u `cz.setly.app.widget` ukázat `group.cz.setly.app` (build 29) |
 | „the compiler is unable to type-check this expression in reasonable time" | Swift ve widgetu: dlouhý řetězec `map`/`filter`/`sorted` nebo výraz s n-ticemi a smíšenými literály. Rozepsat na kroky s pojmenovaným typem. Z Windows se nepozná, spadne až v buildu a stojí kredit (build 28) |
 
 Nativní funkce, tedy HealthKit, Live Activity a iCloud, ve webovém náhledu

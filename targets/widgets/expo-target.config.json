@@ -2,5 +2,14 @@
   "type": "widget",
   "name": "SteelsetWidgets",
   "deploymentTarget": "16.2",
-  "frameworks": ["SwiftUI", "WidgetKit", "ActivityKit"]
+  "frameworks": [
+    "SwiftUI",
+    "WidgetKit",
+    "ActivityKit"
+  ],
+  "entitlements": {
+    "com.apple.security.application-groups": [
+      "group.cz.setly.app"
+    ]
+  }
 }

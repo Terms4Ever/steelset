@@ -537,11 +537,11 @@ struct SteelsetGoalView: View {
           }
           .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-          SteelsetEmpty(caption: "TÝDENNÍ CÍL", hint: "Nastav si cíl v Profilu, kolik tréninků týdně chceš.")
+          SteelsetEmpty(caption: "TÝDENNÍ CÍL", hint: entry.snapshot == nil ? "Otevři Steelset, ať má widget co ukázat." : "Nastav si cíl v Profilu, kolik tréninků týdně chceš.")
         }
       }
     }
-    .widgetURL(URL(string: goal > 0 ? "steelset://" : "steelset://profil"))
+    .widgetURL(URL(string: goal > 0 || entry.snapshot == nil ? "steelset://" : "steelset://profil"))
     .steelsetWidgetBackground(family == .systemSmall ? steelsetBg : Color.clear, padded: family == .systemSmall)
   }
 }

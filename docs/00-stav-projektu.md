@@ -19,7 +19,8 @@ Build 27 prošel testem na zařízení a issues #1 až #14 jsou zavřené. V kó
 navíc #16 (widgety, výběr zadavatele v S31). Build 28 jel interaktivně, App Group
 i profily pro aplikaci a rozšíření se zaregistrovaly, ale kompilace widgetů spadla
 na jediném výrazu, který Swift nezvládl otypovat. Výraz je rozepsaný a build 29
-prošel neinteraktivně a je v TestFlightu. Widgety čekají na test na zařízení.
+prošel neinteraktivně a je v TestFlightu. Na telefonu ale widgety data neviděly:
+rozšíření nemělo oprávnění k App Group (S32). Oprava je v kódu a čeká na build 30.
 
 ## Issues
 

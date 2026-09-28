@@ -19,7 +19,7 @@ Jest přes `jest-expo`, soubory `tests/*.test.ts`, spouští se `npx jest`
 | `routineFromWorkout.test.ts` | 13 | plán z odcvičeného tréninku: nejčastější počet opakování, pořadí cviků |
 | `stall.test.ts` | 13 | stagnace: tři tréninky na stejné váze bez přidaných opakování |
 | `muscleMap.test.ts` | 9 | svalová mapa, šikmé břišní jako vlastní oblast |
-| `widgetSnapshot.test.ts` | 21 | snímek pro widgety: série v řadě, týden, série po partiích a zóny sedí s Dneškem, Pokrokem a svalovou mapou i ze zastaralého snímku; cíl od pondělí, kalendář přes konec měsíce, trend váhy; jména polí sedí se `struct WidgetSnapshot` ve Swiftu |
+| `widgetSnapshot.test.ts` | 23 | snímek pro widgety: série v řadě, týden, série po partiích a zóny sedí s Dneškem, Pokrokem a svalovou mapou i ze zastaralého snímku; cíl od pondělí, kalendář přes konec měsíce, trend váhy; jména polí sedí se `struct WidgetSnapshot` ve Swiftu; aplikace, konfigurace widgetu, Swift i TypeScript mají stejnou App Group a klíč |
 | `widgetSync.test.ts` | 5 | snímek se zapíše hned a obnoví po změně plánu, dokončení tréninku, změně cíle i novém vážení; rychlé změny dají jeden zápis, změna bez vlivu na snímek žádný |
 | `exerciseUsage.test.ts` | 7 | kde se cvik používá, cvik v koši se počítá jako použitý |
 | `prefill.test.ts` | 7 | předvyplnění sérií z minula, váha se sama nenavyšuje |
@@ -28,7 +28,7 @@ Jest přes `jest-expo`, soubory `tests/*.test.ts`, spouští se `npx jest`
 | `monetization.test.ts` | 3 | Pro bez spojení s obchodem nedostane reklamy, nákup bez obchodu selže bezpečně |
 | `csv.test.ts` | 2 | export do CSV: nedokončené tréninky vynechá, zvláštní znaky ošetří |
 
-Běh 27. 9. 2026: 16 sad, 222 testů, všechny prošly.
+Běh 28. 9. 2026: 16 sad, 224 testů, všechny prošly.
 
 ## Kde běží
 
