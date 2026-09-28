@@ -53,8 +53,19 @@ ale build neproběhne.
 eas build --platform ios --profile production
 ```
 
-Poslední taková změna: **App Group `group.cz.setly.app` pro widgety (#16, S30)**.
-Build, který ji přináší poprvé, musí jet interaktivně.
+Poslední taková změna: **App Group `group.cz.setly.app` pro aplikaci i rozšíření
+s widgety (#16, S30, S32)**. Build, který ji přináší poprvé, musí jet interaktivně.
+
+Pozor, neinteraktivní build capability sice zapne („Synced capabilities: Enabled:
+App Groups"), ale **nepropojí ji s konkrétní skupinou**: hlásí „Skipping capability
+identifier syncing because the current Apple authentication session is not using
+Cookies". Profil pak nesouhlasí s oprávněními a Xcode build shodí až při podepisování,
+tedy za kredit. Propojení („Linked: group.cz.setly.app") umí jen přihlášení Apple ID
+v interaktivním buildu. Build 30 se proto zrušil ještě ve frontě a běžel znovu jako 31.
+
+Že build oprávnění opravdu nese, jde ověřit na staženém `.ipa` bez telefonu:
+`embedded.mobileprovision` a podpis binárky aplikace i `PlugIns/SteelsetWidgets.appex`
+musí obsahovat `group.cz.setly.app`.
 
 Na dotazy odpovědět: přidat capability do App ID ano, přegenerovat provisioning
 profil ano, certifikát znovu použít ano. Pak jede zase všechno neinteraktivně.
