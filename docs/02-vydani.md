@@ -122,6 +122,7 @@ Až před veřejným vydáním, na TestFlight nejsou potřeba. Návrh, který č
 | „Bundle identifier is not available" | identifikátor zabral někdo jiný, nemá nastat, `cz.setly.app` je náš |
 | Submit hlásí missing compliance | vyřešeno v `app.json` přes `ITSAppUsesNonExemptEncryption: false` |
 | Ikona zamítnutá kvůli alfa kanálu | vyřešeno, ikona je bez alfa kanálu |
+| „the compiler is unable to type-check this expression in reasonable time" | Swift ve widgetu: dlouhý řetězec `map`/`filter`/`sorted` nebo výraz s n-ticemi a smíšenými literály. Rozepsat na kroky s pojmenovaným typem. Z Windows se nepozná, spadne až v buildu a stojí kredit (build 28) |
 
 Nativní funkce, tedy HealthKit, Live Activity a iCloud, ve webovém náhledu
 nefungují. Ověřují se až v TestFlightu.

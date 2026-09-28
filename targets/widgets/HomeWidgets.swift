@@ -132,19 +132,36 @@ private func steelsetMonth(_ recent: [WidgetSnapshot.Recent], now: Date) -> (day
   return (days, count)
 }
 
+private struct SteelsetMuscleRow {
+  let name: String
+  let sets: Double
+}
+
 /// Pět partií s nejvíc sériemi za klouzavých sedm dní. Stejné počítání jako svalová mapa.
-private func steelsetTopMuscles(_ recent: [WidgetSnapshot.Recent], now: Date) -> [(name: String, sets: Double)] {
+/// Rozepsané do jednoduchých kroků: řetězec map/filter/sorted nad n-ticí kompilátor
+/// v buildu 28 nezvládl otypovat v rozumném čase a build spadl.
+private func steelsetTopMuscles(_ recent: [WidgetSnapshot.Recent], now: Date) -> [SteelsetMuscleRow] {
   let nowMs = steelsetMs(now)
+  let from = nowMs - steelsetMsWeek
   var sum: [String: Double] = [:]
-  for r in recent where r.at >= nowMs - steelsetMsWeek && r.at <= nowMs {
+  for r in recent where r.at >= from && r.at <= nowMs {
     for (muscle, n) in r.sets {
       sum[muscle, default: 0] += n
     }
   }
-  let rows = sum
-    .map { (name: $0.key, sets: ($0.value * 10).rounded() / 10) }
-    .filter { $0.sets > 0 }
-    .sorted { $0.sets != $1.sets ? $0.sets > $1.sets : $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+  var rows: [SteelsetMuscleRow] = []
+  for (muscle, total) in sum {
+    let rounded: Double = (total * 10).rounded() / 10
+    if rounded > 0 {
+      rows.append(SteelsetMuscleRow(name: muscle, sets: rounded))
+    }
+  }
+  rows.sort { (a: SteelsetMuscleRow, b: SteelsetMuscleRow) -> Bool in
+    if a.sets != b.sets {
+      return a.sets > b.sets
+    }
+    return a.name.localizedStandardCompare(b.name) == .orderedAscending
+  }
   return Array(rows.prefix(5))
 }
 

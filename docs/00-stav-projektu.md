@@ -16,9 +16,10 @@ hlavní větev:     main
 TestFlight build 27, verze 1.0.0. Aplikace není veřejně v App Store.
 
 Build 27 prošel testem na zařízení a issues #1 až #14 jsou zavřené. V kódu je
-navíc #16 (widgety, výběr zadavatele v S31), které čeká na build 28. **Ten se musí jednou pustit
-interaktivně**: widgety potřebují App Group, což je nová capability pro
-aplikaci i pro rozšíření, a tu EAS neinteraktivně nedoregistruje (S30).
+navíc #16 (widgety, výběr zadavatele v S31). Build 28 jel interaktivně, App Group
+i profily pro aplikaci a rozšíření se zaregistrovaly, ale kompilace widgetů spadla
+na jediném výrazu, který Swift nezvládl otypovat. Výraz je rozepsaný a další build
+už může jet neinteraktivně.
 
 ## Issues
 
