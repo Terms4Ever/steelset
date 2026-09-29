@@ -947,3 +947,8 @@ nepředával EAS žádná oprávnění, po opravě `group.cz.setly.app`. Samotn�
 widgetem ukáže až build. Další build znamená novou capability pro rozšíření, takže
 možná znovu interaktivně.
 
+## S33 - Snímky v issues stojí v tabulce Před a Po (29. 9. 2026)
+
+**Stav.** Zadavatel: *„se mi nelíbí, že tam agent nedělá správně to před a po obrázky, ať to píše nějak ať to jde dobře poznat"*. Snímky pod sebou nešly rozlišit, popis obrázku GitHub neukazuje (nastroje N39).
+
+**Rozhodnutí.** Šablona `.github/ISSUE_TEMPLATE/ukol.md` má sekci Snímky podle nastroje: tabulka `| Co | Před | Po |`, řádek je jeden pár, v prvním sloupci slovy, co ukazuje, a komentář snímky nevkládá. Snímky #12, #13, #14 a #17 se převedly do tabulky. #12 měl oba snímky jen v komentářích a #13 snímek po, v těle issue teď stojí vedle sebe; z komentářů vložené obrázky zmizely. #14 má štítek `bez snímku po`, buňka Po zůstala prázdná.
