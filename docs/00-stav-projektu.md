@@ -21,8 +21,9 @@ i profily pro aplikaci a rozšíření se zaregistrovaly, ale kompilace widgetů
 na jediném výrazu, který Swift nezvládl otypovat. Výraz je rozepsaný a build 29
 prošel neinteraktivně a je v TestFlightu. Na telefonu ale widgety data neviděly:
 rozšíření nemělo oprávnění k App Group (S32). Oprava je v buildu 31: stažený .ipa
-nese `group.cz.setly.app` v profilu i podpisu aplikace i widgetů. Widgety čekají
-na test na zařízení.
+nese `group.cz.setly.app` v profilu i podpisu aplikace i widgetů. Zadavatel 29. 9.
+otestoval základní funkčnost: widgety na ploše ukazují data a vypadají dobře. Zbývá
+ověřit ťuknutí do widgetů a Live Activity při tréninku.
 
 ## Issues
 
@@ -73,7 +74,7 @@ Všechno z toho ověřené na zařízení v buildu 27 (#1 až #14).
 - #16 - widgety podle výběru zadavatele (S31): Tento týden, Týdenní cíl, Poslední
   trénink, Kalendář měsíce, Tělesná váha, Plány tento týden a Série po partiích.
   Data jim aplikace zapisuje do App Group, cíl se nastavuje v Profilu a váha se
-  čte z Apple Health. Hotové v kódu a ověřená logika, samotné widgety jen na zařízení.
+  čte z Apple Health. Na zařízení ověřené zobrazení dat, zbývá ťuknutí a Live Activity.
 
 ## Co je dál
 
