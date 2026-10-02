@@ -102,7 +102,8 @@ nejdou založit produkty předplatného, bez produktů nemá RevenueCat co nabí
 
 **Dělá zadavatel (účty, smlouvy, peníze):**
 
-1. Koupit doménu (`steelset.cz` 2. 10. neexistuje). Web na ní potřebuje tři věci:
+1. Veřejná adresa pro web aplikace (`steelset.cz` 2. 10. neexistuje). Kupovat doménu
+   není nutné, Lab Protocol má zásady na bezplatné adrese Vercelu. Web potřebuje tři věci:
    zásady soukromí (paywall odkazuje na `/soukromi`), stránku podpory s kontaktem
    (App Store Connect ji vyžaduje) a `app-ads.txt` od AdMobu. Bez `app-ads.txt` na
    doméně uvedené v App Storu jako web vývojáře AdMob omezí reklamy.
