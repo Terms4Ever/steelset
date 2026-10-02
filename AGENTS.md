@@ -63,9 +63,8 @@ Porušení těchhle pravidel rozbije uživatelská data, ne jen vzhled.
    zadává uživatel jen přídavek (minus je asistence), převod jde přes snímek
    `Workout.bodyweightKg`. U cviků na opakování musí `weight` zůstat `null`,
    jinak vznikne fantomový objem.
-2. **Do Apple Health se nezapisuje.** Appka jen čte tep, tréninky a váhu;
-   `deleteMyHealthWorkouts()` uklízí vlastní staré zápisy. Zapisování zaneřádilo
-   Kondici, proto je zakázané.
+2. **Do Apple Health se nezapisuje.** Appka jen čte tep, tréninky a váhu a o zápis
+   ani nežádá (S36). Zapisování zaneřádilo Kondici, proto je zakázané.
 3. **Jeden trénink je jeden záznam.** Živý zápis a tep z hodinek se slučují,
    `localCoversWindow()` skrývá překryvy, import hlídá duplicity přes `healthUuid`.
 4. **Úprava tréninku nesmí useknout tep.** `editWorkout` drží okno přes
@@ -75,6 +74,9 @@ Porušení těchhle pravidel rozbije uživatelská data, ne jen vzhled.
 6. **Migrace persistu patří do `merge`** v useStore: hluboké slučování nastavení,
    doplnění snímků váhy, úklid přechodných polí.
 7. **Prázdný živý trénink se nezahazuje potichu**, zvlášť když nese data z Health.
+8. **Data z Apple Health nesmí do iCloudu** (pravidlo Applu 5.1.3 ii). Záloha je
+   vynechává přes `src/lib/cloudHealth.ts`; nové pole z Health patří do
+   `HEALTH_WORKOUT_FIELDS`, jinak spadne test.
 
 ## Brány před commitem
 

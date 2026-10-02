@@ -7,7 +7,7 @@ import { Card, Screen, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { workoutsToCsv } from '@/lib/csv';
 import { exportCsv } from '@/lib/export';
-import { deleteMyHealthWorkouts, healthSelfTest, latestBodyweightKg, requestHealth } from '@/lib/health';
+import { healthSelfTest, latestBodyweightKg, requestHealth } from '@/lib/health';
 import { fmtNum, fromDisplayWeight, toDisplayWeight } from '@/lib/format';
 import { backupHint, backupLabel, BackupStatus } from '@/lib/backupStatus';
 import { purchasesAvailable } from '@/lib/purchases';
@@ -62,24 +62,6 @@ export default function Profil() {
     const kg = await latestBodyweightKg();
     if (kg && kg > 0) setSetting('bodyweightKg', Math.round(kg * 10) / 10);
     else Alert.alert('Apple Health', 'Váhu se nepodařilo načíst. Zadej ji ručně, nebo si ji zapiš v Health.');
-  };
-
-  const onCleanupHealth = () => {
-    Alert.alert(
-      'Uklidit Apple Health?',
-      'Smaže tréninky, které do Apple Health zapsala starší verze Steelsetu (ty „Tradiční silový trénink"). Tvoje tréninky z hodinek zůstanou nedotčené.',
-      [
-        { text: 'Zrušit', style: 'cancel' },
-        {
-          text: 'Uklidit',
-          style: 'destructive',
-          onPress: async () => {
-            const n = await deleteMyHealthWorkouts();
-            Alert.alert('Hotovo', n > 0 ? `Smazáno ${n} záznamů z Apple Health.` : 'Nic k úklidu - Steelset už do Health nezapisuje.');
-          },
-        },
-      ],
-    );
   };
 
   return (
@@ -179,7 +161,6 @@ export default function Profil() {
                 </Txt>
               </Row>
               <RowButton icon="download-outline" label="Importovat trénink z Health" onPress={() => router.push('/health-import')} />
-              <RowButton icon="sparkles-outline" label="Uklidit tréninky v Health" onPress={onCleanupHealth} />
               <RowButton icon="pulse-outline" label="Test Apple Health (diagnostika)" last onPress={onTestHealth} />
             </>
           ) : (

@@ -10,10 +10,9 @@ const BODYMASS = 'HKQuantityTypeIdentifierBodyMass';
 const ACTIVE_ENERGY = 'HKQuantityTypeIdentifierActiveEnergyBurned';
 const WORKOUT = 'HKWorkoutTypeIdentifier';
 const READ = [HR, BODYMASS, ACTIVE_ENERGY, WORKOUT];
-// Steelset does NOT write workouts to Apple Health (that clutters the Fitness/Kondice app).
-// Workout write permission is requested only so the user can clean up test entries a previous
-// version saved — see deleteMyHealthWorkouts().
-const SHARE = [WORKOUT];
+// Telefon do Apple Health nezapisuje a o zápis ani nežádá (#18). Úklid zápisů ze starých verzí
+// měli jen testeři a veřejná verze ho nepotřebuje; kontrola Applu se na nevyužitý zápis ptá.
+const SHARE: string[] = [];
 
 export interface HealthWorkout {
   uuid: string;
@@ -79,19 +78,6 @@ export async function requestHealth(): Promise<boolean> {
     return !!(await m.requestAuthorization({ toShare: SHARE, toRead: READ }));
   } catch {
     return false;
-  }
-}
-
-/** Delete every workout Steelset previously wrote to Apple Health. HealthKit only lets an app
- *  delete its OWN samples, so this never touches Apple Watch / other apps' workouts. Returns count. */
-export async function deleteMyHealthWorkouts(): Promise<number> {
-  const m = hk();
-  if (!m?.deleteObjects) return 0;
-  try {
-    const n = await m.deleteObjects(WORKOUT, { date: { startDate: new Date(2015, 0, 1), endDate: new Date() } });
-    return typeof n === 'number' ? n : 0;
-  } catch {
-    return 0;
   }
 }
 

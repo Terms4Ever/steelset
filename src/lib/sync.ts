@@ -3,18 +3,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 import type { BackupStatus } from './backupStatus';
+import { keepLocalHealth, stripHealthForCloud } from './cloudHealth';
 import { cloudAvailable, cloudBackup, cloudRestore } from './cloudsync';
 import { readPersistedStore, STORE_KEY } from './storeKeys';
 
 const SYNC_AT_KEY = 'steelset-synced-at';
 
-/** Push the local persisted store to iCloud (last-write-wins by timestamp). */
+/** Push the local persisted store to iCloud (last-write-wins by timestamp). Data z Apple Health do zálohy nejdou (#18). */
 export async function syncToCloud(): Promise<void> {
   try {
     const data = await readPersistedStore();
     if (!data) return;
     const at = Date.now();
-    const ok = await cloudBackup(JSON.stringify({ at, data }));
+    const ok = await cloudBackup(JSON.stringify({ at, data: stripHealthForCloud(data) }));
     if (ok) {
       await AsyncStorage.setItem(SYNC_AT_KEY, String(at));
       backupListeners.forEach((l) => l());
@@ -36,7 +37,9 @@ export async function syncFromCloud(): Promise<boolean> {
     if (!parsed?.data || typeof parsed.at !== 'number') return false;
     const localAt = Number((await AsyncStorage.getItem(SYNC_AT_KEY)) ?? '0');
     if (parsed.at <= localAt) return false; // local is same or newer
-    await AsyncStorage.setItem(STORE_KEY, parsed.data);
+    // záloha nemá tep ani vážení z Health; co z nich telefon už má, zůstane (#18)
+    const local = await AsyncStorage.getItem(STORE_KEY);
+    await AsyncStorage.setItem(STORE_KEY, keepLocalHealth(parsed.data, local));
     await AsyncStorage.setItem(SYNC_AT_KEY, String(parsed.at));
     return true;
   } catch {

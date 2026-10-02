@@ -63,7 +63,8 @@ GitHub topic pro tuto sadu je `pravidla-nastroje` (S27).
 - Grafy tepu a tep po jednotlivých cvicích
 - Živá aktivita na zamčené obrazovce a v Dynamic Island
 - Záloha na iCloud s ukazatelem stavu v Profilu, export do CSV. Přihlášení přes Apple
-  je pryč (#19, S34), přenos na nový telefon dělá záloha
+  je pryč (#19, S34), přenos na nový telefon dělá záloha. Data z Apple Health do zálohy
+  nejdou a po obnovení se načtou znovu z Health (S36)
 - Onboarding
 - Monetizace: aplikace zdarma s reklamami, předplatné Steelset Pro je vypne
 - Uklizený kořen repozitáře, postup vydání v `02-vydani.md`, testy v `tests/`

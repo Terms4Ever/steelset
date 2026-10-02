@@ -127,13 +127,15 @@ nejdou založit produkty předplatného, bez produktů nemá RevenueCat co nabí
 6. Záloha do iCloudu (`src/lib/sync.ts`) posílá celý persist store, tedy i tep
    (`avgHr`, `maxHr`, `hrSeries`) a historii vážení z Health. Pravidlo 5.1.3 (ii)
    říká, že aplikace „may not store personal health information in iCloud".
-   Data z Health se ze zálohy musí vynechat a po obnovení načíst znovu z Health.
+   Hotové v kódu (S36): záloha je bez tepu, kalorií a vážení (`src/lib/cloudHealth.ts`),
+   po obnovení se načtou znovu z Health.
 7. Přihlášení přes Apple jen uloží jméno a e-mail a ukáže je v Profilu. Sběr dat
    bez účelu je proti 5.1.1 (iii). Rozhodnuto: pryč i s capability (S34), v kódu hotové (#19).
    Build bez capability možná znovu interaktivně, jako při jejím přidání.
 8. `app.json` žádá o zápis do Health (`NSHealthUpdateUsageDescription`) kvůli úklidu
    zápisů ze starých verzí. Ty měli jen testeři, veřejná verze to nepotřebuje
-   a kontrola se na nevyužitý zápis ptá.
+   a kontrola se na nevyužitý zápis ptá. Hotové v kódu (S36): telefon o zápis nežádá.
+   Hodinková aplikace (#15) bude zápis potřebovat, s vlastním zdůvodněním.
 9. Release build ověřit na TestFlightu: skutečné reklamy, skrytý přepínač Pro
    v Profilu zmizel (schovává ho jen chybějící klíč RevenueCatu, S7).
 

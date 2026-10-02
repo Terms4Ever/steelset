@@ -972,3 +972,20 @@ aby se velký zásah do textů nemíchal s opravami před vydáním.
 **Rozhodnutí.** Zadavatel: *„Naráz bych vydal, česko, slovensko a svět s angličtinou pouze."*
 Vydání (#18) čeká na anglickou verzi (#20). Česko a Slovensko dostanou češtinu, ostatní země
 angličtinu; jazyk aplikace se řídí telefonem, App Store má popis v obou jazycích.
+
+## S36 - Záloha do iCloudu bez dat z Health, telefon nežádá o zápis do Health (2. 10. 2026)
+
+**Stav.** Záloha posílala do iCloudu celý persist store, tedy i tep, kalorie a historii vážení
+z Apple Health. Pravidlo Applu 5.1.3 (ii) ukládání zdravotních údajů do iCloudu zakazuje (#18).
+Aplikace zároveň žádala o zápis do Health jen kvůli úklidu zápisů ze starých verzí.
+
+**Rozhodnutí.** Záloha vynechá `avgHr`, `maxHr`, `kcal`, `hrSeries` u tréninků i v koši
+a `bodyweightLog`. Zůstává `healthUuid` a `source` (metadata importu, ne zdravotní údaj)
+a tělesná váha v nastavení i její snímek u tréninku: zadává ji uživatel a bez snímku by se
+rozbilo +KG. Obnova nechá telefonu jeho data z Health a po obnovení se tep a vážení dotáhnou
+znovu z Health. Telefon o zápis nežádá a úklid starých zápisů zmizel z Profilu, měli je jen
+testeři. Hodinková aplikace (#15) zápis potřebovat bude a dostane vlastní zdůvodnění.
+
+**Čím ověřeno.** `cloudHealth.test.ts`: záloha nenese žádné z polí, test čte `types.ts`
+a shodí se, když přibude pole z Health mimo seznam; tři záměrné chyby testy zachytily.
+`expo config --type introspect`: `NSHealthUpdateUsageDescription` v Info.plist není.

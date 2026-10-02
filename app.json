@@ -67,7 +67,7 @@
         "@kingstinct/react-native-healthkit",
         {
           "NSHealthShareUsageDescription": "Steelset čte tep, tréninky a váhu z Apple Health, aby je přiřadil k tvým záznamům a mohl je importovat.",
-          "NSHealthUpdateUsageDescription": "Steelset umožňuje odstranit tréninky, které do Apple Health zapsaly starší verze aplikace."
+          "NSHealthUpdateUsageDescription": false
         }
       ],
       [

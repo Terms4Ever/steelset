@@ -15,6 +15,7 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 
 import { MiniWorkoutBar } from '@/components/MiniWorkoutBar';
 import { palette } from '@/constants/theme';
+import { refillHealthAfterRestore } from '@/lib/healthRefill';
 import { scheduleBackup, syncFromCloud } from '@/lib/sync';
 import { useMonetization } from '@/lib/useMonetization';
 import { useBodyweightSync } from '@/lib/useBodyweightSync';
@@ -85,7 +86,11 @@ export default function RootLayout() {
     (async () => {
       try {
         const restored = await syncFromCloud();
-        if (restored) await (useStore as any).persist?.rehydrate?.();
+        if (restored) {
+          await (useStore as any).persist?.rehydrate?.();
+          // záloha nenese data z Apple Health (#18), na novém telefonu se načtou znovu
+          void refillHealthAfterRestore();
+        }
       } catch {}
       unsub = useStore.subscribe(() => scheduleBackup());
     })();
