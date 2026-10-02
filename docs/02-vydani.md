@@ -126,7 +126,7 @@ nejdou založit produkty předplatného, bez produktů nemá RevenueCat co nabí
    říká, že aplikace „may not store personal health information in iCloud".
    Data z Health se ze zálohy musí vynechat a po obnovení načíst znovu z Health.
 7. Přihlášení přes Apple jen uloží jméno a e-mail a ukáže je v Profilu. Sběr dat
-   bez účelu je proti 5.1.1 (iii). Buď pryč (i s capability), nebo mu dát účel.
+   bez účelu je proti 5.1.1 (iii). Rozhodnuto: pryč i s capability (S34, #19).
 8. `app.json` žádá o zápis do Health (`NSHealthUpdateUsageDescription`) kvůli úklidu
    zápisů ze starých verzí. Ty měli jen testeři, veřejná verze to nepotřebuje
    a kontrola se na nevyužitý zápis ptá.

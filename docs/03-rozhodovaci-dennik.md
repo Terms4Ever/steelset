@@ -952,3 +952,14 @@ možná znovu interaktivně.
 **Stav.** Zadavatel: *„se mi nelíbí, že tam agent nedělá správně to před a po obrázky, ať to píše nějak ať to jde dobře poznat"*. Snímky pod sebou nešly rozlišit, popis obrázku GitHub neukazuje (nastroje N39).
 
 **Rozhodnutí.** Šablona `.github/ISSUE_TEMPLATE/ukol.md` má sekci Snímky podle nastroje: tabulka `| Co | Před | Po |`, řádek je jeden pár, v prvním sloupci slovy, co ukazuje, a komentář snímky nevkládá. Snímky #12, #13, #14 a #17 se převedly do tabulky. #12 měl oba snímky jen v komentářích a #13 snímek po, v těle issue teď stojí vedle sebe; z komentářů vložené obrázky zmizely. #14 má štítek `bez snímku po`, buňka Po zůstala prázdná.
+
+## S34 - Přihlášení přes Apple z aplikace zmizí (2. 10. 2026)
+
+**Stav.** Zadavatel chtěl přihlášení, aby uživatel po výměně telefonu měl svoje data. Přihlášení
+ale jen ukládá jméno a e-mail do store a ukazuje je v Profilu. Data přenáší záloha do iCloudu
+(`src/lib/sync.ts`), která na přihlášení nezávisí, stačí stejné Apple ID. Sběr údajů bez účelu je
+proti pravidlu 5.1.1 (iii) a blokoval by vydání (#18).
+
+**Rozhodnutí.** Zadavatel: *„pokud je přihlášení zbytečné, udělejme issue na odebrání"*. Přihlášení
+jde pryč i s capability (#19), řádek zálohy v Profilu místo pevného „Automatická" ukáže skutečný stav.
+Kdyby jednou vznikl vlastní server s účty, přihlášení se vrátí s účelem a se smazáním účtu (5.1.1 v).
