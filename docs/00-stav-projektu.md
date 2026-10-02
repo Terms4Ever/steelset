@@ -80,10 +80,10 @@ Všechno z toho ověřené na zařízení v buildu 27 (#1 až #14).
 
 Rozepsané i s postupem v `01-todo.md`. Ve zkratce:
 
-- Spustit monetizaci naostro: účty a klíče pro AdMob a RevenueCat, produkty
-  a ceny v App Store Connectu. Do té doby běží testovací jednotky Googlu,
-  které vydělávají nulu.
-- Stránka se zásadami ochrany soukromí, paywall na ni odkazuje.
+- Vydání v App Storu (#18), pořadí kroků v `02-vydani.md` (Cesta do App Store).
+  Blokuje ho chybějící doména se zásadami soukromí, záloha tepu z Health do iCloudu
+  (pravidlo 5.1.3) a monetizace bez účtů: AdMob, RevenueCat, smlouva o placených
+  aplikacích. Do té doby běží testovací jednotky Googlu, které vydělávají nulu.
 - Aplikace pro watchOS (#15): spuštění tréninku i na hodinkách a jediná cesta
   k tepu v reálném čase.
 - Podklady pro App Store: snímky obrazovek a popis, před veřejným vydáním.

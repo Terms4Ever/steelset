@@ -94,6 +94,55 @@ Do webu App Store Connectu nemáme přístup, stav buildů hlásí zadavatel.
 
 ---
 
+## Cesta do App Store (#18)
+
+Rozbor z 2. 10. 2026. Pořadí dává smysl, protože pozdější kroky čekají na dřívější:
+bez domény není zásad soukromí ani `app-ads.txt`, bez smlouvy o placených aplikacích
+nejdou založit produkty předplatného, bez produktů nemá RevenueCat co nabízet.
+
+**Dělá zadavatel (účty, smlouvy, peníze):**
+
+1. Koupit doménu (`steelset.cz` 2. 10. neexistuje). Web na ní potřebuje tři věci:
+   zásady soukromí (paywall odkazuje na `/soukromi`), stránku podpory s kontaktem
+   (App Store Connect ji vyžaduje) a `app-ads.txt` od AdMobu. Bez `app-ads.txt` na
+   doméně uvedené v App Storu jako web vývojáře AdMob omezí reklamy.
+2. V App Store Connectu podepsat smlouvu o placených aplikacích (Paid Applications),
+   doplnit bankovní účet a daňový formulář. Bez toho předplatné neprodá nic.
+3. Status obchodníka podle DSA. Aplikace s reklamami a předplatným v EU znamená
+   nejspíš obchodníka; Apple pak na stránce aplikace zveřejní adresu, telefon a e-mail.
+   Rozhodnutí a údaje jsou zadavatele.
+4. AdMob a RevenueCat podle `01-todo.md`. K AdMobu navíc zpráva o souhlasu
+   (Privacy & messaging, GDPR): kód ji volá přes `AdsConsent.gatherConsent()`, ale
+   bez nastavené zprávy se nic neukáže a v EU poběží reklamy jen omezeně. Klíče
+   patří do proměnných prostředí EAS (`eas env`), ne do repozitáře.
+5. Skupina předplatného a dva produkty, ceny potvrdit (návrh v `01-todo.md`).
+   První předplatné se posílá ke kontrole spolu s verzí aplikace.
+
+**Dělá se v kódu:**
+
+6. Záloha do iCloudu (`src/lib/sync.ts`) posílá celý persist store, tedy i tep
+   (`avgHr`, `maxHr`, `hrSeries`) a historii vážení z Health. Pravidlo 5.1.3 (ii)
+   říká, že aplikace „may not store personal health information in iCloud".
+   Data z Health se ze zálohy musí vynechat a po obnovení načíst znovu z Health.
+7. Přihlášení přes Apple jen uloží jméno a e-mail a ukáže je v Profilu. Sběr dat
+   bez účelu je proti 5.1.1 (iii). Buď pryč (i s capability), nebo mu dát účel.
+8. `app.json` žádá o zápis do Health (`NSHealthUpdateUsageDescription`) kvůli úklidu
+   zápisů ze starých verzí. Ty měli jen testeři, veřejná verze to nepotřebuje
+   a kontrola se na nevyužitý zápis ptá.
+9. Release build ověřit na TestFlightu: skutečné reklamy, skrytý přepínač Pro
+   v Profilu zmizel (schovává ho jen chybějící klíč RevenueCatu, S7).
+
+**V App Store Connectu před odesláním:**
+
+10. App Privacy podle sekce níže.
+11. Popis musí obsahovat odkaz na podmínky (standardní EULA Applu) a na zásady
+    soukromí, odkaz na soukromí patří i do pole Privacy Policy URL (5.1.1 i).
+12. Věkové hodnocení podle nového dotazníku, kategorie, klíčová slova, snímky.
+13. Poznámka pro kontrolu: bez Apple Health a hodinek se tep neukáže, předplatné
+    jde vyzkoušet v sandboxu. Vydání nastavit na ruční, ať jde vydat až po kontrole.
+
+---
+
 ## App Privacy: pozor, aplikace už data sbírá
 
 Do zavedení reklam platilo „Data Not Collected". **To už neplatí a vyplnit to tak
@@ -101,7 +150,8 @@ by byla nepravdivá deklarace vůči Applu.** Od verze s monetizací je potřeba
 
 - **AdMob** sbírá identifikátor pro reklamy a údaje o užívání pro cílení reklam
 - **RevenueCat** zpracovává nákupy, tedy identifikátor nákupu a stav předplatného
-- tréninková data zůstávají v telefonu, případně v iCloudu uživatele, a nikam se neposílají
+- tréninková data zůstávají v telefonu, případně v iCloudu uživatele, a nikam se neposílají;
+  data z Apple Health do iCloudu nesmí (krok 6 výše)
 - Apple Health se jen čte, nic se do něj nezapisuje
 
 Bez stránky se zásadami ochrany soukromí (`docs/01-todo.md`) Apple aplikaci
@@ -120,8 +170,8 @@ Až před veřejným vydáním, na TestFlight nejsou potřeba. Návrh, který č
 - **Popis:** Rychlé zapisování sérií, plány s automatickou progresí, sledování pokroku,
   silové skóre, objem podle svalů, export dat. Celé v češtině, tréninková data zůstávají v telefonu.
 - **Věkové hodnocení:** 4+
-- **Snímky:** vyrobit z běžící aplikace (Dnešek, zápis tréninku, Pokrok), rozměr
-  pro 6,7" iPhone je 1290 × 2796
+- **Snímky:** vyrobit z běžící aplikace (Dnešek, zápis tréninku, Pokrok, widgety),
+  povinná sada je pro 6,9" iPhone, bere 1320 × 2868 i 1290 × 2796
 
 ---
 
