@@ -1,0 +1,11 @@
+{
+  "type": "watch",
+  "name": "SteelsetWatch",
+  "displayName": "Steelset",
+  "bundleIdentifier": ".watchkitapp",
+  "deploymentTarget": "10.0",
+  "icon": "../../assets/images/steelset-icon.png",
+  "frameworks": ["SwiftUI", "HealthKit", "WatchConnectivity"],
+  "images": { "SteelsetLogo": "../../assets/images/steelset-icon.png" },
+  "entitlements": { "com.apple.developer.healthkit": true }
+}

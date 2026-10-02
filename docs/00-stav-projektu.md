@@ -77,6 +77,9 @@ Všechno z toho ověřené na zařízení v buildu 27 (#1 až #14).
   trénink, Kalendář měsíce, Tělesná váha, Plány tento týden a Série po partiích.
   Data jim aplikace zapisuje do App Group, cíl se nastavuje v Profilu a váha se
   čte z Apple Health. Na zařízení ověřené zobrazení dat, zbývá ťuknutí a Live Activity.
+- #15 - aplikace pro Apple Watch (S38): start tréninku v telefonu ji spustí, ukazuje čas,
+  tep, kalorie a odpočinek, ukončení funguje oběma směry a trénink uloží do Health.
+  Hotové v kódu, Swift ověří až build; ten musí jet interaktivně (nový target).
 
 ## Co je dál
 

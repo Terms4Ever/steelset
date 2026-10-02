@@ -34,6 +34,7 @@ zelené pozadí, tmavá fajfka a čárky zápisníku, to se drží.
 | EAS slug | `setly` | vázaný na projekt v EAS, neměnit |
 | Bundle ID | `cz.setly.app` | provisioning a TestFlight, neměnit |
 | Widget bundle | `cz.setly.app.widget` | rozšíření pro widgety a Live Activity |
+| Hodinky | `cz.setly.app.watchkitapp` | aplikace pro Apple Watch (#15), `targets/watch/` |
 | App Group | `group.cz.setly.app` | sdílené úložiště aplikace a widgetů, neměnit |
 | Klíč persistu | `steelset-store-v1` | od 19. 9. 2026; starý `setly-store-v1` se čte jako záloha (`src/lib/storeKeys.ts`) |
 | Stará jména | Pulse, Setly, Liftbook | mohou být v komentářích a v assetech |
@@ -54,6 +55,10 @@ Klíčové soubory:
   `struct WidgetSnapshot` v `targets/widgets/HomeWidgets.swift` (hlídá to test),
   zapisuje je `src/lib/useWidgetSync.ts`, vážení z Health pro ně načítá
   `src/lib/useBodyweightSync.ts`
+- `targets/watch/` a `modules/watch-bridge/` - aplikace pro hodinky a most v telefonu;
+  stav, který telefon posílá, je `WatchState` v `src/lib/watchState.ts` a jeho klíče
+  musí sedět s `applyPhoneState` ve Swiftu (hlídá to test), start a konec řídí
+  `src/lib/watchSync.ts`
 
 ## Doménová pravidla
 
@@ -63,8 +68,9 @@ Porušení těchhle pravidel rozbije uživatelská data, ne jen vzhled.
    zadává uživatel jen přídavek (minus je asistence), převod jde přes snímek
    `Workout.bodyweightKg`. U cviků na opakování musí `weight` zůstat `null`,
    jinak vznikne fantomový objem.
-2. **Do Apple Health se nezapisuje.** Appka jen čte tep, tréninky a váhu a o zápis
-   ani nežádá (S36). Zapisování zaneřádilo Kondici, proto je zakázané.
+2. **Telefon do Apple Health nezapisuje.** Čte tep, tréninky a váhu a o zápis ani
+   nežádá (S36); zapisování z telefonu zaneřádilo Kondici. Trénink ukládá jen
+   aplikace na hodinkách, stejně jako Cvičení od Applu (S38).
 3. **Jeden trénink je jeden záznam.** Živý zápis a tep z hodinek se slučují,
    `localCoversWindow()` skrývá překryvy, import hlídá duplicity přes `healthUuid`.
 4. **Úprava tréninku nesmí useknout tep.** `editWorkout` drží okno přes

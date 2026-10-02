@@ -29,9 +29,10 @@ Jest přes `jest-expo`, soubory `tests/*.test.ts`, spouští se `npx jest`
 | `backupStatus.test.ts` | 7 | stav zálohy v Profilu: čas poslední zálohy lidsky, vypnutý iCloud jako varování, posluchač se ozve jen po úspěšné záloze (#19) |
 | `cloudHealth.test.ts` | 7 | záloha do iCloudu je bez tepu, kalorií a vážení z Health a každé pole tréninku popsané jako data z Health se vynechá; obnova nechá telefonu jeho tep, po obnovení se tep dotáhne z Health (#18) |
 | `stepper.test.ts` | 13 | steppery v Profilu: přírůstek po pevném seznamu se vrátí na 2,5 kg i 5 lb, krok po mřížce z minima zpátky na výchozí u všech stepperů (#21) |
+| `watch.test.ts` | 12 | hodinky (#15): spouští se jen u živého tréninku a se zapnutým přepínačem, konec v telefonu je ukončí s uložením nebo bez, konec z hodinek ukončí telefon jen s hotovou sérií; klíče stavu sedí s `applyPhoneState` ve Swiftu |
 | `csv.test.ts` | 2 | export do CSV: nedokončené tréninky vynechá, zvláštní znaky ošetří |
 
-Běh 2. 10. 2026: 19 sad, 252 testů, všechny prošly. `store.test.ts` nově hlídá, že starý
+Běh 2. 10. 2026: 20 sad, 264 testů, všechny prošly. `store.test.ts` nově hlídá, že starý
 persist s přihlášením přes Apple se načte a jméno ani e-mail v něm nezůstanou (#19).
 
 ## Kde běží
@@ -58,6 +59,9 @@ po každém pushi ověřuje, že běh doopravdy prošel.
   ukáže až build. Test hlídá jen to, že jména polí sedí s TypeScriptem, JS
   verzi výpočtů, kterou Swift opakuje, a kdy se snímek zapisuje. Samotný zápis
   do App Group, překreslení widgetu a čtení váhy z Health jen na zařízení.
+- **Aplikace pro hodinky (#15).** Swift z Windows nejde zkompilovat. Test hlídá
+  logiku v telefonu a klíče zpráv; spuštění hodinek, záznam tréninku, odpočet
+  a uložení do Health jen na spárovaných hodinkách.
 - **Reklamy a nákupy.** V prohlížeči se nespustí a dokud chybí klíč
   RevenueCatu, nejde Pro koupit ani na zařízení.
 - **Typy a web export mimo tenhle počítač.** V CI se nepouští, jen ručně

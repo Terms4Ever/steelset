@@ -21,6 +21,7 @@ widgety na plochu a zamčenou obrazovku a kalendář odcvičených dnů.
 - Anatomická svalová mapa, objem a trend po jednotlivých svalech
 - Kalendář odcvičených dnů
 - Apple Health a Apple Watch: tep, import tréninků, grafy tepu po cvicích
+- Aplikace pro Apple Watch: trénink se na hodinkách spustí sám, ukazuje čas, tep, kalorie a odpočinek
 - Živá aktivita na zamčené obrazovce a v Dynamic Island
 - Widgety: tento týden, týdenní cíl, poslední trénink, kalendář, tělesná váha, plány a série po partiích
 - Záloha na iCloud, export do CSV
@@ -43,8 +44,8 @@ widgety na plochu a zamčenou obrazovku a kalendář odcvičených dnů.
 ```
 steelset/
 ├── src/              # obrazovky a logika
-├── modules/          # nativní moduly
-├── targets/          # widgety a Live Activity
+├── modules/          # nativní moduly: Live Activity a most k hodinkám
+├── targets/          # widgety a Live Activity, aplikace pro hodinky
 ├── assets/           # obrázky a ikony
 └── tests/            # testy
 ```

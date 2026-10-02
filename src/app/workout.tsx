@@ -19,6 +19,8 @@ import { detectStall } from '@/lib/stall';
 import { showInterstitial } from '@/lib/ads';
 import { haptic } from '@/lib/haptic';
 import { heartRateFor } from '@/lib/health';
+import { watch } from '@/lib/watch';
+import { runningState } from '@/lib/watchState';
 import { liveActivity } from '@/lib/liveActivity';
 import { activeWorkout, originalExerciseName, useExercisesById, useStore } from '@/store/useStore';
 
@@ -126,7 +128,9 @@ export default function Workout() {
     const total = active.exercises.reduce((n, le) => n + le.sets.length, 0);
     liveActivity.startFor(active.id, active.name, active.startedAt, done, total);
     liveActivity.update(done, total, restEndAt);
-  }, [active, restEndAt]);
+    // hodinky (#15): odpočet a další série; bez spuštěných hodinek se nic nepošle
+    watch.push(runningState(active, restEndAt, exById, Date.now()));
+  }, [active, restEndAt, exById]);
 
   if (!active) {
     return (

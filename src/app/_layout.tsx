@@ -19,6 +19,7 @@ import { refillHealthAfterRestore } from '@/lib/healthRefill';
 import { scheduleBackup, syncFromCloud } from '@/lib/sync';
 import { useMonetization } from '@/lib/useMonetization';
 import { useBodyweightSync } from '@/lib/useBodyweightSync';
+import { useWatchSync } from '@/lib/useWatchSync';
 import { useWidgetSync } from '@/lib/useWidgetSync';
 import { useStore } from '@/store/useStore';
 
@@ -67,6 +68,8 @@ export default function RootLayout() {
   // snímek dat pro widgety na ploše (#16) a vážení z Health pro widget tělesné váhy; mimo iOS nic nedělají
   useWidgetSync(ready);
   useBodyweightSync(ready);
+  // trénink i na hodinkách: start, konec a konec z hodinek (#15)
+  useWatchSync(ready);
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});

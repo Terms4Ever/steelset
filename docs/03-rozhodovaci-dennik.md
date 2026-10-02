@@ -1003,3 +1003,27 @@ minimum už žádnou hodnotu neodřízne.
 
 **Čím ověřeno.** `stepper.test.ts`, s původním výpočtem tři testy padnou. V náhledu skutečnými
 kliky: 2,5, 1,25, 1, 0,5 a zpátky 1, 1,25, 2,5 kg.
+
+## S38 - Aplikace pro Apple Watch: co ukazuje a že trénink ukládá do Health (2. 10. 2026)
+
+**Stav.** Trénink se zapínal dvakrát, ve Steelsetu a ve Cvičení (#15). Cvičení od Applu z telefonu
+spustit nejde, `startWatchApp(toHandle:)` probouzí jen vlastní hodinkovou aplikaci.
+
+**Rozhodnutí.** Zadavatel vybral z náhledů obrazovky 1 trénink běží, 3 odpočinek, 4 ovládání,
+5 bez tréninku a 6 souhrn, a ukončení na hodinkách ukončí trénink i v telefonu. Aktuální cvik (2)
+nechce. Spouštění jde v Profilu vypnout, výchozí je zapnuto. Hodinky trénink ukládají do Health
+jako Tradiční silový trénink, jinak by neseděly kruhy a kalorie; pravidlo „do Health se
+nezapisuje" tím nově platí jen pro telefon (AGENTS, pravidlo 2). Kdo dál spouští i Cvičení, bude
+mít v Health dva tréninky přes sebe; `localCoversWindow` je v aplikaci schová.
+
+**Jak.** Telefon před `startWatchApp` pošle kontext (`WatchState`) a pak ho drží aktuální:
+odpočinek, další série, konec. Start a konec hlídá `watchSync.ts` na `activeWorkoutId`, takže
+platí pro všechny cesty k dokončení i zahození. Starý kontext s koncem minulého tréninku hodinky
+zahodí podle času odeslání. Konec z hodinek ukončí telefon jen s hotovou sérií (pravidlo 7).
+
+**Čím ověřeno.** `watch.test.ts` (12 testů, tři záměrné chyby zachytily), `expo config
+--type introspect`: target `cz.setly.app.watchkitapp` s HealthKitem, modul
+`SteelsetWatchBridge` se linkuje. Nezávislá kontrola Swiftu proti API HealthKitu,
+WatchConnectivity a expo-modules-core chybu překladu nenašla; její pojistky jsou zapracované
+(import Combine, verze Swiftu v podspecu, souhrn neříká „uloženo", když zápis selhal, dvojí
+konec z telefonu se počítá jednou). Swift ověří až build.

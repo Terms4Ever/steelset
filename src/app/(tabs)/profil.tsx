@@ -170,6 +170,19 @@ export default function Profil() {
         </Section>
       )}
 
+      {Platform.OS === 'ios' && (
+        // trénink se spustí i na Apple Watch, bez druhého zapínání ve Cvičení (#15, S38)
+        <Section title="APPLE WATCH">
+          <Row icon="watch-outline" label="Spouštět trénink i na hodinkách" last>
+            <Switch
+              label="Spouštět trénink i na hodinkách"
+              value={settings.watchAutoStart !== false}
+              onChange={(v) => setSetting('watchAutoStart', v)}
+            />
+          </Row>
+        </Section>
+      )}
+
       <Section title="DATA">
         <RowButton icon="download-outline" label="Export dat (CSV)" onPress={onExport} />
         <RowButton

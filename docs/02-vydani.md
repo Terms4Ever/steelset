@@ -53,8 +53,10 @@ ale build neproběhne.
 eas build --platform ios --profile production
 ```
 
-Poslední taková změna: **App Group `group.cz.setly.app` pro aplikaci i rozšíření
-s widgety (#16, S30, S32)**. Build, který ji přináší poprvé, musí jet interaktivně.
+Poslední taková změna: **aplikace pro Apple Watch `cz.setly.app.watchkitapp`
+s HealthKitem (#15, S38)**, ve stejném buildu odchází Sign in with Apple (#19).
+Build, který je přináší poprvé, musí jet interaktivně. Předtím App Group pro
+widgety (#16, S30, S32).
 
 Pozor, neinteraktivní build capability sice zapne („Synced capabilities: Enabled:
 App Groups"), ale **nepropojí ji s konkrétní skupinou**: hlásí „Skipping capability
