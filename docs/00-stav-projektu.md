@@ -62,7 +62,8 @@ GitHub topic pro tuto sadu je `pravidla-nastroje` (S27).
 - Apple Health: čtení tepu, import tréninků, automatická detekce, úklid
 - Grafy tepu a tep po jednotlivých cvicích
 - Živá aktivita na zamčené obrazovce a v Dynamic Island
-- Přihlášení přes Apple, záloha na iCloud, export do CSV
+- Záloha na iCloud s ukazatelem stavu v Profilu, export do CSV. Přihlášení přes Apple
+  je pryč (#19, S34), přenos na nový telefon dělá záloha
 - Onboarding
 - Monetizace: aplikace zdarma s reklamami, předplatné Steelset Pro je vypne
 - Uklizený kořen repozitáře, postup vydání v `02-vydani.md`, testy v `tests/`

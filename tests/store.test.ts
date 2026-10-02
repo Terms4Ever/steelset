@@ -601,3 +601,29 @@ describe('store · mazání cviků nesmí rozbít historii', () => {
     expect(JSON.parse(raw!).state.hiddenExercises).toContain('squat');
   });
 });
+
+describe('store · přihlášení přes Apple je pryč (#19)', () => {
+  it('starý persist se jménem a e-mailem se načte a údaje z něj zmizí', async () => {
+    const old = {
+      state: {
+        workouts: [{ id: 'w_old', name: 'Starý', startedAt: 1, finishedAt: 2, exercises: [] }],
+        appleUser: { sub: '001.abc', name: 'Jan Novák', email: 'jan@example.com' },
+        settings: { onboarded: true },
+      },
+      version: 0,
+    };
+    await AsyncStorage.setItem(STORE_KEY, JSON.stringify(old));
+
+    await useStore.persist.rehydrate();
+
+    expect(s().workouts.map((w) => w.id)).toEqual(['w_old']);
+    expect('appleUser' in s()).toBe(false);
+
+    // příští uložení přepíše persist bez jména a e-mailu, odtud jde i do zálohy v iCloudu
+    s().setUnit('lb');
+    await new Promise((r) => setTimeout(r, 0));
+    const saved = await AsyncStorage.getItem(STORE_KEY);
+    expect(saved).not.toContain('appleUser');
+    expect(saved).not.toContain('jan@example.com');
+  });
+});

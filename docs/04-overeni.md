@@ -26,9 +26,11 @@ Jest přes `jest-expo`, soubory `tests/*.test.ts`, spouští se `npx jest`
 | `keypad.test.ts` | 5 | fokus klávesnice po smazání série |
 | `storeKeys.test.ts` | 5 | přechod ze starého klíče `setly-store-v1`, smazaná data se nevzkřísí (S7) |
 | `monetization.test.ts` | 3 | Pro bez spojení s obchodem nedostane reklamy, nákup bez obchodu selže bezpečně |
+| `backupStatus.test.ts` | 7 | stav zálohy v Profilu: čas poslední zálohy lidsky, vypnutý iCloud jako varování, posluchač se ozve jen po úspěšné záloze (#19) |
 | `csv.test.ts` | 2 | export do CSV: nedokončené tréninky vynechá, zvláštní znaky ošetří |
 
-Běh 28. 9. 2026: 16 sad, 224 testů, všechny prošly.
+Běh 2. 10. 2026: 17 sad, 232 testů, všechny prošly. `store.test.ts` nově hlídá, že starý
+persist s přihlášením přes Apple se načte a jméno ani e-mail v něm nezůstanou (#19).
 
 ## Kde běží
 
@@ -49,7 +51,7 @@ po každém pushi ověřuje, že běh doopravdy prošel.
   syntetické události na webu neposlouchá. Logiku cíle hlídá
   `copyValue.test.ts`, samotné gesto jen TestFlight.
 - **Nativní části**: HealthKit, Live Activity a widget, záloha na iCloud,
-  Sign in with Apple. Jen na zařízení, v Profilu je diagnostika Apple Health.
+  skutečný stav zálohy. Jen na zařízení, v Profilu je diagnostika Apple Health.
 - **Widgety na ploše (#16).** Swift z Windows nejde zkompilovat, chybu v něm
   ukáže až build. Test hlídá jen to, že jména polí sedí s TypeScriptem, JS
   verzi výpočtů, kterou Swift opakuje, a kdy se snímek zapisuje. Samotný zápis

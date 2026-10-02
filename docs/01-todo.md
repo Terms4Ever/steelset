@@ -57,10 +57,10 @@ doby, takže změna ceny nevyžaduje nový build.
 
 ---
 
-## [ ] Stránka se zásadami ochrany soukromí
+## [x] Stránka se zásadami ochrany soukromí (2. 10. 2026)
 
-Paywall odkazuje na `https://steelset.cz/soukromi`, ta stránka zatím
-neexistuje. U aplikace s reklamami a předplatným ji Apple vyžaduje, bez ní
+Běží na https://tomas.saroun.me/steelset/soukromi/ (repozitář tomas.saroun.me, #2),
+paywall na ni odkazuje od #19. Dřív vedl odkaz na neexistující `steelset.cz`. U aplikace s reklamami a předplatným ji Apple vyžaduje, bez ní
 přijde zamítnutí při kontrole.
 
 Musí popsat aspoň tohle:

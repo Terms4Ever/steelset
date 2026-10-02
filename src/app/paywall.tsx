@@ -12,7 +12,8 @@ import { useStore } from '@/store/useStore';
 
 /** Apple's standard EULA - a terms link is required when selling subscriptions. */
 const TERMS_URL = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
-const PRIVACY_URL = 'https://steelset.cz/soukromi';
+/** Zásady leží na webu autora (repozitář tomas.saroun.me), vlastní doménu aplikace nemá (#18). */
+const PRIVACY_URL = 'https://tomas.saroun.me/steelset/soukromi/';
 
 const BENEFITS = [
   { icon: 'eye-off-outline' as const, title: 'Žádné reklamy', text: 'Bannery i celoobrazovkové reklamy zmizí.' },

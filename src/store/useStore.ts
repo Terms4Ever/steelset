@@ -14,12 +14,6 @@ let _c = 0;
 export const uid = (p = 'id') =>
   `${p}_${Date.now().toString(36)}${(_c++).toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
-export interface AppleUser {
-  sub: string;
-  name?: string;
-  email?: string;
-}
-
 interface State {
   customExercises: Exercise[];
   /** Per-exercise overrides (muscles + unilateral flag; works for seed i custom exercises), applied in selectors. */
@@ -45,7 +39,6 @@ interface State {
   trashedWorkouts: TrashedWorkout[];
   activeWorkoutId: string | null;
   settings: Settings;
-  appleUser: AppleUser | null;
   /** Ad-free subscription. Cached here for instant startup; RevenueCat is the source of truth. */
   isPro: boolean;
   dismissedHealth: string[]; // uuids HKWorkoutů, které uživatel odmítl importovat (aby se nenabízely znovu)
@@ -59,7 +52,6 @@ interface Actions {
   resetOnboarding: () => void;
   setUnit: (u: Unit) => void;
   setSetting: <K extends keyof Settings>(k: K, v: Settings[K]) => void;
-  setAppleUser: (u: AppleUser | null) => void;
   setPro: (v: boolean) => void;
   wipeAll: () => void;
   // exercises
@@ -163,7 +155,6 @@ export const useStore = create<State & Actions>()(
       trashedWorkouts: [],
       activeWorkoutId: null,
       settings: DEFAULT_SETTINGS,
-      appleUser: null,
       isPro: false,
       dismissedHealth: [],
       _hydrated: false,
@@ -187,7 +178,6 @@ export const useStore = create<State & Actions>()(
       resetOnboarding: () => set((s) => ({ settings: { ...s.settings, onboarded: false } })),
       setUnit: (u) => set((s) => ({ settings: { ...s.settings, unit: u } })),
       setSetting: (k, v) => set((s) => ({ settings: { ...s.settings, [k]: v } })),
-      setAppleUser: (u) => set({ appleUser: u }),
       setPro: (v) => set({ isPro: v }),
       wipeAll: () =>
         set({
@@ -202,7 +192,6 @@ export const useStore = create<State & Actions>()(
           trashedWorkouts: [],
           activeWorkoutId: null,
           settings: { ...DEFAULT_SETTINGS },
-          appleUser: null,
           dismissedHealth: [],
         }),
 
@@ -577,7 +566,6 @@ export const useStore = create<State & Actions>()(
         trashedWorkouts: s.trashedWorkouts,
         activeWorkoutId: s.activeWorkoutId,
         settings: s.settings,
-        appleUser: s.appleUser,
         isPro: s.isPro,
         dismissedHealth: s.dismissedHealth,
       }),
@@ -601,6 +589,9 @@ export const useStore = create<State & Actions>()(
           const bw = merged.settings?.bodyweightKg ?? 80;
           merged.workouts = merged.workouts.map((w: any) => (w && w.bodyweightKg == null ? { ...w, bodyweightKg: bw } : w));
         }
+        // Přihlášení přes Apple je pryč (#19, S34): jméno a e-mail ze starších verzí se nenačtou
+        // a s příštím uložením zmizí i z telefonu a ze zálohy v iCloudu.
+        delete (merged as any).appleUser;
         // trash: drop entries older than 7 days on every launch
         merged.trashedWorkouts = Array.isArray(merged.trashedWorkouts) ? pruneTrash(merged.trashedWorkouts) : [];
         return merged;

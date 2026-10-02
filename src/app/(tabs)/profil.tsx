@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as AppleAuthentication from 'expo-apple-authentication';
-import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Platform, Pressable, View } from 'react-native';
 
 import { Card, Screen, Txt } from '@/components/ui';
@@ -10,7 +9,9 @@ import { workoutsToCsv } from '@/lib/csv';
 import { exportCsv } from '@/lib/export';
 import { deleteMyHealthWorkouts, healthSelfTest, latestBodyweightKg, requestHealth } from '@/lib/health';
 import { fmtNum, fromDisplayWeight, toDisplayWeight } from '@/lib/format';
+import { backupHint, backupLabel, BackupStatus } from '@/lib/backupStatus';
 import { purchasesAvailable } from '@/lib/purchases';
+import { onBackupDone, readBackupStatus } from '@/lib/sync';
 import { useExercisesById, useStore } from '@/store/useStore';
 
 export default function Profil() {
@@ -23,26 +24,7 @@ export default function Profil() {
   const setUnit = useStore((s) => s.setUnit);
   const setSetting = useStore((s) => s.setSetting);
   const wipeAll = useStore((s) => s.wipeAll);
-  const appleUser = useStore((s) => s.appleUser);
-  const setAppleUser = useStore((s) => s.setAppleUser);
   const exById = useExercisesById();
-
-  const signInApple = async () => {
-    try {
-      const cred = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
-      });
-      const name = cred.fullName
-        ? [cred.fullName.givenName, cred.fullName.familyName].filter(Boolean).join(' ')
-        : undefined;
-      setAppleUser({ sub: cred.user, name: name || undefined, email: cred.email ?? undefined });
-    } catch (e: any) {
-      if (e?.code !== 'ERR_REQUEST_CANCELED') Alert.alert('Přihlášení selhalo', 'Zkus to prosím znovu.');
-    }
-  };
 
   // Bez klíče RevenueCatu si Pro nejde koupit, takže by se ad-free verze nedala otestovat.
   // Sedm ťuknutí na řádek s verzí odemkne ruční přepínač. Jakmile obchod ožije, zmizí sám.
@@ -120,33 +102,9 @@ export default function Profil() {
         </View>
       </Card>
 
-      <Section title="ÚČET A ZÁLOHA">
-        {appleUser ? (
-          <Row icon="logo-apple" label={appleUser.name || appleUser.email || 'Přihlášen přes Apple'}>
-            <Pressable onPress={() => setAppleUser(null)} hitSlop={6}>
-              <Txt size={type.label} weight="semibold" color={palette.red}>
-                Odhlásit
-              </Txt>
-            </Pressable>
-          </Row>
-        ) : Platform.OS === 'ios' ? (
-          <View style={{ padding: space.lg, borderBottomWidth: 1, borderBottomColor: palette.hairline }}>
-            <AppleAuthentication.AppleAuthenticationButton
-              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
-              cornerRadius={12}
-              style={{ height: 46 }}
-              onPress={signInApple}
-            />
-          </View>
-        ) : (
-          <Row icon="logo-apple" label="Přihlášení přes Apple (jen na iPhonu)" />
-        )}
-        <Row icon="cloud-done-outline" label="Záloha do iCloudu" last>
-          <Txt size={type.label} weight="semibold" color={palette.accent}>
-            {Platform.OS === 'ios' ? 'Automatická' : 'Jen iOS'}
-          </Txt>
-        </Row>
+      {/* přenos na nový telefon dělá záloha v iCloudu, přihlášení přes Apple je pryč (#19, S34) */}
+      <Section title="ZÁLOHA">
+        <BackupRow />
       </Section>
 
       <Section title="CVIKY">
@@ -292,6 +250,52 @@ export default function Profil() {
         </Txt>
       </Pressable>
     </Screen>
+  );
+}
+
+/** Skutečný stav zálohy do iCloudu: čas poslední zálohy, nebo že iCloud nejde (#19). */
+function BackupRow() {
+  const [status, setStatus] = useState<BackupStatus | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+
+  const refresh = useCallback(() => {
+    readBackupStatus().then((st) => {
+      setStatus(st);
+      setNow(Date.now());
+    });
+  }, []);
+
+  // při každém návratu na Profil, po každé záloze a jednou za půl minuty kvůli „před N min"
+  useFocusEffect(refresh);
+  useEffect(() => onBackupDone(refresh), [refresh]);
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, []);
+
+  const label = status ? backupLabel(status, now) : null;
+  const color = label?.tone === 'ok' ? palette.accent : label?.tone === 'warn' ? palette.red : palette.textMute;
+  const icon = status?.kind === 'unavailable' ? 'cloud-offline-outline' : 'cloud-done-outline';
+
+  return (
+    <View style={{ padding: space.lg, gap: 6 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+        <Ionicons name={icon} size={20} color={palette.textDim} />
+        <Txt size={type.body} weight="medium" style={{ flex: 1 }}>
+          Záloha do iCloudu
+        </Txt>
+        {label && (
+          <Txt size={type.label} weight="semibold" color={color}>
+            {label.text}
+          </Txt>
+        )}
+      </View>
+      {status && (
+        <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ marginLeft: 34, lineHeight: 17 }}>
+          {backupHint(status)}
+        </Txt>
+      )}
+    </View>
   );
 }
 

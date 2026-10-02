@@ -1,6 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { cloudBackup, cloudRestore } from './cloudsync';
+import { Platform } from 'react-native';
+
+import type { BackupStatus } from './backupStatus';
+import { cloudAvailable, cloudBackup, cloudRestore } from './cloudsync';
 import { readPersistedStore, STORE_KEY } from './storeKeys';
 
 const SYNC_AT_KEY = 'steelset-synced-at';
@@ -12,7 +15,10 @@ export async function syncToCloud(): Promise<void> {
     if (!data) return;
     const at = Date.now();
     const ok = await cloudBackup(JSON.stringify({ at, data }));
-    if (ok) await AsyncStorage.setItem(SYNC_AT_KEY, String(at));
+    if (ok) {
+      await AsyncStorage.setItem(SYNC_AT_KEY, String(at));
+      backupListeners.forEach((l) => l());
+    }
   } catch {
     // ignore - local data is untouched
   }
@@ -45,4 +51,22 @@ export function scheduleBackup(delay = 3000): void {
   timer = setTimeout(() => {
     void syncToCloud();
   }, delay);
+}
+
+const backupListeners = new Set<() => void>();
+
+/** Ozve se po každé úspěšné záloze, ať Profil ukáže čerstvý čas. Vrací odhlášení. */
+export function onBackupDone(listener: () => void): () => void {
+  backupListeners.add(listener);
+  return () => {
+    backupListeners.delete(listener);
+  };
+}
+
+/** Skutečný stav zálohy pro Profil (#19): dostupnost iCloudu a čas poslední zálohy. */
+export async function readBackupStatus(): Promise<BackupStatus> {
+  if (Platform.OS !== 'ios') return { kind: 'unsupported' };
+  if (!(await cloudAvailable())) return { kind: 'unavailable' };
+  const at = Number((await AsyncStorage.getItem(SYNC_AT_KEY)) ?? '0');
+  return at > 0 ? { kind: 'done', at } : { kind: 'never' };
 }

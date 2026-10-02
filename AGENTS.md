@@ -18,7 +18,7 @@ v `docs/00-stav-projektu.md`, ne tady.
 
 Expo SDK 56, Expo Router (`src/app/`), TypeScript strict, RN 0.85, New
 Architecture, zustand s persistem (AsyncStorage), jest-expo, react-native-svg,
-HealthKit v14, react-native-cloud-storage (iCloud), Sign in with Apple,
+HealthKit v14, react-native-cloud-storage (iCloud),
 `@bacons/apple-targets` pro widget a lokální expo modul pro ActivityKit.
 
 Design tokeny jsou v `src/constants/theme.ts`: pozadí `#0A0B0D`, plochy
