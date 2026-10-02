@@ -963,3 +963,12 @@ proti pravidlu 5.1.1 (iii) a blokoval by vydání (#18).
 **Rozhodnutí.** Zadavatel: *„pokud je přihlášení zbytečné, udělejme issue na odebrání"*. Přihlášení
 jde pryč i s capability (#19), řádek zálohy v Profilu místo pevného „Automatická" ukáže skutečný stav.
 Kdyby jednou vznikl vlastní server s účty, přihlášení se vrátí s účelem a se smazáním účtu (5.1.1 v).
+
+## S35 - Vydání naráz: česky Česko a Slovensko, anglicky zbytek světa (2. 10. 2026)
+
+**Stav.** Navrhl jsem první vydání jen pro Česko a Slovensko a svět až s angličtinou (#20),
+aby se velký zásah do textů nemíchal s opravami před vydáním.
+
+**Rozhodnutí.** Zadavatel: *„Naráz bych vydal, česko, slovensko a svět s angličtinou pouze."*
+Vydání (#18) čeká na anglickou verzi (#20). Česko a Slovensko dostanou češtinu, ostatní země
+angličtinu; jazyk aplikace se řídí telefonem, App Store má popis v obou jazycích.
