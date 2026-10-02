@@ -11,6 +11,7 @@ import { healthSelfTest, latestBodyweightKg, requestHealth } from '@/lib/health'
 import { fmtNum, fromDisplayWeight, toDisplayWeight } from '@/lib/format';
 import { backupHint, backupLabel, BackupStatus } from '@/lib/backupStatus';
 import { purchasesAvailable } from '@/lib/purchases';
+import { INCREMENT_OPTIONS_KG, INCREMENT_OPTIONS_LB, stepNumber, stepOption } from '@/lib/stepper';
 import { onBackupDone, readBackupStatus } from '@/lib/sync';
 import { useExercisesById, useStore } from '@/store/useStore';
 
@@ -116,9 +117,9 @@ export default function Profil() {
         </Row>
         <Row icon="layers-outline" label="Přírůstek (steppery)">
           {settings.unit === 'lb' ? (
-            <Stepper value={settings.incrementLb} step={2.5} min={1} suffix=" lb" onChange={(v) => setSetting('incrementLb', v)} />
+            <Stepper value={settings.incrementLb} options={INCREMENT_OPTIONS_LB} suffix=" lb" onChange={(v) => setSetting('incrementLb', v)} />
           ) : (
-            <Stepper value={settings.increment} step={1.25} min={0.5} suffix=" kg" onChange={(v) => setSetting('increment', v)} />
+            <Stepper value={settings.increment} options={INCREMENT_OPTIONS_KG} suffix=" kg" onChange={(v) => setSetting('increment', v)} />
           )}
         </Row>
         <Row icon="timer-outline" label="Výchozí odpočinek">
@@ -341,19 +342,27 @@ function Switch({ value, onChange, label }: { value: boolean; onChange: (v: bool
   );
 }
 
-function Stepper({ value, step, min, max, suffix, zeroLabel, onChange }: { value: number; step: number; min: number; max?: number; suffix: string; zeroLabel?: string; onChange: (v: number) => void }) {
+type StepperProps = { value: number; suffix: string; zeroLabel?: string; onChange: (v: number) => void } & (
+  | { step: number; min: number; max?: number; options?: undefined }
+  | { options: readonly number[]; step?: undefined; min?: undefined; max?: undefined }
+);
+
+/** Krok dopadá vždy na mřížku nebo na hodnotu ze seznamu, takže se jde vrátit, odkud se vyšlo (#21). */
+function Stepper({ value, step, min, max, options, suffix, zeroLabel, onChange }: StepperProps) {
+  const go = (dir: 1 | -1) => (options ? stepOption(options, value, dir) : stepNumber(value, step!, dir, min!, max));
+  const atMax = options ? value >= Math.max(...options) : max != null && value >= max;
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-      <Pressable onPress={() => onChange(Math.max(min, Math.round((value - step) * 100) / 100))} hitSlop={6}>
+      <Pressable onPress={() => onChange(go(-1))} hitSlop={6}>
         <Ionicons name="remove-circle" size={26} color={palette.textDim} />
       </Pressable>
       <Txt size={type.body} weight="bold" num style={{ minWidth: 56, textAlign: 'center' }}>
         {value === 0 && zeroLabel ? zeroLabel : `${fmtNum(value, 2)}${suffix}`}
       </Txt>
       <Pressable
-        onPress={() => onChange(Math.min(max ?? Infinity, Math.round((value + step) * 100) / 100))}
+        onPress={() => onChange(go(1))}
         hitSlop={6}>
-        <Ionicons name="add-circle" size={26} color={max != null && value >= max ? palette.surface3 : palette.accent} />
+        <Ionicons name="add-circle" size={26} color={atMax ? palette.surface3 : palette.accent} />
       </Pressable>
     </View>
   );

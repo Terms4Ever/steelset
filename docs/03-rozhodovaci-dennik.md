@@ -989,3 +989,17 @@ testeři. Hodinková aplikace (#15) zápis potřebovat bude a dostane vlastní z
 **Čím ověřeno.** `cloudHealth.test.ts`: záloha nenese žádné z polí, test čte `types.ts`
 a shodí se, když přibude pole z Health mimo seznam; tři záměrné chyby testy zachytily.
 `expo config --type introspect`: `NSHealthUpdateUsageDescription` v Info.plist není.
+
+## S37 - Přírůstek po pevném seznamu podle kotoučů (2. 10. 2026)
+
+**Stav.** Zadavatel: *„když dám steper pryč z 2,5 kg, tak už se tam nedostanu zpět nikdy"* (#21).
+Stepper přičítal krok 1,25 kg k aktuální hodnotě a minimum 0,5 ji usekávalo mimo mřížku, takže
+z 0,5 vedla cesta jen přes 1,75, 3 a 4,25.
+
+**Rozhodnutí.** Zadavatel vybral z nabídky pevný seznam podle běžných kotoučů: 0,5, 1, 1,25, 2,5
+a 5 kg, v librách 1, 2,5, 5 a 10 lb. Hodnota ze staré verze mimo seznam jde k nejbližší v daném
+směru. Ostatní steppery v Profilu krokují po mřížce násobků kroku (`src/lib/stepper.ts`), takže
+minimum už žádnou hodnotu neodřízne.
+
+**Čím ověřeno.** `stepper.test.ts`, s původním výpočtem tři testy padnou. V náhledu skutečnými
+kliky: 2,5, 1,25, 1, 0,5 a zpátky 1, 1,25, 2,5 kg.
