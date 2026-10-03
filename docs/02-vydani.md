@@ -137,7 +137,8 @@ nejdou založit produkty předplatného, bez produktů nemá RevenueCat co nabí
 8. `app.json` žádá o zápis do Health (`NSHealthUpdateUsageDescription`) kvůli úklidu
    zápisů ze starých verzí. Ty měli jen testeři, veřejná verze to nepotřebuje
    a kontrola se na nevyužitý zápis ptá. Hotové v kódu (S36): telefon o zápis nežádá.
-   Hodinková aplikace (#15) bude zápis potřebovat, s vlastním zdůvodněním.
+   Text `NSHealthUpdateUsageDescription` ale v telefonu zůstat musí, bez něj Apple
+   build odmítne (ITMS-90683, S39); zdůvodňuje ho zápis z hodinek (#15).
 9. Release build ověřit na TestFlightu: skutečné reklamy, skrytý přepínač Pro
    v Profilu zmizel (schovává ho jen chybějící klíč RevenueCatu, S7).
 
@@ -193,6 +194,7 @@ Až před veřejným vydáním, na TestFlight nejsou potřeba. Návrh, který č
 | Submit hlásí missing compliance | vyřešeno v `app.json` přes `ITSAppUsesNonExemptEncryption: false` |
 | Ikona zamítnutá kvůli alfa kanálu | vyřešeno, ikona je bez alfa kanálu |
 | Widgety na telefonu jen hlásí „Otevři Steelset", i když aplikace běží | rozšíření s widgety nemá oprávnění k App Group. `@bacons/apple-targets` ji převezme od aplikace, jen když má `targets/widgets/expo-target.config.json` vlastní klíč `entitlements`; proto je tam výslovně. Ověřit jde bez buildu: `npx expo config --type introspect` musí u `cz.setly.app.widget` ukázat `group.cz.setly.app` (build 29) |
+| Build v TestFlightu „Failed", ITMS-90683 Missing purpose string | v Info.plist chybí text pro oprávnění, na které knihovna v kódu odkazuje, i když ho aplikace nepoužívá. U HealthKitu musí telefon mít `NSHealthShareUsageDescription` i `NSHealthUpdateUsageDescription` (build 33, S39, hlídá `healthPlist.test.ts`). Důvod je v App Store Connectu, TestFlight, Build Uploads |
 | „the compiler is unable to type-check this expression in reasonable time" | Swift ve widgetu: dlouhý řetězec `map`/`filter`/`sorted` nebo výraz s n-ticemi a smíšenými literály. Rozepsat na kroky s pojmenovaným typem. Z Windows se nepozná, spadne až v buildu a stojí kredit (build 28) |
 
 Nativní funkce, tedy HealthKit, Live Activity a iCloud, ve webovém náhledu

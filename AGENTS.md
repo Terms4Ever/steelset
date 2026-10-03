@@ -69,7 +69,9 @@ Porušení těchhle pravidel rozbije uživatelská data, ne jen vzhled.
    `Workout.bodyweightKg`. U cviků na opakování musí `weight` zůstat `null`,
    jinak vznikne fantomový objem.
 2. **Telefon do Apple Health nezapisuje.** Čte tep, tréninky a váhu a o zápis ani
-   nežádá (S36); zapisování z telefonu zaneřádilo Kondici. Trénink ukládá jen
+   nežádá (S36); zapisování z telefonu zaneřádilo Kondici. Text
+   `NSHealthUpdateUsageDescription` ale v `app.json` zůstat musí, jinak Apple
+   build odmítne (S39). Trénink ukládá jen
    aplikace na hodinkách, stejně jako Cvičení od Applu (S38).
 3. **Jeden trénink je jeden záznam.** Živý zápis a tep z hodinek se slučují,
    `localCoversWindow()` skrývá překryvy, import hlídá duplicity přes `healthUuid`.

@@ -1027,3 +1027,18 @@ zahodí podle času odeslání. Konec z hodinek ukončí telefon jen s hotovou s
 WatchConnectivity a expo-modules-core chybu překladu nenašla; její pojistky jsou zapracované
 (import Combine, verze Swiftu v podspecu, souhrn neříká „uloženo", když zápis selhal, dvojí
 konec z telefonu se počítá jednou). Swift ověří až build.
+
+## S39 - Text pro zápis do Health telefon mít musí, opravuje S36 (3. 10. 2026)
+
+**Stav.** Build 33 s hodinkami se sestavil a odeslal, ale do TestFlightu nedorazil. App Store
+Connect ho vedl jako „Failed" s chybou 90683: v Info.plist telefonu chybí
+`NSHealthUpdateUsageDescription`. V S36 jsem text odebral, protože telefon o zápis nežádá.
+Knihovna HealthKitu ale v kódu odkazuje i na zápis a Apple pak text vyžaduje vždy.
+
+**Rozhodnutí.** Text se vrací s pravdivým zdůvodněním: trénink do Health ukládá aplikace na
+hodinkách, telefon sám nezapisuje. Telefon dál o zápis nežádá (`SHARE` zůstává prázdné), S36
+v tomhle bodě neplatí. `healthPlist.test.ts` hlídá oba texty v telefonu i na hodinkách;
+s `false` místo textu spadne.
+
+**Poučení.** Odebrat text pro oprávnění jde jen s ověřením, že na API neodkazuje žádná
+knihovna; z Windows se to nepozná, ukáže to až zpracování v App Store Connectu.
