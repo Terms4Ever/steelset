@@ -15,7 +15,8 @@ hlavní větev:     main
 
 TestFlight build 34, verze 1.0.0. Aplikace není veřejně v App Store. Build 34 nese aplikaci
 pro hodinky (#15), zálohu bez dat z Health (#18), Profil bez přihlášení přes Apple (#19)
-a opravený stepper (#21); čeká na test na telefonu a hodinkách. Build 33 Apple odmítl
+a opravený stepper (#21); čeká na test na telefonu a hodinkách. Z testu: odpočinek na
+hodinkách schoval čas, tep a kalorie (#22), v kódu je už jako samostatná stránka (S40). Build 33 Apple odmítl
 kvůli chybějícímu textu pro zápis do Health (S39).
 
 Build 27 prošel testem na zařízení a issues #1 až #14 jsou zavřené. V kódu je

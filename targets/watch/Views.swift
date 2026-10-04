@@ -39,29 +39,55 @@ struct SteelsetRootView: View {
   }
 }
 
-/// Běžící trénink: vlevo ovládání, vpravo míry nebo odpočinek. Otevírá se na mírách.
+/// Stránky běžícího tréninku: 0 ovládání, 1 míry, 2 odpočinek.
+let steelsetPageControls = 0
+let steelsetPageMetrics = 1
+let steelsetPageRest = 2
+
+/// Kam se má pager přepnout, když se změní odpočinek (#22, varianta A vybraná zadavatelem).
+/// Začátek odpočinku skočí na jeho stránku, konec vrátí z ní na míry. Posun konce o +15 s
+/// stránku nemění, ať uživatele, který se přejetím vrátil na míry, nevrací zpátky.
+func steelsetPageAfterRestChange(page: Int, wasResting: Bool, isResting: Bool) -> Int {
+  if !wasResting && isResting { return steelsetPageRest }
+  if wasResting && !isResting && page == steelsetPageRest { return steelsetPageMetrics }
+  return page
+}
+
+/// Běžící trénink: vlevo ovládání, uprostřed čas, tep a kalorie, vpravo odpočinek, jen když běží.
+/// Odpočinek míry nenahrazuje, přejetím doprava se na ně jde kdykoli vrátit (#22).
 struct SteelsetWorkoutPager: View {
-  @State private var page = 1
+  @EnvironmentObject var manager: WorkoutManager
+  @State private var page = steelsetPageMetrics
 
   var body: some View {
     TabView(selection: $page) {
-      SteelsetControlsView().tag(0)
-      SteelsetMetricsPage().tag(1)
+      SteelsetControlsView().tag(steelsetPageControls)
+      SteelsetMetricsPage().tag(steelsetPageMetrics)
+      if manager.restEndAt != nil {
+        SteelsetRestPage().tag(steelsetPageRest)
+      }
     }
     .tabViewStyle(.page)
+    .onChange(of: manager.restEndAt) { oldValue, newValue in
+      page = steelsetPageAfterRestChange(page: page, wasResting: oldValue != nil, isResting: newValue != nil)
+    }
   }
 }
 
 struct SteelsetMetricsPage: View {
+  var body: some View {
+    TimelineView(.periodic(from: Date(), by: 1.0)) { context in
+      SteelsetRunningView(now: context.date)
+    }
+  }
+}
+
+struct SteelsetRestPage: View {
   @EnvironmentObject var manager: WorkoutManager
 
   var body: some View {
     TimelineView(.periodic(from: Date(), by: 1.0)) { context in
-      if let restEnd = manager.restEndAt, restEnd > context.date {
-        SteelsetRestView(now: context.date, restEnd: restEnd)
-      } else {
-        SteelsetRunningView(now: context.date)
-      }
+      SteelsetRestView(now: context.date, restEnd: manager.restEndAt ?? context.date)
     }
   }
 }

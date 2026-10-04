@@ -1042,3 +1042,14 @@ s `false` místo textu spadne.
 
 **Poučení.** Odebrat text pro oprávnění jde jen s ověřením, že na API neodkazuje žádná
 knihovna; z Windows se to nepozná, ukáže to až zpracování v App Store Connectu.
+
+## S40 - Odpočinek na hodinkách má vlastní stránku, míry nenahrazuje (4. 10. 2026)
+
+**Stav.** Zadavatel z testu buildu 34: *„když jede trénink tak se ti tam ukáže ten časovač
+a nejde se vrátit na to jak dlouho jedu, kcal, tep"* (#22). Stránka s mírami během odpočinku
+ukazovala místo nich odpočet.
+
+**Rozhodnutí.** Zadavatel vybral z náhledu variantu A: odpočinek je samostatná stránka vpravo
+od měr, existuje jen během odpočinku. Odškrtnutí série na ni hodinky přepne, přejetím doprava se
+jde kdykoli zpátky na čas, tep a kalorie, konec odpočinku vrátí hodinky na míry. Posun konce
+o +15 s v telefonu stránku nemění. Varianta B (lišta s odpočtem na mírách) zamítnutá.
