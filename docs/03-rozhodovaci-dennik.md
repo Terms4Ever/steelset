@@ -1053,3 +1053,14 @@ ukazovala místo nich odpočet.
 od měr, existuje jen během odpočinku. Odškrtnutí série na ni hodinky přepne, přejetím doprava se
 jde kdykoli zpátky na čas, tep a kalorie, konec odpočinku vrátí hodinky na míry. Posun konce
 o +15 s v telefonu stránku nemění. Varianta B (lišta s odpočtem na mírách) zamítnutá.
+
+## S41 - Místní složka se jmenuje steelset, mění S1 (5. 10. 2026)
+
+**Stav.** S1 nechávalo složce projektu historický název `primed/`. Zadavatel
+při úklidu `C:\laragon\www` složku přejmenoval na `steelset/`.
+
+**Rozhodnutí.** Složka je `C:\laragon\www\steelset`. Ostatní historické
+názvy z S1 platí dál: slug v EAS `setly`, identifikátor balíčku
+`cz.setly.app`. Na složku odkazovala jen konfigurace náhledu
+`www/.claude/launch.json`, ta je opravená. `node_modules` nemá junctiony,
+přejmenování ho nerozbilo; místní doména Laragonu je `steelset.test`.

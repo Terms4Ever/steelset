@@ -99,7 +99,7 @@ Rozepsané i s postupem v `01-todo.md`. Ve zkratce:
 
 ## Na co si dát pozor
 
-Historická jména se pletou. Složka projektu je `primed/`, slug v EAS `setly`,
+Historická jména se pletou. Složka projektu je `steelset/` (do 5. 10. `primed/`, S41), slug v EAS `setly`,
 identifikátor balíčku `cz.setly.app`, aplikace se jmenuje Steelset. Slug ani
 identifikátor balíčku se nepřejmenovávají, tabulka v `AGENTS.md` říká proč.
 Klíč uložených dat už `steelset-store-v1` je, starý `setly-store-v1` se jen

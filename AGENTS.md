@@ -30,7 +30,7 @@ zelené pozadí, tmavá fajfka a čárky zápisníku, to se drží.
 | Co | Hodnota | Poznámka |
 |---|---|---|
 | Název appky | Steelset | zobrazovaný i v App Store Connect |
-| Složka projektu | `primed/` | historický název, nepřejmenovávat |
+| Složka projektu | `steelset/` | do 5. 10. 2026 `primed/` (S41) |
 | EAS slug | `setly` | vázaný na projekt v EAS, neměnit |
 | Bundle ID | `cz.setly.app` | provisioning a TestFlight, neměnit |
 | Widget bundle | `cz.setly.app.widget` | rozšíření pro widgety a Live Activity |
