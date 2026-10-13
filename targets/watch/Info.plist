@@ -11,6 +11,6 @@
 	<key>NSHealthShareUsageDescription</key>
 	<string>Steelset na hodinkách čte během tréninku tep a spálené kalorie.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Steelset na hodinkách ukládá silový trénink do Apple Health, stejně jako aplikace Cvičení.</string>
+	<string>Steelset na hodinkách ukládá silový trénink do Apple Health i se spálenými kaloriemi a tepem, stejně jako aplikace Cvičení.</string>
 </dict>
 </plist>

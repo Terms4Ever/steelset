@@ -177,3 +177,21 @@ describe('hodinky · konec jde telefonu hned (#23)', () => {
     expect(finish).not.toContain('sendEnded');
   });
 });
+
+describe('hodinky · kalorie do Health a setiny (#24, #25)', () => {
+  const manager = readFileSync(join(__dirname, '../targets/watch/WorkoutManager.swift'), 'utf8');
+  const views = readFileSync(join(__dirname, '../targets/watch/Views.swift'), 'utf8');
+
+  it('hodinky žádají o zápis kalorií a tepu, jinak Kondice ukáže u tréninku jen čas', () => {
+    const auth = manager.slice(manager.indexOf('func requestAuthorization'), manager.indexOf('// MARK: Start a konec'));
+    expect(auth).toMatch(/forIdentifier: \.activeEnergyBurned\)[\s\S]*?share\.insert\(kcal\)/);
+    expect(auth).toMatch(/forIdentifier: \.heartRate\)[\s\S]*?share\.insert\(hr\)/);
+  });
+
+  it('čas tréninku jde se setinami a se ztlumeným displejem bez nich', () => {
+    expect(views).toContain('func steelsetClockPrecise');
+    const metrics = views.slice(views.indexOf('struct SteelsetMetricsPage'), views.indexOf('struct SteelsetRestPage'));
+    expect(metrics).toContain('isLuminanceReduced');
+    expect(metrics).toContain('hundredths: !isLuminanceReduced');
+  });
+});

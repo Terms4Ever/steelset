@@ -54,12 +54,20 @@ final class WorkoutManager: NSObject, ObservableObject {
 
   // MARK: Oprávnění
 
+  /// Zápis nejen tréninku, ale i kalorií a tepu: bez nich se trénink uloží holý a Kondice u něj
+  /// ukáže čas místo kalorií (#25). Nové typy watchOS po aktualizaci nabídne k povolení sám.
   func requestAuthorization() {
     guard HKHealthStore.isHealthDataAvailable() else { return }
-    let share: Set<HKSampleType> = [HKObjectType.workoutType()]
+    var share: Set<HKSampleType> = [HKObjectType.workoutType()]
     var read: Set<HKObjectType> = [HKObjectType.workoutType()]
-    if let hr = HKObjectType.quantityType(forIdentifier: .heartRate) { read.insert(hr) }
-    if let kcal = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) { read.insert(kcal) }
+    if let hr = HKObjectType.quantityType(forIdentifier: .heartRate) {
+      share.insert(hr)
+      read.insert(hr)
+    }
+    if let kcal = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) {
+      share.insert(kcal)
+      read.insert(kcal)
+    }
     healthStore.requestAuthorization(toShare: share, read: read) { _, _ in }
   }
 

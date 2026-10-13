@@ -20,6 +20,15 @@ func steelsetClock(_ interval: TimeInterval) -> String {
   return String(format: "%d:%02d", minutes, seconds)
 }
 
+/// Čas tréninku se setinami jako ve Cvičení od Applu: „42:15,37", „1:02:15,37" (#24).
+/// Desetinná čárka podle češtiny. Bez setin, když je displej ztlumený.
+func steelsetClockPrecise(_ interval: TimeInterval, hundredths: Bool) -> String {
+  let base = steelsetClock(interval)
+  if !hundredths { return base }
+  let centis = Int((max(0, interval) * 100).rounded(.down)) % 100
+  return base + "," + String(format: "%02d", centis)
+}
+
 func steelsetNumber(_ value: Double) -> String {
   return value > 0 ? String(Int(value.rounded())) : "--"
 }
@@ -74,10 +83,14 @@ struct SteelsetWorkoutPager: View {
   }
 }
 
+/// Se zvednutým zápěstím se čas obnovuje 30krát za sekundu kvůli setinám, se ztlumeným
+/// displejem jednou za sekundu a bez setin, ať to nežere baterii (#24).
 struct SteelsetMetricsPage: View {
+  @Environment(\.isLuminanceReduced) private var isLuminanceReduced
+
   var body: some View {
-    TimelineView(.periodic(from: Date(), by: 1.0)) { context in
-      SteelsetRunningView(now: context.date)
+    TimelineView(.periodic(from: Date(), by: isLuminanceReduced ? 1.0 : 1.0 / 30.0)) { context in
+      SteelsetRunningView(now: context.date, hundredths: !isLuminanceReduced)
     }
   }
 }
@@ -97,12 +110,16 @@ struct SteelsetRestPage: View {
 struct SteelsetRunningView: View {
   @EnvironmentObject var manager: WorkoutManager
   let now: Date
+  let hundredths: Bool
 
   var body: some View {
     VStack(alignment: .leading, spacing: 2) {
-      Text(steelsetClock(manager.elapsedTime(at: now)))
+      Text(steelsetClockPrecise(manager.elapsedTime(at: now), hundredths: hundredths))
         .font(.system(size: 40, weight: .bold, design: .rounded))
         .monospacedDigit()
+        // „1:02:15,37" se na nejmenší hodinky nevejde v plné velikosti
+        .lineLimit(1)
+        .minimumScaleFactor(0.6)
         .foregroundColor(manager.phase == .paused ? .yellow : steelsetGreen)
       SteelsetMetricRow(symbol: "heart.fill", value: steelsetNumber(manager.heartRate), unit: "BPM", color: steelsetHeart)
       SteelsetMetricRow(symbol: nil, value: steelsetNumber(manager.activeEnergy), unit: "KCAL", color: steelsetEnergy)

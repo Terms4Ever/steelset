@@ -1081,3 +1081,17 @@ seknutí telefonu z kódu jisté není, příští test ho tak půjde dohledat.
 
 **Čím ověřeno.** `watch.test.ts`: shoda id, starý konec, pořadí odeslání ve Swiftu; dvě záměrné
 chyby testy zachytily. Na hodinkách až s buildem.
+
+## S43 - Hodinky ukládají kalorie a tep, čas tréninku má setiny (13. 10. 2026)
+
+**Stav.** Zadavatel: *„ať na hodinkách to ukazuje i setiny"* (#24) a *„když uložím trénink, ať
+se v kondice aplikaci ukazuje podle kcal, teď se ukazuje čas"* (#25). Hodinky žádaly Health
+o zápis jen tréninku, ne kalorií a tepu, takže uložený trénink kalorie neměl a Kondice ukázala čas.
+
+**Rozhodnutí.** Hodinky žádají o zápis i aktivních kalorií a tepu; po aktualizaci se na nové
+oprávnění zeptají samy. Čas tréninku má setiny („42:15,37") a obnovuje se 30krát za sekundu,
+se ztlumeným displejem (stažené zápěstí) jde po sekundách bez setin kvůli baterii. Odpočet
+odpočinku a souhrn setiny nemají, zadavatel chtěl jen čas tréninku.
+
+**Čím ověřeno.** `watch.test.ts` hlídá typy k zápisu a setiny ve Swiftu, záměrná chyba test
+shodila. Kondici a plynulost setin ověří až hodinky.
