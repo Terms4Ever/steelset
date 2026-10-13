@@ -1,6 +1,6 @@
 import { liveActivity } from '@/lib/liveActivity';
 import { watch } from '@/lib/watch';
-import { endedState, runningState, startsWatch } from '@/lib/watchState';
+import { endedState, runningState, startsWatch, type WatchEnded } from '@/lib/watchState';
 import { exercisesById, useStore } from '@/store/useStore';
 
 export type WatchApi = Pick<typeof watch, 'startFor' | 'end' | 'forget'>;
@@ -37,19 +37,27 @@ export function startWatchSync(api: WatchApi = watch, now: () => number = Date.n
   });
 }
 
+export type FinishFromWatch = { finished: boolean; reason: string };
+
 /**
  * Hodinky ukončily trénink. Telefon ho ukončí taky, pokud má aspoň jednu hotovou sérii; bez ní
- * zůstane otevřený, aby se potichu nezahodil (AGENTS, pravidlo 7). Vrací, jestli ukončil.
+ * zůstane otevřený, aby se potichu nezahodil (AGENTS, pravidlo 7).
+ *
+ * Na shodě id nezáleží: hodinky běží jen pro jeden trénink a jejich id může zaostat za telefonem.
+ * Konec, který padl dřív, než aktuální trénink začal, je ale z minula a ukončit ho nesmí (#23).
  */
-export function finishFromWatch(workoutId: string, api: Pick<WatchApi, 'forget'> = watch): boolean {
+export function finishFromWatch(ended: WatchEnded, api: Pick<WatchApi, 'forget'> = watch): FinishFromWatch {
   const s = useStore.getState();
   const activeId = s.activeWorkoutId;
-  if (!activeId || (workoutId && workoutId !== activeId)) return false;
+  if (!activeId) return { finished: false, reason: 'v telefonu neběží trénink' };
   const w = s.workouts.find((x) => x.id === activeId);
-  if (!w || w.manual) return false;
+  if (!w || w.manual) return { finished: false, reason: 'aktivní trénink není živý' };
+  if (ended.at < w.startedAt) return { finished: false, reason: 'konec je z minulého tréninku' };
   api.forget(activeId);
-  if (!w.exercises.some((le) => le.sets.some((st) => st.done))) return false;
+  if (!w.exercises.some((le) => le.sets.some((st) => st.done))) {
+    return { finished: false, reason: 'trénink nemá hotovou sérii, zůstal otevřený' };
+  }
   liveActivity.end();
   s.finishWorkout();
-  return true;
+  return { finished: true, reason: ended.workoutId && ended.workoutId !== activeId ? 'ukončen (id se lišilo)' : 'ukončen' };
 }

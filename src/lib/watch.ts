@@ -1,6 +1,8 @@
 import { Platform } from 'react-native';
 
-import type { WatchState } from '@/lib/watchState';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import type { WatchEnded, WatchState } from '@/lib/watchState';
 
 // Most k hodinkové aplikaci (#15). Jen iOS s nativním modulem, jinde se nic nestane (web, Expo Go).
 
@@ -26,7 +28,10 @@ export const watch = {
     try {
       // kontext jde napřed, ať ho hodinky po probuzení najdou
       mod.pushState(state);
-      mod.startWorkout().catch(() => {});
+      mod
+        .startWorkout()
+        .then((ok: boolean) => logWatch(ok ? 'hodinky spuštěné' : 'hodinky nespuštěné (nejsou spárované nebo nemají aplikaci)'))
+        .catch(() => logWatch('spuštění hodinek selhalo'));
     } catch {
       /* bez hodinek se nic neděje */
     }
@@ -45,6 +50,7 @@ export const watch = {
   end(state: WatchState) {
     if (!mod || startedForId !== state.workoutId) return;
     startedForId = null;
+    void logWatch(state.discard ? 'trénink zahozen, hodinky končí bez uložení' : 'trénink skončil v telefonu, hodinky končí');
     try {
       mod.pushState(state);
     } catch {
@@ -53,17 +59,21 @@ export const watch = {
   },
 
   /** Hodinky ukončily trénink. Vrací odhlášení. */
-  onEnded(listener: (workoutId: string) => void): () => void {
+  onEnded(listener: (ended: WatchEnded) => void): () => void {
     if (!mod?.addListener) return () => {};
-    const sub = mod.addListener('onWatchEnded', (e: { workoutId?: string }) => listener(e?.workoutId ?? ''));
+    const sub = mod.addListener('onWatchEnded', (e: any) => listener(toEnded(e)));
     return () => sub?.remove?.();
   },
 
-  /** Konec z hodinek, který přišel, než se JS stihl přihlásit k odběru. */
-  takePendingEnded(): string | null {
+  /**
+   * Konec z hodinek, který si JS ještě nevyzvedl: přišel před odběrem nebo když aplikace spala.
+   * Nativní strana ho drží, dokud ho tohle nevyzvedne (#23).
+   */
+  takePendingEnded(): WatchEnded | null {
     if (!mod) return null;
     try {
-      return mod.takePendingEnded() ?? null;
+      const e = mod.takePendingEnded();
+      return e ? toEnded(e) : null;
     } catch {
       return null;
     }
@@ -74,3 +84,34 @@ export const watch = {
     if (startedForId === workoutId) startedForId = null;
   },
 };
+
+function toEnded(e: any): WatchEnded {
+  return { workoutId: typeof e?.workoutId === 'string' ? e.workoutId : '', at: typeof e?.at === 'number' ? e.at : Date.now() };
+}
+
+const LOG_KEY = 'steelset-watch-log';
+const LOG_MAX = 20;
+
+/**
+ * Deník událostí hodinek v telefonu (#23). Konec z hodinek nejde z Windows vyzkoušet, takže když
+ * se zase něco ztratí, Profil ukáže, co telefon dostal a jak s tím naložil.
+ */
+export async function logWatch(text: string, now = Date.now()): Promise<void> {
+  try {
+    const raw = await AsyncStorage.getItem(LOG_KEY);
+    const list: { at: number; text: string }[] = raw ? JSON.parse(raw) : [];
+    list.push({ at: now, text });
+    await AsyncStorage.setItem(LOG_KEY, JSON.stringify(list.slice(-LOG_MAX)));
+  } catch {
+    /* deník nesmí shodit nic jiného */
+  }
+}
+
+export async function readWatchLog(): Promise<{ at: number; text: string }[]> {
+  try {
+    const raw = await AsyncStorage.getItem(LOG_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}

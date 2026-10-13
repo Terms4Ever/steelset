@@ -18,6 +18,9 @@ export type WatchState = {
   at: number;
 };
 
+/** Konec tréninku z hodinek: id, které hodinky znaly, a kdy na hodinkách padlo Ukončit (ms). */
+export type WatchEnded = { workoutId: string; at: number };
+
 /** Spouštět hodinky jen u živého tréninku, ne u zpětného zápisu ani úpravy starého. */
 export function startsWatch(w: Workout | undefined, now: number): boolean {
   if (!w || w.manual || w.finishedAt != null || w.editEndAt != null) return false;

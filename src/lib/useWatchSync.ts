@@ -1,8 +1,10 @@
 import { usePathname, useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
+import { AppState } from 'react-native';
 
 import { heartRateFor } from '@/lib/health';
-import { watch } from '@/lib/watch';
+import { logWatch, watch } from '@/lib/watch';
+import type { WatchEnded } from '@/lib/watchState';
 import { finishFromWatch, startWatchSync } from '@/lib/watchSync';
 import { useStore } from '@/store/useStore';
 
@@ -29,20 +31,30 @@ export function useWatchSync(ready: boolean) {
     if (!ready || !watch.available()) return;
     const stop = startWatchSync();
 
-    const onEnded = (workoutId: string) => {
+    const onEnded = (ended: WatchEnded, via: string) => {
       const s = useStore.getState();
       const w = s.workouts.find((x) => x.id === s.activeWorkoutId);
-      const end = Date.now();
-      if (!finishFromWatch(workoutId)) return;
-      if (w) pullHeartRateLater(w.id, w.startedAt, end);
+      const result = finishFromWatch(ended);
+      void logWatch(`konec z hodinek (${via}): ${result.reason}`);
+      if (!result.finished) return;
+      if (w) pullHeartRateLater(w.id, w.startedAt, ended.at);
       if (pathRef.current === '/workout') router.replace('/');
     };
+    // Nativní strana drží konec, dokud si ho JS nevyzvedne. Vyzvedává se po startu, po události
+    // i při návratu do popředí: konec, který přišel, když aplikace spala, se tak neztratí (#23).
+    const takePending = (via: string) => {
+      const pending = watch.takePendingEnded();
+      if (pending) onEnded(pending, via);
+    };
     // nejdřív odběr, pak vyzvednout konec, který přišel před ním; jinak by mezi tím propadl
-    const off = watch.onEnded(onEnded);
-    const pending = watch.takePendingEnded();
-    if (pending != null) onEnded(pending);
+    const off = watch.onEnded(() => takePending('událost'));
+    takePending('start aplikace');
+    const sub = AppState.addEventListener('change', (st) => {
+      if (st === 'active') takePending('návrat do popředí');
+    });
     return () => {
       off();
+      sub.remove();
       stop();
     };
   }, [ready, router]);

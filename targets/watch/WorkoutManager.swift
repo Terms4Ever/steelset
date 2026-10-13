@@ -106,6 +106,9 @@ final class WorkoutManager: NSObject, ObservableObject {
     isEnding = true
     saveOnEnd = save
     notifyPhoneOnEnd = notifyPhone
+    // telefon se o konci dozví hned, ne až po uložení do Health: když uložení vázne nebo selže,
+    // trénink i Live Activity by v telefonu běžely dál (#23)
+    if notifyPhone { PhoneLink.shared.sendEnded(workoutId: phoneWorkoutId) }
     session.end()
   }
 
@@ -193,9 +196,7 @@ final class WorkoutManager: NSObject, ObservableObject {
   private func finish(at endDate: Date) {
     guard let builder = builder else { return }
     let save = saveOnEnd
-    let notify = notifyPhoneOnEnd
     let name = workoutName
-    let workoutId = phoneWorkoutId
     builder.endCollection(withEnd: endDate) { _, _ in
       if !save {
         builder.discardWorkout()
@@ -214,7 +215,6 @@ final class WorkoutManager: NSObject, ObservableObject {
             activeEnergy: self.activeEnergy > 0 ? self.activeEnergy : nil
           )
           self.reset(to: .summary)
-          if notify { PhoneLink.shared.sendEnded(workoutId: workoutId) }
         }
       }
     }

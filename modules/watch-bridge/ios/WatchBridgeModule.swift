@@ -9,9 +9,10 @@ import WatchConnectivity
 final class SteelsetWatchLink: NSObject, WCSessionDelegate {
   static let shared = SteelsetWatchLink()
 
-  /// Ukončení z hodinek, které přišlo dřív, než si ho JS vyzvedl (aplikace se teprve spouštěla).
-  var pendingEnded: String?
-  var onEnded: ((String) -> Void)?
+  /// Ukončení z hodinek, které si JS ještě nevyzvedl (aplikace se spouštěla nebo spala na pozadí).
+  /// Drží se, dokud ho JS nevyzvedne, i když zároveň odešla událost; vyzvednutí je idempotentní (#23).
+  var pendingEnded: [String: Any]?
+  var onEnded: (([String: Any]) -> Void)?
 
   func activate() {
     guard WCSession.isSupported() else { return }
@@ -54,13 +55,13 @@ final class SteelsetWatchLink: NSObject, WCSessionDelegate {
 
   private func handle(_ payload: [String: Any]) {
     guard (payload["type"] as? String) == "ended" else { return }
-    let workoutId = (payload["workoutId"] as? String) ?? ""
+    let ended: [String: Any] = [
+      "workoutId": (payload["workoutId"] as? String) ?? "",
+      "at": (payload["at"] as? Double) ?? Date().timeIntervalSince1970 * 1000,
+    ]
     DispatchQueue.main.async {
-      if let onEnded = self.onEnded {
-        onEnded(workoutId)
-      } else {
-        self.pendingEnded = workoutId
-      }
+      self.pendingEnded = ended
+      self.onEnded?(ended)
     }
   }
 }
@@ -78,8 +79,9 @@ public class WatchBridgeModule: Module {
     }
 
     OnStartObserving {
-      SteelsetWatchLink.shared.onEnded = { [weak self] workoutId in
-        self?.sendEvent("onWatchEnded", ["workoutId": workoutId])
+      SteelsetWatchLink.shared.onEnded = { [weak self] ended in
+        // sendEvent bere [String: Any?], klíče se předávají výslovně
+        self?.sendEvent("onWatchEnded", ["workoutId": ended["workoutId"], "at": ended["at"]])
       }
     }
 
@@ -112,10 +114,10 @@ public class WatchBridgeModule: Module {
       SteelsetWatchLink.shared.push(state)
     }
 
-    Function("takePendingEnded") { () -> String? in
-      let workoutId = SteelsetWatchLink.shared.pendingEnded
+    Function("takePendingEnded") { () -> [String: Any]? in
+      let ended = SteelsetWatchLink.shared.pendingEnded
       SteelsetWatchLink.shared.pendingEnded = nil
-      return workoutId
+      return ended
     }
   }
 }

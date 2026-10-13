@@ -1064,3 +1064,20 @@ názvy z S1 platí dál: slug v EAS `setly`, identifikátor balíčku
 `cz.setly.app`. Na složku odkazovala jen konfigurace náhledu
 `www/.claude/launch.json`, ta je opravená. `node_modules` nemá junctiony,
 přejmenování ho nerozbilo; místní doména Laragonu je `steelset.test`.
+
+## S42 - Konec z hodinek jde telefonu hned a neztratí se (13. 10. 2026)
+
+**Stav.** Zadavatel z testu buildu 35: *„Opravit ukončení tréninku. Nyní se sekne a live activity
+se nevypne"* (#23). Upřesnil v dialogu: ukončil na hodinkách, trénink měl hotovou sérii, telefon
+se sekl, trénink v něm běžel dál. Kód měl tři místa, kde se konec ztratí: hodinky ho posílaly až
+po uložení do Health, telefon ho zahodil při neshodě id a konec přijatý ve spánku vyzvedl jen
+při startu aplikace.
+
+**Rozhodnutí.** Hodinky pošlou konec hned po Ukončit. Telefon ukončí aktivní živý trénink bez
+ohledu na id, jen konec starší než začátek tréninku zahodí. Nativní strana drží konec, dokud ho
+JS nevyzvedne, a JS ho vyzvedává po události, po startu i při návratu do popředí. Co se
+s koncem stalo, zapisuje telefon do deníku událostí, Profil ho ukáže (Události hodinek): samotné
+seknutí telefonu z kódu jisté není, příští test ho tak půjde dohledat.
+
+**Čím ověřeno.** `watch.test.ts`: shoda id, starý konec, pořadí odeslání ve Swiftu; dvě záměrné
+chyby testy zachytily. Na hodinkách až s buildem.

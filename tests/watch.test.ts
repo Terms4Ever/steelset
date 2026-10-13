@@ -123,12 +123,14 @@ describe('watchSync · start a konec podle tréninku v telefonu', () => {
   });
 });
 
-describe('watchSync · konec z hodinek ukončí telefon', () => {
+describe('watchSync · konec z hodinek ukončí telefon (#23)', () => {
+  const ended = (workoutId: string, at = Date.now() + 1000) => ({ workoutId, at });
+
   it('s hotovou sérií trénink v telefonu skončí a uloží se', () => {
     const api = fakeWatch();
     const wid = s().startWorkout(routine());
     s().toggleSetDone(0, 0);
-    expect(finishFromWatch(wid, api)).toBe(true);
+    expect(finishFromWatch(ended(wid), api)).toEqual({ finished: true, reason: 'ukončen' });
     expect(s().activeWorkoutId).toBeNull();
     expect(s().workouts.find((w) => w.id === wid)?.finishedAt).toBeDefined();
     expect(api.forgotten).toEqual([wid]);
@@ -136,14 +138,42 @@ describe('watchSync · konec z hodinek ukončí telefon', () => {
 
   it('bez hotové série zůstane otevřený, nic se potichu nezahodí', () => {
     const wid = s().startWorkout(routine());
-    expect(finishFromWatch(wid, fakeWatch())).toBe(false);
+    expect(finishFromWatch(ended(wid), fakeWatch()).finished).toBe(false);
     expect(s().activeWorkoutId).toBe(wid);
   });
 
-  it('konec cizího tréninku telefon neukončí', () => {
+  it('jiné nebo prázdné id telefon stejně ukončí, hodinky běží jen pro tenhle trénink', () => {
     const wid = s().startWorkout(routine());
     s().toggleSetDone(0, 0);
-    expect(finishFromWatch('jiny', fakeWatch())).toBe(false);
+    expect(finishFromWatch(ended('jine-id'), fakeWatch())).toEqual({ finished: true, reason: 'ukončen (id se lišilo)' });
+    expect(s().workouts.find((w) => w.id === wid)?.finishedAt).toBeDefined();
+
+    const wid2 = s().startWorkout(routine());
+    s().toggleSetDone(0, 0);
+    expect(finishFromWatch(ended(''), fakeWatch()).finished).toBe(true);
+    expect(s().workouts.find((w) => w.id === wid2)?.finishedAt).toBeDefined();
+  });
+
+  it('konec z doby před začátkem tréninku je z minula a trénink neukončí', () => {
+    const wid = s().startWorkout(routine());
+    s().toggleSetDone(0, 0);
+    const startedAt = s().workouts.find((w) => w.id === wid)!.startedAt;
+    expect(finishFromWatch(ended(wid, startedAt - 1), fakeWatch())).toEqual({ finished: false, reason: 'konec je z minulého tréninku' });
     expect(s().activeWorkoutId).toBe(wid);
+  });
+
+  it('bez běžícího tréninku se nic nestane', () => {
+    expect(finishFromWatch(ended('x'), fakeWatch()).finished).toBe(false);
+  });
+});
+
+describe('hodinky · konec jde telefonu hned (#23)', () => {
+  it('Ukončit pošle konec telefonu před ukončením záznamu, ne až po uložení do Health', () => {
+    const swift = readFileSync(join(__dirname, '../targets/watch/WorkoutManager.swift'), 'utf8');
+    const end = swift.slice(swift.indexOf('func end(save: Bool, notifyPhone: Bool)'), swift.indexOf('func togglePause'));
+    expect(end.indexOf('sendEnded')).toBeGreaterThan(-1);
+    expect(end.indexOf('sendEnded')).toBeLessThan(end.indexOf('session.end()'));
+    const finish = swift.slice(swift.indexOf('private func finish(at'), swift.indexOf('private func reset('));
+    expect(finish).not.toContain('sendEnded');
   });
 });

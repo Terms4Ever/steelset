@@ -13,6 +13,7 @@ import { backupHint, backupLabel, BackupStatus } from '@/lib/backupStatus';
 import { purchasesAvailable } from '@/lib/purchases';
 import { INCREMENT_OPTIONS_KG, INCREMENT_OPTIONS_LB, stepNumber, stepOption } from '@/lib/stepper';
 import { onBackupDone, readBackupStatus } from '@/lib/sync';
+import { readWatchLog } from '@/lib/watch';
 import { useExercisesById, useStore } from '@/store/useStore';
 
 export default function Profil() {
@@ -57,6 +58,18 @@ export default function Profil() {
   const onTestHealth = async () => {
     const res = await healthSelfTest();
     Alert.alert('Apple Health - test', res);
+  };
+
+  const onWatchLog = async () => {
+    const log = await readWatchLog();
+    const text = log.length
+      ? log
+          .slice()
+          .reverse()
+          .map((e) => `${new Date(e.at).toLocaleString('cs-CZ')}  ${e.text}`)
+          .join('\n')
+      : 'Zatím žádné události.';
+    Alert.alert('Události hodinek', text);
   };
 
   const onPullBodyweight = async () => {
@@ -173,13 +186,15 @@ export default function Profil() {
       {Platform.OS === 'ios' && (
         // trénink se spustí i na Apple Watch, bez druhého zapínání ve Cvičení (#15, S38)
         <Section title="APPLE WATCH">
-          <Row icon="watch-outline" label="Spouštět trénink i na hodinkách" last>
+          <Row icon="watch-outline" label="Spouštět trénink i na hodinkách">
             <Switch
               label="Spouštět trénink i na hodinkách"
               value={settings.watchAutoStart !== false}
               onChange={(v) => setSetting('watchAutoStart', v)}
             />
           </Row>
+          {/* co telefon od hodinek dostal a jak s tím naložil, pro dohledání potíží na zařízení (#23) */}
+          <RowButton icon="list-outline" label="Události hodinek (diagnostika)" last onPress={onWatchLog} />
         </Section>
       )}
 
