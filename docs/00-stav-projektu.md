@@ -18,7 +18,8 @@ pro hodinky (#15) s odpočinkem na samostatné stránce (#22, S40), zálohu bez 
 (#18), Profil bez přihlášení přes Apple (#19) a opravený stepper (#21). Z testu buildu 35:
 konec tréninku na hodinkách telefon neukončil a Live Activity zůstala (#23); oprava je
 v kódu (S42) a je v buildu 36. Po něm v kódu: čas na hodinkách se setinami (#24) a trénink
-z hodinek s kaloriemi v Kondici (#25, S43). Build 33 Apple odmítl kvůli textu pro zápis do
+z hodinek s kaloriemi v Kondici (#25, S43). Build 37 je nese, ale hodinky se na oprávnění
+k zápisu kalorií nezeptaly; dotaz při zobrazení hodinek je v kódu (S44). Build 33 Apple odmítl kvůli textu pro zápis do
 Health (S39).
 
 Build 27 prošel testem na zařízení a issues #1 až #14 jsou zavřené. V kódu je

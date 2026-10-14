@@ -33,7 +33,22 @@ func steelsetNumber(_ value: Double) -> String {
   return value > 0 ? String(Int(value.rounded())) : "--"
 }
 
+/// O oprávnění k Health se hodinky ptají, když jsou na očích. Při spuštění z telefonu na pozadí
+/// watchOS dotaz neukáže, proto na buildu 37 nepřišel a kalorie se neukládaly (#25).
 struct SteelsetRootView: View {
+  @EnvironmentObject var manager: WorkoutManager
+  @Environment(\.scenePhase) private var scenePhase
+
+  var body: some View {
+    SteelsetPhaseView()
+      .onAppear { manager.requestAuthorization() }
+      .onChange(of: scenePhase) { _, phase in
+        if phase == .active { manager.requestAuthorization() }
+      }
+  }
+}
+
+struct SteelsetPhaseView: View {
   @EnvironmentObject var manager: WorkoutManager
 
   var body: some View {
@@ -291,6 +306,11 @@ struct SteelsetSummaryView: View {
             .font(.system(size: 13, weight: .semibold))
             .foregroundColor(summary.saved ? Color.gray : Color.red)
             .padding(.top, 4)
+          if summary.saved && !summary.energySaved {
+            Text("Kalorie do Zdraví nesmí. Povol je v iPhonu: Zdraví, profil, Aplikace, Steelset.")
+              .font(.system(size: 12, weight: .semibold))
+              .foregroundColor(.orange)
+          }
         }
         Button("Hotovo") { manager.dismissSummary() }
           .padding(.top, 8)

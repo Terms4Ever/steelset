@@ -188,6 +188,17 @@ describe('hodinky · kalorie do Health a setiny (#24, #25)', () => {
     expect(auth).toMatch(/forIdentifier: \.heartRate\)[\s\S]*?share\.insert\(hr\)/);
   });
 
+  it('o oprávnění k Health se hodinky ptají, když jsou na očích, ne jen při spuštění na pozadí', () => {
+    const root = views.slice(views.indexOf('struct SteelsetRootView'), views.indexOf('struct SteelsetPhaseView'));
+    expect(root).toContain('.onAppear { manager.requestAuthorization() }');
+    expect(root).toMatch(/scenePhase[\s\S]*?\.active[\s\S]*?requestAuthorization/);
+  });
+
+  it('souhrn řekne, když kalorie do Zdraví nesmí', () => {
+    expect(manager).toContain('let energySaved = self.energyWriteAllowed');
+    expect(views).toContain('!summary.energySaved');
+  });
+
   it('čas tréninku jde se setinami a se ztlumeným displejem bez nich', () => {
     expect(views).toContain('func steelsetClockPrecise');
     const metrics = views.slice(views.indexOf('struct SteelsetMetricsPage'), views.indexOf('struct SteelsetRestPage'));

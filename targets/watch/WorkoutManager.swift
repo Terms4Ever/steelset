@@ -16,6 +16,8 @@ struct SteelsetSummary {
   let name: String
   /// Uložení do Health se povedlo; bez oprávnění k zápisu souhrn nesmí tvrdit opak.
   let saved: Bool
+  /// Kalorie směly do Zdraví. Bez nich Kondice ukáže u tréninku jako hlavní číslo čas (#25).
+  let energySaved: Bool
   let duration: TimeInterval
   let averageHeartRate: Double?
   let activeEnergy: Double?
@@ -69,6 +71,12 @@ final class WorkoutManager: NSObject, ObservableObject {
       read.insert(kcal)
     }
     healthStore.requestAuthorization(toShare: share, read: read) { _, _ in }
+  }
+
+  /// Smějí hodinky zapsat kalorie? Jen tohle oprávnění rozhoduje, jestli je Kondice ukáže (#25).
+  var energyWriteAllowed: Bool {
+    guard let kcal = HKObjectType.quantityType(forIdentifier: .activeEnergyBurned) else { return false }
+    return healthStore.authorizationStatus(for: kcal) == .sharingAuthorized
   }
 
   // MARK: Start a konec
@@ -214,10 +222,12 @@ final class WorkoutManager: NSObject, ObservableObject {
       builder.finishWorkout { workout, error in
         let duration = builder.elapsedTime(at: endDate)
         let saved = workout != nil && error == nil
+        let energySaved = self.energyWriteAllowed
         DispatchQueue.main.async {
           self.summary = SteelsetSummary(
             name: name,
             saved: saved,
+            energySaved: energySaved,
             duration: duration,
             averageHeartRate: self.averageHeartRate > 0 ? self.averageHeartRate : nil,
             activeEnergy: self.activeEnergy > 0 ? self.activeEnergy : nil

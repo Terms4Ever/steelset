@@ -1095,3 +1095,16 @@ odpočinku a souhrn setiny nemají, zadavatel chtěl jen čas tréninku.
 
 **Čím ověřeno.** `watch.test.ts` hlídá typy k zápisu a setiny ve Swiftu, záměrná chyba test
 shodila. Kondici a plynulost setin ověří až hodinky.
+
+## S44 - Hodinky se na oprávnění ptají, když jsou na očích (14. 10. 2026)
+
+**Stav.** Zadavatel z testu buildu 37: *„Já chci ukazovat kcal, právě je chci ukazovat jako
+primární věc v aplikaci Kondice, teď se ukazuje čas"* (#25). Upřesnil v dialogu: na buildu 37
+se hodinky na nové oprávnění nezeptaly. Dotaz běžel jen při spuštění aplikace, a to na pozadí
+z telefonu, kdy ho watchOS neukáže. Bez povolení se kalorie k tréninku neuloží a Kondice ukáže
+jako hlavní číslo čas. Oprava z S43 je správná, jen se k uživateli nedostala.
+
+**Rozhodnutí.** Hodinky žádají o oprávnění při zobrazení a pokaždé, když se aplikace dostane
+do popředí; watchOS dotaz ukáže jen pro typy, o kterých se ještě nerozhodlo. Souhrn po tréninku
+řekne, když kalorie do Zdraví nesmí, a kde je povolit. Do té doby jde povolit ručně v iPhonu:
+Zdraví, profil, Aplikace, Steelset.
