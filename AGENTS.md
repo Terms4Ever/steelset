@@ -55,6 +55,9 @@ Klíčové soubory:
   `struct WidgetSnapshot` v `targets/widgets/HomeWidgets.swift` (hlídá to test),
   zapisuje je `src/lib/useWidgetSync.ts`, vážení z Health pro ně načítá
   `src/lib/useBodyweightSync.ts`
+- `src/i18n/` - texty aplikace česky (`cs.ts`, vzor tvaru) a anglicky (`en.ts`, tvar hlídá
+  typ `Dict`); komponenty berou slovník přes `useT()`, kód mimo ně přes `t()`. Nový text
+  patří do obou slovníků, uložená data (názvy partií, cviků) se nepřekládají, jen zobrazení
 - `targets/watch/` a `modules/watch-bridge/` - aplikace pro hodinky a most v telefonu;
   stav, který telefon posílá, je `WatchState` v `src/lib/watchState.ts` a jeho klíče
   musí sedět s `applyPhoneState` ve Swiftu (hlídá to test), start a konec řídí

@@ -21,6 +21,7 @@ import { useMonetization } from '@/lib/useMonetization';
 import { useBodyweightSync } from '@/lib/useBodyweightSync';
 import { useWatchSync } from '@/lib/useWatchSync';
 import { useWidgetSync } from '@/lib/useWidgetSync';
+import { useT } from '@/i18n/useT';
 import { useStore } from '@/store/useStore';
 
 /**
@@ -61,6 +62,8 @@ export default function RootLayout() {
   const router = useRouter();
 
   const ready = loaded && hydrated;
+  // jazyk aplikace podle nastavení nebo telefonu, dřív než se vykreslí cokoli dalšího (#20)
+  useT();
 
   // subscription state + ads (no-op for Pro subscribers)
   useMonetization(ready);

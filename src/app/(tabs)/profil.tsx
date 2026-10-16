@@ -14,10 +14,14 @@ import { purchasesAvailable } from '@/lib/purchases';
 import { INCREMENT_OPTIONS_KG, INCREMENT_OPTIONS_LB, stepNumber, stepOption } from '@/lib/stepper';
 import { onBackupDone, readBackupStatus } from '@/lib/sync';
 import { readWatchLog } from '@/lib/watch';
+import { locale } from '@/i18n';
+import { useT } from '@/i18n/useT';
 import { useExercisesById, useStore } from '@/store/useStore';
 
 export default function Profil() {
   const router = useRouter();
+  const tx = useT();
+  const p = tx.profile;
   const settings = useStore((s) => s.settings);
   const workouts = useStore((s) => s.workouts);
   const trashedCount = useStore((s) => s.trashedWorkouts.length);
@@ -37,16 +41,16 @@ export default function Profil() {
 
   const onExport = async () => {
     if (finishedCount === 0) {
-      Alert.alert('Žádná data', 'Nejdřív zaloguj nějaký trénink.');
+      Alert.alert(p.noDataTitle, p.noDataText);
       return;
     }
     await exportCsv(workoutsToCsv(workouts, exById));
   };
 
   const onWipe = () => {
-    Alert.alert('Smazat všechna data?', 'Tréninky, plány i vlastní cviky budou nenávratně smazány.', [
-      { text: 'Zrušit', style: 'cancel' },
-      { text: 'Smazat', style: 'destructive', onPress: () => wipeAll() },
+    Alert.alert(p.wipeTitle, p.wipeText, [
+      { text: tx.common.cancel, style: 'cancel' },
+      { text: tx.common.delete, style: 'destructive', onPress: () => wipeAll() },
     ]);
   };
 
@@ -57,7 +61,7 @@ export default function Profil() {
 
   const onTestHealth = async () => {
     const res = await healthSelfTest();
-    Alert.alert('Apple Health - test', res);
+    Alert.alert(p.healthTestTitle, res);
   };
 
   const onWatchLog = async () => {
@@ -66,22 +70,22 @@ export default function Profil() {
       ? log
           .slice()
           .reverse()
-          .map((e) => `${new Date(e.at).toLocaleString('cs-CZ')}  ${e.text}`)
+          .map((e) => `${new Date(e.at).toLocaleString(locale())}  ${e.text}`)
           .join('\n')
-      : 'Zatím žádné události.';
-    Alert.alert('Události hodinek', text);
+      : p.watchLogEmpty;
+    Alert.alert(p.watchLogTitle, text);
   };
 
   const onPullBodyweight = async () => {
     const kg = await latestBodyweightKg();
     if (kg && kg > 0) setSetting('bodyweightKg', Math.round(kg * 10) / 10);
-    else Alert.alert('Apple Health', 'Váhu se nepodařilo načíst. Zadej ji ručně, nebo si ji zapiš v Health.');
+    else Alert.alert('Apple Health', p.bodyweightFail);
   };
 
   return (
     <Screen>
       <Txt size={type.title} weight="bold">
-        Profil
+        {p.title}
       </Txt>
 
       <Card style={{ marginTop: space.lg, flexDirection: 'row', alignItems: 'center', gap: 14 }}>
@@ -90,29 +94,51 @@ export default function Profil() {
         </View>
         <View style={{ flex: 1 }}>
           <Txt size={type.h1} weight="bold">
-            Můj profil
+            {p.me}
           </Txt>
           <Txt size={type.label} weight="medium" color={palette.textMute}>
-            {finishedCount} {finishedCount === 1 ? 'trénink' : finishedCount >= 2 && finishedCount <= 4 ? 'tréninky' : 'tréninků'} · lokální data
+            {tx.common.workouts(finishedCount)} · {p.localData}
           </Txt>
         </View>
       </Card>
 
       {/* přenos na nový telefon dělá záloha v iCloudu, přihlášení přes Apple je pryč (#19, S34) */}
-      <Section title="ZÁLOHA">
+      <Section title={p.backup}>
         <BackupRow />
       </Section>
 
-      <Section title="CVIKY">
+      <Section title={p.exercises}>
         {/* katalog jde spravovat i bez běžícího tréninku: úprava a mazání cviků (#11) */}
-        <RowButton icon="barbell-outline" label="Správa cviků" last onPress={() => router.push('/exercises?mode=manage')} />
+        <RowButton icon="barbell-outline" label={p.manageExercises} last onPress={() => router.push('/exercises?mode=manage')} />
       </Section>
 
-      <Section title="JEDNOTKY">
-        <Row icon="barbell-outline" label="Váhové jednotky">
+      {/* jazyk aplikace: podle telefonu, nebo natvrdo (#20) */}
+      <Section title={p.language}>
+        <View style={{ padding: space.lg, gap: 12 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+            <Ionicons name="language-outline" size={20} color={palette.textDim} />
+            <Txt size={type.body} weight="medium" style={{ flex: 1 }}>
+              {p.languageRow}
+            </Txt>
+          </View>
+          <Toggle
+            options={['auto', 'cs', 'en']}
+            labels={{ auto: p.languageAuto, cs: 'Čeština', en: 'English' }}
+            value={settings.language ?? 'auto'}
+            onChange={(v) => setSetting('language', v as 'auto' | 'cs' | 'en')}
+            stretch
+          />
+          <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ lineHeight: 17 }}>
+            {p.languageHint}
+          </Txt>
+        </View>
+      </Section>
+
+      <Section title={p.units}>
+        <Row icon="barbell-outline" label={p.weightUnits}>
           <Toggle options={['kg', 'lb']} value={settings.unit} onChange={(v) => setUnit(v as any)} />
         </Row>
-        <Row icon="body-outline" label="Tělesná váha">
+        <Row icon="body-outline" label={p.bodyweight}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             {Platform.OS === 'ios' && settings.healthEnabled && (
               <Pressable onPress={onPullBodyweight} hitSlop={6}>
@@ -128,17 +154,17 @@ export default function Profil() {
             />
           </View>
         </Row>
-        <Row icon="layers-outline" label="Přírůstek (steppery)">
+        <Row icon="layers-outline" label={p.increment}>
           {settings.unit === 'lb' ? (
             <Stepper value={settings.incrementLb} options={INCREMENT_OPTIONS_LB} suffix=" lb" onChange={(v) => setSetting('incrementLb', v)} />
           ) : (
             <Stepper value={settings.increment} options={INCREMENT_OPTIONS_KG} suffix=" kg" onChange={(v) => setSetting('increment', v)} />
           )}
         </Row>
-        <Row icon="timer-outline" label="Výchozí odpočinek">
+        <Row icon="timer-outline" label={p.restDefault}>
           <Stepper value={settings.restDefaultSec} step={15} min={15} suffix=" s" onChange={(v) => setSetting('restDefaultSec', v)} />
         </Row>
-        <Row icon="list-outline" label="Sérií u nového cviku">
+        <Row icon="list-outline" label={p.defaultSets}>
           <Stepper
             value={settings.defaultSets ?? 3}
             step={1}
@@ -149,19 +175,19 @@ export default function Profil() {
           />
         </Row>
         {/* cíl pro widget týdenního cíle (#16); 0 = bez cíle, widget pak vyzve k nastavení */}
-        <Row icon="flag-outline" label="Týdenní cíl tréninků">
+        <Row icon="flag-outline" label={p.weeklyGoal}>
           <Stepper
             value={settings.weeklyGoal ?? 0}
             step={1}
             min={0}
             max={7}
             suffix="×"
-            zeroLabel="Vyp"
+            zeroLabel={tx.common.off}
             onChange={(v) => setSetting('weeklyGoal', v)}
           />
         </Row>
-        <Row icon="trending-up-outline" label="Nabízet zvýšení váhy" last>
-          <Switch label="Nabízet zvýšení váhy" value={settings.stallAlerts !== false} onChange={(v) => setSetting('stallAlerts', v)} />
+        <Row icon="trending-up-outline" label={p.stallAlerts} last>
+          <Switch label={p.stallAlerts} value={settings.stallAlerts !== false} onChange={(v) => setSetting('stallAlerts', v)} />
         </Row>
       </Section>
 
@@ -171,14 +197,14 @@ export default function Profil() {
             <>
               <Row icon="heart" label="Apple Health">
                 <Txt size={type.label} weight="semibold" color={palette.accent}>
-                  Připojeno
+                  {p.connected}
                 </Txt>
               </Row>
-              <RowButton icon="download-outline" label="Importovat trénink z Health" onPress={() => router.push('/health-import')} />
-              <RowButton icon="pulse-outline" label="Test Apple Health (diagnostika)" last onPress={onTestHealth} />
+              <RowButton icon="download-outline" label={p.importHealth} onPress={() => router.push('/health-import')} />
+              <RowButton icon="pulse-outline" label={p.testHealth} last onPress={onTestHealth} />
             </>
           ) : (
-            <RowButton icon="heart-outline" label="Připojit Apple Health" last onPress={onConnectHealth} />
+            <RowButton icon="heart-outline" label={p.connectHealth} last onPress={onConnectHealth} />
           )}
         </Section>
       )}
@@ -186,26 +212,26 @@ export default function Profil() {
       {Platform.OS === 'ios' && (
         // trénink se spustí i na Apple Watch, bez druhého zapínání ve Cvičení (#15, S38)
         <Section title="APPLE WATCH">
-          <Row icon="watch-outline" label="Spouštět trénink i na hodinkách">
+          <Row icon="watch-outline" label={p.watchAutoStart}>
             <Switch
-              label="Spouštět trénink i na hodinkách"
+              label={p.watchAutoStart}
               value={settings.watchAutoStart !== false}
               onChange={(v) => setSetting('watchAutoStart', v)}
             />
           </Row>
           {/* co telefon od hodinek dostal a jak s tím naložil, pro dohledání potíží na zařízení (#23) */}
-          <RowButton icon="list-outline" label="Události hodinek (diagnostika)" last onPress={onWatchLog} />
+          <RowButton icon="list-outline" label={p.watchLog} last onPress={onWatchLog} />
         </Section>
       )}
 
-      <Section title="DATA">
-        <RowButton icon="download-outline" label="Export dat (CSV)" onPress={onExport} />
+      <Section title={p.data}>
+        <RowButton icon="download-outline" label={p.exportCsv} onPress={onExport} />
         <RowButton
           icon="arrow-undo-outline"
-          label={trashedCount > 0 ? `Koš (${trashedCount})` : 'Koš'}
+          label={trashedCount > 0 ? p.trashCount(trashedCount) : p.trash}
           onPress={() => router.push('/trash')}
         />
-        <RowButton icon="trash-outline" label="Smazat všechna data" danger last onPress={onWipe} />
+        <RowButton icon="trash-outline" label={p.wipe} danger last onPress={onWipe} />
       </Section>
 
       <Section title="STEELSET">
@@ -218,7 +244,7 @@ export default function Profil() {
               Steelset Pro
             </Txt>
             <Txt size={type.caption} weight="medium" color={isPro ? palette.accent : palette.textMute} style={{ marginTop: 1 }}>
-              {isPro ? 'Aktivní - bez reklam' : 'Vypni reklamy a podpoř vývoj'}
+              {isPro ? p.proActive : p.proPitch}
             </Txt>
           </View>
           <Ionicons name="chevron-forward" size={18} color={palette.textMute} />
@@ -226,17 +252,17 @@ export default function Profil() {
       </Section>
 
       {testerUnlocked && (
-        <Section title="JEN PRO TESTOVÁNÍ">
+        <Section title={p.testerOnly}>
           <Pressable
             onPress={() => setPro(!isPro)}
             style={{ flexDirection: 'row', alignItems: 'center', gap: 14, padding: space.lg }}>
             <Ionicons name="construct-outline" size={20} color={palette.amber} />
             <View style={{ flex: 1 }}>
               <Txt size={type.body} weight="medium">
-                Předstírat předplatné
+                {p.fakePro}
               </Txt>
               <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ marginTop: 1 }}>
-                {isPro ? 'Zapnuto - reklamy skryté' : 'Vypnuto - reklamy se zobrazují'}
+                {isPro ? p.fakeProOn : p.fakeProOff}
               </Txt>
             </View>
             <View
@@ -256,7 +282,7 @@ export default function Profil() {
 
       <Pressable onPress={() => setVersionTaps((n) => n + 1)}>
         <Txt size={type.caption} color={palette.textMute} style={{ textAlign: 'center', marginTop: space.xl }}>
-          Steelset · v1.0.0 · data zůstávají v telefonu
+          {p.footer}
         </Txt>
       </Pressable>
     </Screen>
@@ -265,6 +291,7 @@ export default function Profil() {
 
 /** Skutečný stav zálohy do iCloudu: čas poslední zálohy, nebo že iCloud nejde (#19). */
 function BackupRow() {
+  const tx = useT();
   const [status, setStatus] = useState<BackupStatus | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
@@ -292,7 +319,7 @@ function BackupRow() {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         <Ionicons name={icon} size={20} color={palette.textDim} />
         <Txt size={type.body} weight="medium" style={{ flex: 1 }}>
-          Záloha do iCloudu
+          {tx.backup.row}
         </Txt>
         {label && (
           <Txt size={type.label} weight="semibold" color={color}>
@@ -344,13 +371,28 @@ function RowButton({ icon, label, onPress, danger, last }: { icon: any; label: s
   );
 }
 
-function Toggle({ options, value, onChange }: { options: string[]; value: string; onChange: (v: string) => void }) {
+function Toggle({
+  options,
+  labels,
+  value,
+  onChange,
+  stretch,
+}: {
+  options: string[];
+  labels?: Record<string, string>;
+  value: string;
+  onChange: (v: string) => void;
+  stretch?: boolean;
+}) {
   return (
     <View style={{ flexDirection: 'row', backgroundColor: palette.surface2, borderRadius: radius.pill, padding: 3 }}>
       {options.map((o) => (
-        <Pressable key={o} onPress={() => onChange(o)} style={{ paddingHorizontal: 16, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: value === o ? palette.accent : 'transparent' }}>
-          <Txt size={type.label} weight="bold" color={value === o ? palette.bg : palette.textDim}>
-            {o}
+        <Pressable
+          key={o}
+          onPress={() => onChange(o)}
+          style={{ flex: stretch ? 1 : undefined, alignItems: 'center', paddingHorizontal: stretch ? 8 : 16, paddingVertical: 6, borderRadius: radius.pill, backgroundColor: value === o ? palette.accent : 'transparent' }}>
+          <Txt size={type.label} weight="bold" color={value === o ? palette.bg : palette.textDim} numberOfLines={1}>
+            {labels?.[o] ?? o}
           </Txt>
         </Pressable>
       ))}

@@ -1,4 +1,5 @@
 import { Unit } from '@/data/types';
+import { getLang, t } from '@/i18n';
 
 const KG_TO_LB = 2.20462;
 
@@ -21,20 +22,19 @@ export function plural(n: number, one: string, few: string, many: string): strin
  */
 export const NBSP = '\u00A0';
 
-/** Czech number: comma decimal, trims trailing .0 */
+/** Číslo podle jazyka: česky desetinná čárka, anglicky tečka; ořízne koncové nuly (#20). */
 export function fmtNum(n: number, maxDecimals = 1): string {
   const rounded = Math.round(n * 10 ** maxDecimals) / 10 ** maxDecimals;
-  return rounded
-    .toFixed(maxDecimals)
-    .replace(/\.?0+$/, '')
-    .replace('.', ',');
+  const plain = maxDecimals > 0 ? rounded.toFixed(maxDecimals).replace(/\.?0+$/, '') : rounded.toFixed(0);
+  return plain.replace('.', t().format.decimal);
 }
 
-/** Jako fmtNum, ale tisíce odděluje nezlomitelnou mezerou: 12 345,5 */
+/** Jako fmtNum, ale s oddělenými tisíci: česky nezlomitelná mezera (12 345,5), anglicky čárka (12,345.5). */
 export function fmtGrouped(n: number, maxDecimals = 1): string {
-  const [int, dec] = fmtNum(n, maxDecimals).split(',');
-  const grouped = int.replace(/\B(?=(\d{3})+(?!\d))/g, NBSP);
-  return dec ? `${grouped},${dec}` : grouped;
+  const dot = t().format.decimal;
+  const [int, dec] = fmtNum(n, maxDecimals).split(dot);
+  const grouped = int.replace(/\B(?=(\d{3})+(?!\d))/g, getLang() === 'cs' ? NBSP : ',');
+  return dec ? `${grouped}${dot}${dec}` : grouped;
 }
 
 export function fmtWeight(kg: number, unit: Unit): string {
@@ -66,27 +66,25 @@ export function fmtClock(totalSec: number): string {
 
 export function fmtDateShort(ms: number): string {
   const d = new Date(ms);
-  return `${d.getDate()}. ${d.getMonth() + 1}.`;
+  return t().format.dateShort(d.getDate(), d.getMonth() + 1);
 }
 
-const DAYS = ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota'];
-const MON = ['led', 'úno', 'bře', 'dub', 'kvě', 'čer', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'];
-
 export function dayName(ms: number): string {
-  return DAYS[new Date(ms).getDay()];
+  return t().format.days[new Date(ms).getDay()];
 }
 export function fmtHeaderDate(ms: number): string {
   const d = new Date(ms);
-  return `${DAYS[d.getDay()].toUpperCase()} · ${d.getDate()}. ${MON[d.getMonth()]}`;
+  const f = t().format;
+  return f.headerDate(f.days[d.getDay()], d.getDate(), f.monthsShort[d.getMonth()]);
 }
 
-/** "před 3 dny", "včera", "dnes" */
+/** "před 3 dny", "včera", "dnes" podle jazyka */
 export function relativeDay(ms: number, now: number): string {
   const days = Math.floor((startOfDay(now) - startOfDay(ms)) / 86_400_000);
-  if (days <= 0) return 'dnes';
-  if (days === 1) return 'včera';
-  if (days < 5) return `před ${days} dny`;
-  return `před ${days} dny`;
+  const f = t().format;
+  if (days <= 0) return f.today;
+  if (days === 1) return f.yesterday;
+  return f.daysAgo(days);
 }
 
 export function startOfDay(ms: number): number {

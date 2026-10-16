@@ -23,7 +23,9 @@
         "NSUserTrackingUsageDescription": "Steelset pomocí tohoto povolení zobrazuje relevantnější reklamy. Bez souhlasu uvidíš reklamy obecné - aplikace funguje stejně."
       },
       "entitlements": {
-        "com.apple.security.application-groups": ["group.cz.setly.app"]
+        "com.apple.security.application-groups": [
+          "group.cz.setly.app"
+        ]
       },
       "appleTeamId": "B5N5746R9W"
     },
@@ -78,7 +80,8 @@
           "userTrackingUsageDescription": "Steelset pomocí tohoto povolení zobrazuje relevantnější reklamy. Bez souhlasu uvidíš reklamy obecné - aplikace funguje stejně."
         }
       ],
-      "expo-tracking-transparency"
+      "expo-tracking-transparency",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": false,

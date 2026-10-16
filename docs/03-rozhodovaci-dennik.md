@@ -1108,3 +1108,16 @@ jako hlavní číslo čas. Oprava z S43 je správná, jen se k uživateli nedost
 do popředí; watchOS dotaz ukáže jen pro typy, o kterých se ještě nerozhodlo. Souhrn po tréninku
 řekne, když kalorie do Zdraví nesmí, a kde je povolit. Do té doby jde povolit ručně v iPhonu:
 Zdraví, profil, Aplikace, Steelset.
+
+## S45 - Angličtina: jazyk podle telefonu, volba v Profilu, po částech (16. 10. 2026)
+
+**Stav.** Vydání jde naráz česky i anglicky (S35), aplikace měla texty natvrdo česky v kódu.
+
+**Rozhodnutí.** Zadavatel vybral jazyk podle telefonu s přepínačem v Profilu (Auto, Čeština,
+English) a postup po částech s náhledy. Auto dá češtinu telefonům v češtině a slovenštině,
+ostatním angličtinu. Texty jsou ve slovnících `src/i18n/cs.ts` a `en.ts`; tvar angličtiny
+vynucuje TypeScript, test hlídá klíče, prázdné texty a české znaky v angličtině. Věty se
+skloňováním jsou funkce, aby šly přeložit celé. Čísla a data se formátují podle jazyka.
+Názvy partií jsou v uložených datech česky (`MuscleGroup`), proto se nepřekládá úložiště,
+jen to, co se zobrazí. Přepnutí jazyka nastaví `useT()` v kořenovém layoutu; komponenty si
+slovník berou přes `useT()`, aby se překreslily, kód mimo komponenty přes `t()`.

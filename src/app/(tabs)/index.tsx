@@ -7,11 +7,13 @@ import { Card, PrimaryButton, Screen, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { weekStreak, workoutVolumeEx } from '@/lib/calc';
 import { fmtClock, fmtHeaderDate, fmtWeight, NBSP, relativeDay } from '@/lib/format';
+import { useT } from '@/i18n/useT';
 import { useHealthScan } from '@/lib/useHealthScan';
 import { activeWorkout, history as historySel, useExercisesById, useStore } from '@/store/useStore';
 
 export default function Dnesek() {
   const router = useRouter();
+  const tx = useT();
   const now = Date.now();
 
   const workouts = useStore((s) => s.workouts);
@@ -57,7 +59,7 @@ export default function Dnesek() {
             {fmtHeaderDate(now)}
           </Txt>
           <Txt size={type.title} weight="bold" style={{ marginTop: 2 }}>
-            Dnešek
+            {tx.today.title}
           </Txt>
         </View>
         {streak > 0 && (
@@ -67,7 +69,7 @@ export default function Dnesek() {
               {streak}
             </Txt>
             <Txt size={type.caption} weight="medium" color={palette.textDim}>
-              týd.
+              {tx.today.weeksShort}
             </Txt>
           </View>
         )}
@@ -83,10 +85,10 @@ export default function Dnesek() {
           </View>
           <View style={{ flex: 1 }}>
             <Txt size={type.body} weight="bold">
-              {newHealth.length === 1 ? 'Nový trénink z Apple Health' : `${newHealth.length} nových tréninků z Apple Health`}
+              {newHealth.length === 1 ? tx.today.healthOne : tx.today.healthMany(newHealth.length)}
             </Txt>
             <Txt size={type.caption} weight="medium" color={palette.textMute}>
-              Ťukni pro import i s tepem
+              {tx.today.healthHint}
             </Txt>
           </View>
           <Pressable onPress={() => dismissHealthWorkouts(newHealth.map((w) => w.uuid))} hitSlop={12}>
@@ -98,8 +100,8 @@ export default function Dnesek() {
       {/* primary action - logging first */}
       <View style={{ marginTop: space.xl }}>
         <PrimaryButton
-          label={active ? 'Pokračovat v tréninku' : 'Začít trénink'}
-          sublabel={active ? active.name : 'Živě - zapisuj série během cvičení'}
+          label={active ? tx.today.continue : tx.today.start}
+          sublabel={active ? active.name : tx.today.startHint}
           onPress={() => start(null)}
         />
         <Pressable
@@ -107,7 +109,7 @@ export default function Dnesek() {
           style={{ marginTop: 10, paddingVertical: 14, alignItems: 'center', borderRadius: radius.md, borderWidth: 1, borderColor: palette.hairline, flexDirection: 'row', justifyContent: 'center', gap: 8 }}>
           <Ionicons name="create-outline" size={18} color={palette.textDim} />
           <Txt size={type.body} weight="semibold" color={palette.textDim}>
-            Zapsat hotový trénink
+            {tx.today.logDone}
           </Txt>
         </Pressable>
       </View>
@@ -117,11 +119,11 @@ export default function Dnesek() {
         <View style={{ marginTop: space.xl }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <Txt size={type.label} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5 }}>
-              TVOJE PLÁNY
+              {tx.today.yourPlans}
             </Txt>
             <Pressable onPress={() => router.push('/plany')}>
               <Txt size={type.label} weight="semibold" color={palette.accent}>
-                Vše
+                {tx.common.all}
               </Txt>
             </Pressable>
           </View>
@@ -137,7 +139,7 @@ export default function Dnesek() {
                       {r.name}
                     </Txt>
                     <Txt size={type.caption} weight="medium" color={palette.textMute}>
-                      {r.exercises.length} cviků
+                      {tx.common.exercises(r.exercises.length)}
                     </Txt>
                   </View>
                   {!active && r.exercises.length > 0 && (
@@ -155,12 +157,12 @@ export default function Dnesek() {
       {/* recent workouts */}
       <View style={{ marginTop: space.xl }}>
         <Txt size={type.label} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5, marginBottom: 10 }}>
-          NEDÁVNÉ TRÉNINKY
+          {tx.today.recent}
         </Txt>
         {finished.length === 0 ? (
           <Card>
             <Txt size={type.body} weight="medium" color={palette.textMute}>
-              Zatím žádný trénink. Klikni na „Začít trénink" a zapiš první sérii.
+              {tx.today.empty}
             </Txt>
           </Card>
         ) : (
@@ -170,10 +172,10 @@ export default function Dnesek() {
               const empty = w.exercises.length === 0;
               const dur = w.finishedAt && !w.manual ? Math.round((w.finishedAt - w.startedAt) / 1000) : 0;
               const sub = empty
-                ? [relativeDay(w.finishedAt!, now), dur >= 30 ? fmtClock(dur) : null, w.avgHr ? `⌀${w.avgHr}${NBSP}tep` : null]
+                ? [relativeDay(w.finishedAt!, now), dur >= 30 ? fmtClock(dur) : null, w.avgHr ? `⌀${w.avgHr}${NBSP}${tx.common.bpm}` : null]
                     .filter(Boolean)
                     .join(' · ')
-                : `${relativeDay(w.finishedAt!, now)} · ${w.exercises.length} cviků · ${setCount} sérií`;
+                : `${relativeDay(w.finishedAt!, now)} · ${tx.common.exercises(w.exercises.length)} · ${tx.common.sets(setCount)}`;
               return (
                 <Pressable key={w.id} onPress={() => router.push(`/history/${w.id}`)} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: space.lg, borderTopWidth: i === 0 ? 0 : 1, borderTopColor: palette.hairline }}>
                   <View style={{ flex: 1 }}>

@@ -24,6 +24,7 @@ widgety na plochu a zamčenou obrazovku a kalendář odcvičených dnů.
 - Aplikace pro Apple Watch: trénink se na hodinkách spustí sám, ukazuje čas, tep, kalorie a odpočinek
 - Živá aktivita na zamčené obrazovce a v Dynamic Island
 - Widgety: tento týden, týdenní cíl, poslední trénink, kalendář, tělesná váha, plány a série po partiích
+- Česky a anglicky podle jazyka telefonu, s volbou v Profilu
 - Záloha na iCloud, export do CSV
 
 ---

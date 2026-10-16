@@ -7,17 +7,20 @@ import { AdBanner } from '@/components/AdBanner';
 import { MiniWorkoutBar } from '@/components/MiniWorkoutBar';
 import { Txt } from '@/components/ui';
 import { palette, space } from '@/constants/theme';
+import type { Dict } from '@/i18n';
+import { useT } from '@/i18n/useT';
 
-const TABS: Record<string, { label: string; icon: keyof typeof Ionicons.glyphMap }> = {
-  index: { label: 'Dnešek', icon: 'today-outline' },
-  plany: { label: 'Plány', icon: 'albums-outline' },
-  pokrok: { label: 'Pokrok', icon: 'trending-up-outline' },
-  kalendar: { label: 'Kalendář', icon: 'calendar-outline' },
-  profil: { label: 'Profil', icon: 'person-outline' },
+const TABS: Record<string, { label: keyof Dict['tabs']; icon: keyof typeof Ionicons.glyphMap }> = {
+  index: { label: 'today', icon: 'today-outline' },
+  plany: { label: 'plans', icon: 'albums-outline' },
+  pokrok: { label: 'progress', icon: 'trending-up-outline' },
+  kalendar: { label: 'calendar', icon: 'calendar-outline' },
+  profil: { label: 'profile', icon: 'person-outline' },
 };
 
 function TabBar({ state, navigation }: { state: any; navigation: any }) {
   const insets = useSafeAreaInsets();
+  const tx = useT();
   return (
     <View>
       <AdBanner />
@@ -46,7 +49,7 @@ function TabBar({ state, navigation }: { state: any; navigation: any }) {
             style={{ flex: 1, alignItems: 'center', gap: 4 }}>
             <Ionicons name={cfg.icon} size={23} color={color} />
             <Txt size={10} weight={focused ? 'semibold' : 'medium'} color={color}>
-              {cfg.label}
+              {tx.tabs[cfg.label]}
             </Txt>
           </Pressable>
         );

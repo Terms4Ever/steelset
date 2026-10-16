@@ -141,6 +141,7 @@ export interface Settings {
   stallAlerts: boolean; // nabízet zvýšení váhy, když se cvik zasekne na stejné váze
   weeklyGoal: number; // kolik tréninků týdně si uživatel dal za cíl, 0 = cíl nemá (widget týdenního cíle)
   watchAutoStart: boolean; // spustit trénink i na Apple Watch (#15), výchozí zapnuto
+  language: 'auto' | 'cs' | 'en'; // jazyk aplikace (#20), auto = podle telefonu
   onboarded: boolean;
 }
 
