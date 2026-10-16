@@ -27,3 +27,32 @@ describe('hodinky · texty pro Apple Health', () => {
     expect(plist).toMatch(new RegExp('<key>' + key + '</key>[\\s]*<string>[^<]{30,}</string>'));
   });
 });
+
+describe('texty oprávnění v obou jazycích (#20)', () => {
+  const CZECH = /[ěščřžýáíéůúťďňĚŠČŘŽÝÁÍÉŮÚ]/;
+  const cs = JSON.parse(readFileSync(join(__dirname, '../locales/cs.json'), 'utf8')).ios;
+  const en = JSON.parse(readFileSync(join(__dirname, '../locales/en.json'), 'utf8')).ios;
+
+  it('aplikace má v obou jazycích stejné klíče, anglicky bez českých znaků', () => {
+    expect(Object.keys(en).sort()).toEqual(Object.keys(cs).sort());
+    for (const k of Object.keys(en)) expect(CZECH.test(en[k])).toBe(false);
+  });
+
+  it('čeština v locales sedí s texty v app.json, slovenština dostane češtinu', () => {
+    expect(cs.NSHealthShareUsageDescription).toBe(healthkit[1].NSHealthShareUsageDescription);
+    expect(cs.NSHealthUpdateUsageDescription).toBe(healthkit[1].NSHealthUpdateUsageDescription);
+    expect(cs.NSUserTrackingUsageDescription).toBe(appJson.expo.ios.infoPlist.NSUserTrackingUsageDescription);
+    expect(appJson.expo.locales).toEqual({ cs: './locales/cs.json', sk: './locales/cs.json', en: './locales/en.json' });
+  });
+
+  it('hodinky mají InfoPlist.strings pro češtinu, slovenštinu i angličtinu', () => {
+    const read = (lang: string) => readFileSync(join(__dirname, `../targets/watch/${lang}.lproj/InfoPlist.strings`), 'utf8');
+    for (const lang of ['cs', 'sk', 'en']) {
+      const s = read(lang);
+      for (const key of ['NSHealthShareUsageDescription', 'NSHealthUpdateUsageDescription']) {
+        expect(s).toMatch(new RegExp('"' + key + '" = "[^"]{30,}";'));
+      }
+    }
+    expect(CZECH.test(read('en'))).toBe(false);
+  });
+});

@@ -20,9 +20,9 @@ konec tréninku na hodinkách telefon neukončil a Live Activity zůstala (#23);
 v kódu (S42) a je v buildu 36. Po něm v kódu: čas na hodinkách se setinami (#24) a trénink
 z hodinek s kaloriemi v Kondici (#25, S43). Build 37 je nese, ale hodinky se na oprávnění
 k zápisu kalorií nezeptaly; dotaz při zobrazení hodinek je v kódu (S44). Build 33 Apple odmítl kvůli textu pro zápis do
-Health (S39). Angličtina (#20) se dělá po částech (S45): všechny obrazovky aplikace, katalog cviků,
-partie, vybavení, upozornění svalové mapy a diagnostika jsou přeložené; čekají widgety,
-Live Activity, hodinky, texty oprávnění, web se zásadami a stránka v App Storu.
+Health (S39). Angličtina (#20, S45, S46): aplikace, katalog cviků, widgety, Live Activity, hodinky
+a texty oprávnění jsou přeložené, zásady a podpora mají anglickou verzi. Čeká build,
+test na zařízení a anglická stránka v App Storu.
 
 Build 27 prošel testem na zařízení a issues #1 až #14 jsou zavřené. V kódu je
 navíc #16 (widgety, výběr zadavatele v S31). Build 28 jel interaktivně, App Group

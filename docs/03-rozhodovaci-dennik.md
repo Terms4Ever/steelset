@@ -1121,3 +1121,16 @@ skloňováním jsou funkce, aby šly přeložit celé. Čísla a data se formát
 Názvy partií jsou v uložených datech česky (`MuscleGroup`), proto se nepřekládá úložiště,
 jen to, co se zobrazí. Přepnutí jazyka nastaví `useT()` v kořenovém layoutu; komponenty si
 slovník berou přes `useT()`, aby se překreslily, kód mimo komponenty přes `t()`.
+
+## S46 - Widgety, hodinky a oprávnění mluví jazykem aplikace (16. 10. 2026)
+
+**Rozhodnutí.** Widgety a Live Activity berou jazyk ze snímku v App Group (pole `lang`), takže
+se řídí volbou v Profilu, ne jen telefonem; bez snímku jazykem telefonu. Partie ve snímku zůstávají
+česky (klíče dat), Swift je přeloží jen při zobrazení. Hodinky dostávají `lang` v kontextu od
+telefonu a pamatují si ho; před prvním kontaktem se řídí jazykem hodinek. Texty oprávnění
+(Health, sledování) jsou v `locales/cs.json` a `en.json`, slovenština dostane češtinu; hodinky
+mají `InfoPlist.strings` v `targets/watch/*.lproj`. Odkaz na zásady v předplatném vede na
+anglickou nebo českou verzi podle jazyka.
+
+**Čím ověřeno.** Shoda tvaru snímku se Swiftem (`widgetSnapshot.test.ts`), klíče stavu hodinek
+(`watch.test.ts`), texty oprávnění v obou jazycích (`healthPlist.test.ts`). Swift ověří build.

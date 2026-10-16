@@ -81,7 +81,18 @@
         }
       ],
       "expo-tracking-transparency",
-      "expo-localization"
+      [
+        "expo-localization",
+        {
+          "supportedLocales": {
+            "ios": [
+              "cs",
+              "sk",
+              "en"
+            ]
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": false,
@@ -93,6 +104,11 @@
         "projectId": "de37acc9-cc92-4d28-8e35-4d8998fd26f9"
       }
     },
-    "owner": "terms4e"
+    "owner": "terms4e",
+    "locales": {
+      "cs": "./locales/cs.json",
+      "sk": "./locales/cs.json",
+      "en": "./locales/en.json"
+    }
   }
 }

@@ -1,0 +1,8 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "Steelset",
+    "NSHealthShareUsageDescription": "Steelset reads heart rate, workouts and weight from Apple Health to match them to your logs and import them.",
+    "NSHealthUpdateUsageDescription": "Steelset on Apple Watch saves strength workouts to Apple Health, just like the Workout app. The phone itself never writes to Health.",
+    "NSUserTrackingUsageDescription": "Steelset uses this permission to show more relevant ads. Without it you'll see generic ads - the app works the same."
+  }
+}

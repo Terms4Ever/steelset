@@ -5,6 +5,7 @@ import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, View } from '
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Txt } from '@/components/ui';
+import { getLang } from '@/i18n';
 import { useT } from '@/i18n/useT';
 import { palette, radius, space, type } from '@/constants/theme';
 import { haptic } from '@/lib/haptic';
@@ -14,7 +15,7 @@ import { useStore } from '@/store/useStore';
 /** Apple's standard EULA - a terms link is required when selling subscriptions. */
 const TERMS_URL = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
 /** Zásady leží na webu autora (repozitář tomas.saroun.me), vlastní doménu aplikace nemá (#18). */
-const PRIVACY_URL = 'https://tomas.saroun.me/steelset/soukromi/';
+const PRIVACY_URL = { cs: 'https://tomas.saroun.me/steelset/soukromi/', en: 'https://tomas.saroun.me/steelset/privacy/' };
 
 const BENEFIT_ICONS = ['eye-off-outline', 'flash-outline', 'heart-outline'] as const;
 
@@ -248,7 +249,7 @@ export default function Paywall() {
               {py.terms}
             </Txt>
           </Pressable>
-          <Pressable onPress={() => Linking.openURL(PRIVACY_URL)}>
+          <Pressable onPress={() => Linking.openURL(PRIVACY_URL[getLang()])}>
             <Txt size={type.caption} weight="medium" color={palette.textMute}>
               {py.privacy}
             </Txt>

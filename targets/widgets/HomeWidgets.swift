@@ -12,7 +12,67 @@ private let steelsetMsWeek: Double = 7 * 24 * 3600 * 1000
 private let steelsetMsDay: Double = 24 * 3600 * 1000
 private let steelsetDim = Color(white: 0.62)
 private let steelsetTrack = Color(red: 0.118, green: 0.129, blue: 0.153) // #1E2127
-private let steelsetLocale = Locale(identifier: "cs_CZ")
+// MARK: - Jazyk (#20)
+
+/// Jen pole `lang` ze snímku; celý snímek se kvůli jazyku nedekóduje do struktury.
+private struct SteelsetLangHead: Decodable {
+  let lang: String?
+}
+
+/// Widgety mluví stejným jazykem jako aplikace: snímek nese `lang` podle volby v Profilu.
+/// Bez snímku (čerstvá instalace, galerie widgetů) rozhoduje jazyk telefonu, čeština a slovenština
+/// dostanou češtinu. Sdílí to i Live Activity v `index.swift`.
+func steelsetIsEnglish() -> Bool {
+  if let raw = UserDefaults(suiteName: steelsetAppGroup)?.string(forKey: steelsetSnapshotKey),
+     let data = raw.data(using: .utf8),
+     let head = try? JSONDecoder().decode(SteelsetLangHead.self, from: data),
+     let lang = head.lang {
+    return lang == "en"
+  }
+  let first = Locale.preferredLanguages.first ?? "cs"
+  return !(first.hasPrefix("cs") || first.hasPrefix("sk"))
+}
+
+/// Text v jazyce aplikace.
+func steelsetL(_ cs: String, _ en: String) -> String {
+  steelsetIsEnglish() ? en : cs
+}
+
+private var steelsetLocale: Locale {
+  steelsetIsEnglish() ? Locale(identifier: "en_US") : Locale(identifier: "cs_CZ")
+}
+
+/// Partie se ve snímku drží česky (klíče uložených dat), anglicky se jen zobrazí.
+private let steelsetMusclesEn: [String: String] = [
+  "Hrudník": "Chest", "Záda": "Back", "Nohy": "Legs", "Ramena": "Shoulders", "Biceps": "Biceps",
+  "Triceps": "Triceps", "Břicho": "Abs", "Hýždě": "Glutes", "Lýtka": "Calves", "Předloktí": "Forearms",
+  "Trapézy": "Traps", "Horní záda": "Upper back", "Spodní záda": "Lower back", "Kvadricepsy": "Quads",
+  "Hamstringy": "Hamstrings", "Šikmé břišní": "Obliques",
+]
+
+private func steelsetMuscle(_ name: String) -> String {
+  steelsetIsEnglish() ? (steelsetMusclesEn[name] ?? name) : name
+}
+
+private func steelsetWorkoutsWord(_ n: Int) -> String {
+  steelsetIsEnglish() ? (n == 1 ? "workout" : "workouts") : czPlural(n, "trénink", "tréninky", "tréninků")
+}
+
+private func steelsetExercisesWord(_ n: Int) -> String {
+  steelsetIsEnglish() ? (n == 1 ? "exercise" : "exercises") : czPlural(n, "cvik", "cviky", "cviků")
+}
+
+private func steelsetStreakText(_ n: Int) -> String {
+  steelsetL("\(n) týd. v řadě", "\(n)-week streak")
+}
+
+private var steelsetOpenHint: String {
+  steelsetL("Otevři Steelset, ať má widget co ukázat.", "Open Steelset so the widget has something to show.")
+}
+
+private var steelsetNoWorkoutHint: String {
+  steelsetL("Zatím žádný trénink. Ťukni a začni.", "No workout yet. Tap to start.")
+}
 
 // MARK: - Snímek dat
 
@@ -55,6 +115,8 @@ struct WidgetSnapshot: Codable {
   let routines: [RoutineRow]
   let next: String?
   let weight: [WeightPoint]
+  /// Jazyk aplikace, `cs` nebo `en` (#20). Volitelný kvůli snímkům ze starších verzí.
+  let lang: String?
 }
 
 private func steelsetLoadSnapshot() -> WidgetSnapshot? {
@@ -195,6 +257,10 @@ private func steelsetNextRefresh(_ snapshot: WidgetSnapshot?, now: Date) -> Date
   return steelsetDate(candidates.min() ?? nowMs + 3600 * 1000)
 }
 
+private var steelsetWeekdayLetters: [String] {
+  steelsetIsEnglish() ? ["M", "T", "W", "T", "F", "S", "S"] : ["P", "Ú", "S", "Č", "P", "S", "N"]
+}
+
 private func czPlural(_ n: Int, _ one: String, _ few: String, _ many: String) -> String {
   if n == 1 { return one }
   if n >= 2 && n <= 4 { return few }
@@ -236,18 +302,19 @@ private func steelsetSampleSnapshot(now: Date) -> WidgetSnapshot {
     ],
     streakWeeks: [thisWeek, thisWeek - 1, thisWeek - 2, thisWeek - 3],
     goal: 4,
-    last: WidgetSnapshot.Last(id: "", name: "Hrudník", at: nowMs - steelsetMsDay, volume: 7850, minutes: 52, avgHr: 128),
+    last: WidgetSnapshot.Last(id: "", name: steelsetL("Hrudník", "Chest"), at: nowMs - steelsetMsDay, volume: 7850, minutes: 52, avgHr: 128),
     routines: [
-      WidgetSnapshot.RoutineRow(id: "a", name: "Hrudník", exercises: 5, lastAt: nowMs - steelsetMsDay),
-      WidgetSnapshot.RoutineRow(id: "b", name: "Záda", exercises: 6, lastAt: nowMs - 3 * steelsetMsDay),
-      WidgetSnapshot.RoutineRow(id: "c", name: "Nohy a břicho", exercises: 6, lastAt: nil),
+      WidgetSnapshot.RoutineRow(id: "a", name: steelsetL("Hrudník", "Chest"), exercises: 5, lastAt: nowMs - steelsetMsDay),
+      WidgetSnapshot.RoutineRow(id: "b", name: steelsetL("Záda", "Back"), exercises: 6, lastAt: nowMs - 3 * steelsetMsDay),
+      WidgetSnapshot.RoutineRow(id: "c", name: steelsetL("Nohy a břicho", "Legs and abs"), exercises: 6, lastAt: nil),
     ],
     next: "c",
     weight: [
       WidgetSnapshot.WeightPoint(at: nowMs - 25 * steelsetMsDay, value: 83.2),
       WidgetSnapshot.WeightPoint(at: nowMs - 12 * steelsetMsDay, value: 82.9),
       WidgetSnapshot.WeightPoint(at: nowMs - 2 * steelsetMsDay, value: 82.4),
-    ]
+    ],
+    lang: steelsetIsEnglish() ? "en" : "cs"
   )
 }
 
@@ -334,7 +401,7 @@ private struct SteelsetStreakLine: View {
       Image(systemName: "flame.fill")
         .font(.system(size: 11))
         .foregroundColor(steelsetAccent)
-      Text(verbatim: extra.map { "\(streak) týd. v řadě · \($0)" } ?? "\(streak) týd. v řadě")
+      Text(verbatim: extra.map { "\(steelsetStreakText(streak)) · \($0)" } ?? steelsetStreakText(streak))
         .font(.system(size: 12, weight: .semibold))
         .foregroundColor(steelsetDim)
         .lineLimit(1)
@@ -394,13 +461,13 @@ private struct SteelsetWeekSmall: View {
     let week = steelsetWeek(snapshot.recent, now: now)
     let streak = steelsetStreak(snapshot.streakWeeks, now: now)
     VStack(alignment: .leading, spacing: 3) {
-      SteelsetCaption(text: "TENTO TÝDEN")
+      SteelsetCaption(text: steelsetL("TENTO TÝDEN", "THIS WEEK"))
       Spacer(minLength: 0)
       HStack(alignment: .firstTextBaseline, spacing: 5) {
         Text(verbatim: "\(week.count)")
           .font(.system(size: 36, weight: .bold).monospacedDigit())
           .foregroundColor(steelsetAccent)
-        Text(verbatim: czPlural(week.count, "trénink", "tréninky", "tréninků"))
+        Text(verbatim: steelsetWorkoutsWord(week.count))
           .font(.system(size: 13, weight: .semibold))
           .foregroundColor(.white)
       }
@@ -432,18 +499,18 @@ struct SteelsetWeekView: View {
             AccessoryWidgetBackground()
             VStack(spacing: 0) {
               Text(verbatim: "\(week.count)").font(.system(size: 22, weight: .bold).monospacedDigit())
-              Text(verbatim: "týden").font(.system(size: 10, weight: .semibold))
+              Text(verbatim: steelsetL("týden", "week")).font(.system(size: 10, weight: .semibold))
             }
           }
         case .accessoryRectangular:
           VStack(alignment: .leading, spacing: 1) {
-            Text(verbatim: "Tento týden").font(.headline)
-            Text(verbatim: "\(week.count) \(czPlural(week.count, "trénink", "tréninky", "tréninků")) · \(fmtInt(week.volume)) \(snapshot.unit)")
+            Text(verbatim: steelsetL("Tento týden", "This week")).font(.headline)
+            Text(verbatim: "\(week.count) \(steelsetWorkoutsWord(week.count)) · \(fmtInt(week.volume)) \(snapshot.unit)")
               .font(.caption)
               .lineLimit(1)
               .minimumScaleFactor(0.8)
             if streak > 0 {
-              Text(verbatim: "\(streak) týd. v řadě").font(.caption)
+              Text(verbatim: steelsetStreakText(streak)).font(.caption)
             }
           }
           .frame(maxWidth: .infinity, alignment: .leading)
@@ -460,11 +527,11 @@ struct SteelsetWeekView: View {
         case .accessoryRectangular:
           VStack(alignment: .leading, spacing: 1) {
             Text(verbatim: "Steelset").font(.headline)
-            Text(verbatim: "Zatím žádný trénink").font(.caption)
+            Text(verbatim: steelsetL("Zatím žádný trénink", "No workout yet")).font(.caption)
           }
           .frame(maxWidth: .infinity, alignment: .leading)
         default:
-          SteelsetEmpty(caption: "TENTO TÝDEN", hint: entry.snapshot == nil ? "Otevři Steelset, ať má widget co ukázat." : "Zatím žádný trénink. Ťukni a začni.")
+          SteelsetEmpty(caption: steelsetL("TENTO TÝDEN", "THIS WEEK"), hint: entry.snapshot == nil ? steelsetOpenHint : steelsetNoWorkoutHint)
         }
       }
     }
@@ -480,8 +547,8 @@ struct SteelsetWeekWidget: Widget {
     StaticConfiguration(kind: kind, provider: SteelsetProvider()) { entry in
       SteelsetWeekView(entry: entry)
     }
-    .configurationDisplayName("Tento týden")
-    .description("Tréninky a objem za posledních sedm dní a série týdnů v řadě.")
+    .configurationDisplayName(steelsetL("Tento týden", "This week"))
+    .description(steelsetL("Tréninky a objem za posledních sedm dní a série týdnů v řadě.", "Workouts and volume over the last seven days, plus your weekly streak."))
     .supportedFamilies([.systemSmall, .accessoryCircular, .accessoryRectangular])
   }
 }
@@ -506,19 +573,19 @@ struct SteelsetGoalView: View {
               .padding(4)
             VStack(spacing: 0) {
               Text(verbatim: "\(done)/\(goal)").font(.system(size: 17, weight: .bold).monospacedDigit())
-              Text(verbatim: "cíl").font(.system(size: 9, weight: .semibold))
+              Text(verbatim: steelsetL("cíl", "goal")).font(.system(size: 9, weight: .semibold))
             }
           } else {
             VStack(spacing: 0) {
               Image(systemName: "flag")
-              Text(verbatim: "cíl").font(.system(size: 9, weight: .semibold))
+              Text(verbatim: steelsetL("cíl", "goal")).font(.system(size: 9, weight: .semibold))
             }
           }
         }
       default:
         if goal > 0 {
           VStack(spacing: 0) {
-            SteelsetCaption(text: "TÝDENNÍ CÍL")
+            SteelsetCaption(text: steelsetL("TÝDENNÍ CÍL", "WEEKLY GOAL"))
               .frame(maxWidth: .infinity, alignment: .leading)
             Spacer(minLength: 4)
             ZStack {
@@ -528,7 +595,7 @@ struct SteelsetGoalView: View {
                 Text(verbatim: "\(done)/\(goal)")
                   .font(.system(size: 22, weight: .bold).monospacedDigit())
                   .foregroundColor(.white)
-                Text(verbatim: czPlural(goal, "trénink", "tréninky", "tréninků"))
+                Text(verbatim: steelsetWorkoutsWord(goal))
                   .font(.system(size: 10, weight: .semibold))
                   .foregroundColor(steelsetDim)
               }
@@ -537,7 +604,7 @@ struct SteelsetGoalView: View {
           }
           .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-          SteelsetEmpty(caption: "TÝDENNÍ CÍL", hint: entry.snapshot == nil ? "Otevři Steelset, ať má widget co ukázat." : "Nastav si cíl v Profilu, kolik tréninků týdně chceš.")
+          SteelsetEmpty(caption: steelsetL("TÝDENNÍ CÍL", "WEEKLY GOAL"), hint: entry.snapshot == nil ? steelsetOpenHint : steelsetL("Nastav si cíl v Profilu, kolik tréninků týdně chceš.", "Set a goal in Profile for how many workouts a week you want."))
         }
       }
     }
@@ -553,8 +620,8 @@ struct SteelsetGoalWidget: Widget {
     StaticConfiguration(kind: kind, provider: SteelsetProvider()) { entry in
       SteelsetGoalView(entry: entry)
     }
-    .configurationDisplayName("Týdenní cíl")
-    .description("Kolik tréninků máš tento týden za sebou z cíle, který si nastavíš v Profilu.")
+    .configurationDisplayName(steelsetL("Týdenní cíl", "Weekly goal"))
+    .description(steelsetL("Kolik tréninků máš tento týden za sebou z cíle, který si nastavíš v Profilu.", "How many workouts you have done this week out of the goal you set in Profile."))
     .supportedFamilies([.systemSmall, .accessoryCircular])
   }
 }
@@ -595,23 +662,23 @@ struct SteelsetLastView: View {
     Group {
       if let last = last, let snapshot = entry.snapshot {
         VStack(alignment: .leading, spacing: 4) {
-          SteelsetCaption(text: "POSLEDNÍ TRÉNINK · \(steelsetRelative(steelsetDate(last.at)).uppercased())")
+          SteelsetCaption(text: "\(steelsetL("POSLEDNÍ TRÉNINK", "LAST WORKOUT")) · \(steelsetRelative(steelsetDate(last.at)).uppercased())")
           Text(verbatim: last.name)
             .font(.system(size: 17, weight: .bold))
             .foregroundColor(.white)
             .lineLimit(1)
           Spacer(minLength: 0)
           HStack(alignment: .bottom, spacing: 26) {
-            SteelsetStat(value: "\(fmtInt(Int(last.volume.rounded()))) \(snapshot.unit)", label: "objem")
-            SteelsetStat(value: "\(last.minutes) min", label: "délka")
+            SteelsetStat(value: "\(fmtInt(Int(last.volume.rounded()))) \(snapshot.unit)", label: steelsetL("objem", "volume"))
+            SteelsetStat(value: "\(last.minutes) min", label: steelsetL("délka", "duration"))
             if let hr = last.avgHr {
-              SteelsetStat(value: "\(hr)", label: "prům. tep", heart: true)
+              SteelsetStat(value: "\(hr)", label: steelsetL("prům. tep", "avg HR"), heart: true)
             }
           }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
       } else {
-        SteelsetEmpty(caption: "POSLEDNÍ TRÉNINK", hint: entry.snapshot == nil ? "Otevři Steelset, ať má widget co ukázat." : "Zatím žádný trénink. Ťukni a začni.")
+        SteelsetEmpty(caption: steelsetL("POSLEDNÍ TRÉNINK", "LAST WORKOUT"), hint: entry.snapshot == nil ? steelsetOpenHint : steelsetNoWorkoutHint)
       }
     }
     .widgetURL(URL(string: last.map { "steelset://history/\($0.id)" } ?? "steelset://"))
@@ -626,8 +693,8 @@ struct SteelsetLastWidget: Widget {
     StaticConfiguration(kind: kind, provider: SteelsetProvider()) { entry in
       SteelsetLastView(entry: entry)
     }
-    .configurationDisplayName("Poslední trénink")
-    .description("Objem, délka a průměrný tep posledního tréninku.")
+    .configurationDisplayName(steelsetL("Poslední trénink", "Last workout"))
+    .description(steelsetL("Objem, délka a průměrný tep posledního tréninku.", "Volume, duration and average heart rate of your last workout."))
     .supportedFamilies([.systemMedium])
   }
 }
@@ -660,7 +727,7 @@ struct SteelsetCalendarView: View {
       VStack(alignment: .leading, spacing: 4) {
         SteelsetCaption(text: formatter.string(from: now).uppercased())
         HStack(spacing: 3) {
-          ForEach(Array(["P", "Ú", "S", "Č", "P", "S", "N"].enumerated()), id: \.offset) { item in
+          ForEach(Array(steelsetWeekdayLetters.enumerated()), id: \.offset) { item in
             Text(verbatim: item.element)
               .font(.system(size: 9, weight: .semibold))
               .foregroundColor(steelsetDim)
@@ -693,10 +760,10 @@ struct SteelsetCalendarView: View {
         Text(verbatim: "\(month.count)")
           .font(.system(size: 34, weight: .bold).monospacedDigit())
           .foregroundColor(steelsetAccent)
-        Text(verbatim: czPlural(month.count, "trénink", "tréninky", "tréninků"))
+        Text(verbatim: steelsetWorkoutsWord(month.count))
           .font(.system(size: 13, weight: .semibold))
           .foregroundColor(.white)
-        Text(verbatim: "tento měsíc")
+        Text(verbatim: steelsetL("tento měsíc", "this month"))
           .font(.system(size: 12, weight: .medium))
           .foregroundColor(steelsetDim)
         if streak > 0 {
@@ -719,8 +786,8 @@ struct SteelsetCalendarWidget: Widget {
     StaticConfiguration(kind: kind, provider: SteelsetProvider()) { entry in
       SteelsetCalendarView(entry: entry)
     }
-    .configurationDisplayName("Kalendář měsíce")
-    .description("Dny s tréninkem v tomhle měsíci a série týdnů v řadě.")
+    .configurationDisplayName(steelsetL("Kalendář měsíce", "Month calendar"))
+    .description(steelsetL("Dny s tréninkem v tomhle měsíci a série týdnů v řadě.", "Days you trained this month, plus your weekly streak."))
     .supportedFamilies([.systemMedium])
   }
 }
@@ -736,7 +803,7 @@ struct SteelsetWeightView: View {
     Group {
       if let lastPoint = points.last, let firstPoint = points.first {
         VStack(alignment: .leading, spacing: 2) {
-          SteelsetCaption(text: "TĚLESNÁ VÁHA")
+          SteelsetCaption(text: steelsetL("TĚLESNÁ VÁHA", "BODYWEIGHT"))
           Text(verbatim: "\(fmt1(lastPoint.value)) \(unit)")
             .font(.system(size: 30, weight: .bold).monospacedDigit())
             .foregroundColor(.white)
@@ -744,11 +811,11 @@ struct SteelsetWeightView: View {
             .minimumScaleFactor(0.7)
             .padding(.top, 4)
           if points.count > 1 {
-            Text(verbatim: "\(fmtSigned1(lastPoint.value - firstPoint.value)) \(unit) za měsíc")
+            Text(verbatim: "\(fmtSigned1(lastPoint.value - firstPoint.value)) \(unit) \(steelsetL("za měsíc", "this month"))")
               .font(.system(size: 12, weight: .semibold))
               .foregroundColor(steelsetAccent)
           } else {
-            Text(verbatim: "za posledních 30 dní")
+            Text(verbatim: steelsetL("za posledních 30 dní", "over the last 30 days"))
               .font(.system(size: 12, weight: .semibold))
               .foregroundColor(steelsetDim)
           }
@@ -757,7 +824,7 @@ struct SteelsetWeightView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
       } else {
-        SteelsetEmpty(caption: "TĚLESNÁ VÁHA", hint: "Připoj Apple Health v Profilu, ať má widget odkud brát vážení.")
+        SteelsetEmpty(caption: steelsetL("TĚLESNÁ VÁHA", "BODYWEIGHT"), hint: steelsetL("Připoj Apple Health v Profilu, ať má widget odkud brát vážení.", "Connect Apple Health in Profile so the widget can read your weigh-ins."))
       }
     }
     .widgetURL(URL(string: "steelset://profil"))
@@ -772,8 +839,8 @@ struct SteelsetWeightWidget: Widget {
     StaticConfiguration(kind: kind, provider: SteelsetProvider()) { entry in
       SteelsetWeightView(entry: entry)
     }
-    .configurationDisplayName("Tělesná váha")
-    .description("Poslední vážení z Apple Health a trend za měsíc.")
+    .configurationDisplayName(steelsetL("Tělesná váha", "Bodyweight"))
+    .description(steelsetL("Poslední vážení z Apple Health a trend za měsíc.", "Your latest weigh-in from Apple Health and the monthly trend."))
     .supportedFamilies([.systemSmall])
   }
 }
@@ -793,11 +860,11 @@ struct SteelsetPlansView: View {
     let unit = snapshot?.unit ?? "kg"
     Group {
       if routines.isEmpty {
-        SteelsetEmpty(caption: "PLÁNY TENTO TÝDEN", hint: snapshot == nil ? "Otevři Steelset, ať má widget co ukázat." : "Zatím nemáš žádný plán. Vytvoříš ho v záložce Plány.")
+        SteelsetEmpty(caption: steelsetL("PLÁNY TENTO TÝDEN", "PLANS THIS WEEK"), hint: snapshot == nil ? steelsetOpenHint : steelsetL("Zatím nemáš žádný plán. Vytvoříš ho v záložce Plány.", "You have no plan yet. Create one in the Plans tab."))
       } else {
         VStack(alignment: .leading, spacing: 0) {
           HStack {
-            SteelsetCaption(text: "PLÁNY TENTO TÝDEN")
+            SteelsetCaption(text: steelsetL("PLÁNY TENTO TÝDEN", "PLANS THIS WEEK"))
             Spacer(minLength: 0)
             Text(verbatim: "\(doneCount) ze \(routines.count)")
               .font(.system(size: 13, weight: .bold).monospacedDigit())
@@ -825,13 +892,13 @@ struct SteelsetPlansView: View {
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(done ? steelsetDim : .white)
                     .lineLimit(1)
-                  Text(verbatim: "\(r.exercises) \(czPlural(r.exercises, "cvik", "cviky", "cviků"))")
+                  Text(verbatim: "\(r.exercises) \(steelsetExercisesWord(r.exercises))")
                     .font(.system(size: 11.5, weight: .medium))
                     .foregroundColor(steelsetDim)
                 }
                 Spacer(minLength: 0)
                 if r.id == snapshot?.next && !done {
-                  Text(verbatim: "Na řadě")
+                  Text(verbatim: steelsetL("Na řadě", "Up next"))
                     .font(.system(size: 11, weight: .bold))
                     .foregroundColor(steelsetBg)
                     .padding(.horizontal, 10)
@@ -843,7 +910,7 @@ struct SteelsetPlansView: View {
             }
           }
           Spacer(minLength: 0)
-          SteelsetStreakLine(streak: streak, extra: "\(fmtInt(week.volume)) \(unit) tento týden")
+          SteelsetStreakLine(streak: streak, extra: "\(fmtInt(week.volume)) \(unit) \(steelsetL("tento týden", "this week"))")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
       }
@@ -860,8 +927,8 @@ struct SteelsetPlansWidget: Widget {
     StaticConfiguration(kind: kind, provider: SteelsetProvider()) { entry in
       SteelsetPlansView(entry: entry)
     }
-    .configurationDisplayName("Plány tento týden")
-    .description("Které plány už tento týden máš za sebou a který je na řadě.")
+    .configurationDisplayName(steelsetL("Plány tento týden", "Plans this week"))
+    .description(steelsetL("Které plány už tento týden máš za sebou a který je na řadě.", "Which plans you have done this week and which one is up next."))
     .supportedFamilies([.systemLarge])
   }
 }
@@ -876,14 +943,14 @@ struct SteelsetMusclesView: View {
     let top = rows.first?.sets ?? 1
     Group {
       if rows.isEmpty {
-        SteelsetEmpty(caption: "SÉRIE PO PARTIÍCH · 7 DNÍ", hint: entry.snapshot == nil ? "Otevři Steelset, ať má widget co ukázat." : "Za posledních sedm dní žádné série.")
+        SteelsetEmpty(caption: steelsetL("SÉRIE PO PARTIÍCH · 7 DNÍ", "SETS BY MUSCLE · 7 DAYS"), hint: entry.snapshot == nil ? steelsetOpenHint : steelsetL("Za posledních sedm dní žádné série.", "No sets in the last seven days."))
       } else {
         VStack(alignment: .leading, spacing: 5) {
-          SteelsetCaption(text: "SÉRIE PO PARTIÍCH · 7 DNÍ")
+          SteelsetCaption(text: steelsetL("SÉRIE PO PARTIÍCH · 7 DNÍ", "SETS BY MUSCLE · 7 DAYS"))
             .padding(.bottom, 2)
           ForEach(rows, id: \.name) { m in
             HStack(spacing: 8) {
-              Text(verbatim: m.name)
+              Text(verbatim: steelsetMuscle(m.name))
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundColor(.white)
                 .lineLimit(1)
@@ -921,8 +988,8 @@ struct SteelsetMusclesWidget: Widget {
     StaticConfiguration(kind: kind, provider: SteelsetProvider()) { entry in
       SteelsetMusclesView(entry: entry)
     }
-    .configurationDisplayName("Série po partiích")
-    .description("Kolik sérií dostala která partie za posledních sedm dní, barvy jako na svalové mapě.")
+    .configurationDisplayName(steelsetL("Série po partiích", "Sets by muscle"))
+    .description(steelsetL("Kolik sérií dostala která partie za posledních sedm dní, barvy jako na svalové mapě.", "How many sets each muscle got in the last seven days, colored like the muscle map."))
     .supportedFamilies([.systemMedium])
   }
 }

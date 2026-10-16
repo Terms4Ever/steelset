@@ -58,7 +58,7 @@ struct SteelsetWorkoutLiveActivity: Widget {
             HStack(spacing: 8) {
               Image(systemName: "timer")
                 .foregroundColor(steelsetAccent)
-              Text("Odpočinek")
+              Text(verbatim: steelsetL("Odpočinek", "Rest"))
                 .font(.subheadline)
               Spacer()
               Text(timerInterval: Date()...rest, countsDown: true)
@@ -69,11 +69,11 @@ struct SteelsetWorkoutLiveActivity: Widget {
             }
           } else {
             HStack {
-              Text("\(context.state.doneSets)/\(context.state.totalSets) sérií")
+              Text(verbatim: "\(context.state.doneSets)/\(context.state.totalSets) \(steelsetL("sérií", "sets"))")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
               Spacer()
-              Text("probíhá")
+              Text(verbatim: steelsetL("probíhá", "in progress"))
                 .font(.subheadline)
                 .foregroundColor(steelsetAccent)
             }
@@ -126,7 +126,7 @@ struct LockScreenView: View {
         HStack(spacing: 8) {
           Image(systemName: "timer")
             .foregroundColor(steelsetAccent)
-          Text("Odpočinek")
+          Text(verbatim: steelsetL("Odpočinek", "Rest"))
             .font(.subheadline)
             .foregroundColor(.white.opacity(0.7))
           Spacer()
@@ -138,11 +138,11 @@ struct LockScreenView: View {
         }
       } else {
         HStack {
-          Text("\(context.state.doneSets)/\(context.state.totalSets) sérií")
+          Text(verbatim: "\(context.state.doneSets)/\(context.state.totalSets) \(steelsetL("sérií", "sets"))")
             .font(.subheadline)
             .foregroundColor(.white.opacity(0.7))
           Spacer()
-          Text("probíhá")
+          Text(verbatim: steelsetL("probíhá", "in progress"))
             .font(.subheadline.bold())
             .foregroundColor(steelsetAccent)
         }

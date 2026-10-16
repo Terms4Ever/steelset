@@ -1,0 +1,3 @@
+/* Texty oprávnění hodinek (#20), musí sedět s Info.plist a s testem healthPlist.test.ts */
+"NSHealthShareUsageDescription" = "Steelset na hodinkách čte během tréninku tep a spálené kalorie.";
+"NSHealthUpdateUsageDescription" = "Steelset na hodinkách ukládá silový trénink do Apple Health i se spálenými kaloriemi a tepem, stejně jako aplikace Cvičení.";

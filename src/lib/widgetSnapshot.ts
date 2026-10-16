@@ -1,3 +1,4 @@
+import { getLang, type Lang } from '@/i18n';
 import { Exercise, Routine, Unit, Workout } from '@/data/types';
 import { MS, muscleSetsDetailed, SET_ZONES, workoutVolumeEx } from '@/lib/calc';
 import { toDisplayWeight } from '@/lib/format';
@@ -49,6 +50,8 @@ export type WidgetSnapshot = {
   next: string | null;
   /** Vážení za posledních 30 dní v jednotce uživatele, nejstarší první. Prázdné bez Apple Health. */
   weight: { at: number; value: number }[];
+  /** Jazyk aplikace, ve kterém widgety a Live Activity mluví (#20). */
+  lang: Lang;
 };
 
 /**
@@ -92,10 +95,13 @@ export function buildWidgetSnapshot(
     weeklyGoal: number;
     bodyweightLog: { at: number; kg: number }[];
     exercisesById: Record<string, Exercise>;
+    /** Bez udání jazyk, ve kterém aplikace právě běží. */
+    lang?: Lang;
   },
   now: number,
 ): WidgetSnapshot {
   const { workouts, routines, unit, weeklyGoal, bodyweightLog, exercisesById } = input;
+  const lang = input.lang ?? getLang();
   const finished = workouts.filter((w) => w.finishedAt != null).sort((a, b) => b.finishedAt! - a.finishedAt!);
 
   const since = now - RECENT_DAYS * MS.DAY;
@@ -146,6 +152,7 @@ export function buildWidgetSnapshot(
     routines: shown.map((r) => ({ id: r.id, name: r.name, exercises: r.exercises.length, lastAt: lastAt.get(r.id) ?? null })),
     next: nx ? nx.routine.id : null,
     weight,
+    lang,
   };
 }
 

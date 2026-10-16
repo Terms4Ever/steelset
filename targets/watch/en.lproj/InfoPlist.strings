@@ -1,0 +1,3 @@
+/* Watch permission texts (#20), must match Info.plist and healthPlist.test.ts */
+"NSHealthShareUsageDescription" = "Steelset on Apple Watch reads your heart rate and active calories during a workout.";
+"NSHealthUpdateUsageDescription" = "Steelset on Apple Watch saves strength workouts to Apple Health with calories and heart rate, just like the Workout app.";

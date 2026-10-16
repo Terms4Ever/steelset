@@ -3,6 +3,24 @@ import Foundation
 import HealthKit
 import WatchKit
 
+/// Jazyk hodinek (#20): stejný jako aplikace v telefonu, ten ho posílá v kontextu (`lang`).
+/// Poslední známý se pamatuje, aby souhrn po tréninku nemluvil jinak než trénink. Bez něj podle
+/// jazyka hodinek: čeština a slovenština česky, ostatní anglicky.
+private let steelsetLangKey = "steelsetLang"
+
+func steelsetWatchIsEnglish() -> Bool {
+  if let lang = UserDefaults.standard.string(forKey: steelsetLangKey) {
+    return lang == "en"
+  }
+  let first = Locale.preferredLanguages.first ?? "cs"
+  return !(first.hasPrefix("cs") || first.hasPrefix("sk"))
+}
+
+/// Text v jazyce aplikace.
+func steelsetWL(_ cs: String, _ en: String) -> String {
+  steelsetWatchIsEnglish() ? en : cs
+}
+
 /// Fáze hodinkové aplikace. Obrazovky podle výběru zadavatele (#15, S38):
 /// 1 trénink běží, 3 odpočinek, 4 ovládání, 5 bez tréninku, 6 souhrn.
 enum SteelsetPhase {
@@ -42,7 +60,7 @@ final class WorkoutManager: NSObject, ObservableObject {
   @Published var summary: SteelsetSummary?
 
   // stav z telefonu: název tréninku a odpočinek mezi sériemi
-  @Published var workoutName: String = "Silový trénink"
+  @Published var workoutName: String = steelsetWL("Silový trénink", "Strength training")
   @Published var restEndAt: Date?
   @Published var restStartedAt: Date?
   @Published var restNext: String = ""
@@ -156,6 +174,10 @@ final class WorkoutManager: NSObject, ObservableObject {
   func applyPhoneState(_ state: [String: Any]) {
     let id = (state["workoutId"] as? String) ?? ""
     let active = (state["active"] as? Bool) ?? true
+    // jazyk platí z každého kontextu, i z konce tréninku, ať souhrn mluví jako telefon (#20)
+    if let lang = state["lang"] as? String, lang == "cs" || lang == "en" {
+      UserDefaults.standard.set(lang, forKey: steelsetLangKey)
+    }
 
     if !active {
       // konec patří tomuhle tréninku, když nese jeho id, nebo ho telefon poslal až po startu

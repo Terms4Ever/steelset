@@ -1,4 +1,5 @@
 import type { Exercise, Workout } from '@/data/types';
+import { getLang, type Lang } from '@/i18n';
 
 /**
  * Co telefon posílá hodinkám (#15). Tvar čte `WorkoutManager.applyPhoneState` v
@@ -16,6 +17,8 @@ export type WatchState = {
   discard: boolean;
   /** Kdy telefon stav poslal (ms). Hodinky podle něj zahodí starý konec z minulého tréninku. */
   at: number;
+  /** Jazyk aplikace, hodinky mluví stejně (#20). */
+  lang: Lang;
 };
 
 /** Konec tréninku z hodinek: id, které hodinky znaly, a kdy na hodinkách padlo Ukončit (ms). */
@@ -53,9 +56,10 @@ export function runningState(
     next: nextSetLabel(w, exById),
     discard: false,
     at: now,
+    lang: getLang(),
   };
 }
 
 export function endedState(workoutId: string, discard: boolean, now: number): WatchState {
-  return { active: false, workoutId, name: '', restEndAt: 0, next: '', discard, at: now };
+  return { active: false, workoutId, name: '', restEndAt: 0, next: '', discard, at: now, lang: getLang() };
 }

@@ -141,7 +141,7 @@ struct SteelsetRunningView: View {
       SteelsetMetricRow(symbol: nil, value: "Ø " + steelsetNumber(manager.averageHeartRate), unit: "BPM", color: .gray)
     }
     .frame(maxWidth: .infinity, alignment: .leading)
-    .navigationTitle(manager.phase == .paused ? "Pauza" : "Silový trénink")
+    .navigationTitle(manager.phase == .paused ? steelsetWL("Pauza", "Paused") : steelsetWL("Silový trénink", "Strength training"))
   }
 }
 
@@ -199,7 +199,7 @@ struct SteelsetRestView: View {
       }
       .frame(width: 110, height: 110)
       if !manager.restNext.isEmpty {
-        Text("Další: " + manager.restNext)
+        Text(steelsetWL("Další: ", "Next: ") + manager.restNext)
           .font(.system(size: 13, weight: .semibold))
           .foregroundColor(.gray)
           .lineLimit(1)
@@ -211,7 +211,7 @@ struct SteelsetRestView: View {
           .monospacedDigit()
       }
     }
-    .navigationTitle("Odpočinek")
+    .navigationTitle(steelsetWL("Odpočinek", "Rest"))
   }
 }
 
@@ -224,14 +224,14 @@ struct SteelsetControlsView: View {
     HStack(spacing: 12) {
       SteelsetControlButton(
         symbol: "xmark",
-        title: "Ukončit",
+        title: steelsetWL("Ukončit", "End"),
         color: .red
       ) {
         manager.end(save: true, notifyPhone: true)
       }
       SteelsetControlButton(
         symbol: manager.phase == .paused ? "play.fill" : "pause.fill",
-        title: manager.phase == .paused ? "Pokračovat" : "Pauza",
+        title: manager.phase == .paused ? steelsetWL("Pokračovat", "Resume") : steelsetWL("Pauza", "Pause"),
         color: .yellow
       ) {
         manager.togglePause()
@@ -276,7 +276,7 @@ struct SteelsetIdleView: View {
         .clipShape(RoundedRectangle(cornerRadius: 13))
       Text("Steelset")
         .font(.system(size: 17, weight: .bold))
-      Text("Trénink spusť v telefonu, hodinky se zapnou samy.")
+      Text(steelsetWL("Trénink spusť v telefonu, hodinky se zapnou samy.", "Start a workout on your phone and the watch starts by itself."))
         .font(.system(size: 13, weight: .semibold))
         .foregroundColor(.gray)
         .multilineTextAlignment(.center)
@@ -302,21 +302,21 @@ struct SteelsetSummaryView: View {
             .foregroundColor(steelsetGreen)
           SteelsetMetricRow(symbol: "heart.fill", value: steelsetNumber(summary.averageHeartRate ?? 0), unit: "Ø BPM", color: steelsetHeart)
           SteelsetMetricRow(symbol: nil, value: steelsetNumber(summary.activeEnergy ?? 0), unit: "KCAL", color: steelsetEnergy)
-          Text(summary.saved ? "Uloženo do Zdraví" : "Do Zdraví se uložit nepodařilo")
+          Text(summary.saved ? steelsetWL("Uloženo do Zdraví", "Saved to Health") : steelsetWL("Do Zdraví se uložit nepodařilo", "Couldn't save to Health"))
             .font(.system(size: 13, weight: .semibold))
             .foregroundColor(summary.saved ? Color.gray : Color.red)
             .padding(.top, 4)
           if summary.saved && !summary.energySaved {
-            Text("Kalorie do Zdraví nesmí. Povol je v iPhonu: Zdraví, profil, Aplikace, Steelset.")
+            Text(steelsetWL("Kalorie do Zdraví nesmí. Povol je v iPhonu: Zdraví, profil, Aplikace, Steelset.", "Calories can't be saved to Health. Allow them on your iPhone: Health, profile, Apps, Steelset."))
               .font(.system(size: 12, weight: .semibold))
               .foregroundColor(.orange)
           }
         }
-        Button("Hotovo") { manager.dismissSummary() }
+        Button(steelsetWL("Hotovo", "Done")) { manager.dismissSummary() }
           .padding(.top, 8)
       }
       .frame(maxWidth: .infinity, alignment: .leading)
     }
-    .navigationTitle("Hotovo")
+    .navigationTitle(steelsetWL("Hotovo", "Done"))
   }
 }
