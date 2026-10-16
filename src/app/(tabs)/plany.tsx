@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
+import { useT } from '@/i18n/useT';
 import { Card, Screen, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { STARTER_ROUTINES } from '@/data/exercises';
@@ -9,12 +10,13 @@ import { useStore } from '@/store/useStore';
 
 export default function Plany() {
   const router = useRouter();
+  const tx = useT();
   const routines = useStore((s) => s.routines);
   const addRoutine = useStore((s) => s.addRoutine);
   const startWorkout = useStore((s) => s.startWorkout);
 
   const createNew = () => {
-    const id = addRoutine({ name: 'Nový plán', exercises: [] });
+    const id = addRoutine({ name: tx.plans.newPlan, exercises: [] });
     router.push(`/routine/${id}`);
   };
 
@@ -31,12 +33,12 @@ export default function Plany() {
     <Screen>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <Txt size={type.title} weight="bold">
-          Plány
+          {tx.plans.title}
         </Txt>
         <Pressable onPress={createNew} style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: palette.accentDeep, paddingHorizontal: 12, paddingVertical: 7, borderRadius: radius.pill }}>
           <Ionicons name="add" size={16} color={palette.accent} />
           <Txt size={type.label} weight="bold" color={palette.accent}>
-            Nový plán
+            {tx.plans.newPlan}
           </Txt>
         </Pressable>
       </View>
@@ -44,11 +46,11 @@ export default function Plany() {
       {routines.length === 0 ? (
         <Card style={{ marginTop: space.xl, alignItems: 'flex-start', gap: 12 }}>
           <Txt size={type.body} weight="medium" color={palette.textMute}>
-            Zatím žádné plány. Vytvoř vlastní nebo importuj ověřené programy.
+            {tx.plans.empty}
           </Txt>
           <Pressable onPress={importStarters} style={{ backgroundColor: palette.surface2, paddingHorizontal: 16, paddingVertical: 10, borderRadius: radius.sm }}>
             <Txt size={type.label} weight="bold" color={palette.accent}>
-              Importovat startovací plány
+              {tx.plans.importStarters}
             </Txt>
           </Pressable>
         </Card>
@@ -64,7 +66,7 @@ export default function Plany() {
                 </View>
                 <Txt size={type.label} weight="medium" color={palette.textMute} style={{ marginTop: 4 }}>
                   {r.folder ? `${r.folder} · ` : ''}
-                  {r.exercises.length} cviků
+                  {tx.common.exercises(r.exercises.length)}
                 </Txt>
               </Pressable>
               <Pressable onPress={() => start(r.id)} disabled={r.exercises.length === 0} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: r.exercises.length ? palette.accent : palette.surface2, alignItems: 'center', justifyContent: 'center' }}>

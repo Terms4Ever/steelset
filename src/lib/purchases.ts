@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 /**
  * Subscriptions via RevenueCat. Steelset is free with ads; an active "pro" entitlement removes them.
  *
@@ -148,7 +149,7 @@ export async function buyPro(pkg: ProPackage): Promise<PurchaseResult> {
   } catch (e: any) {
     // the user backing out of the App Store sheet is not an error worth showing
     if (e?.userCancelled) return { ok: false, isPro: false, cancelled: true };
-    return { ok: false, isPro: false, cancelled: false, error: e?.message ?? 'Nákup se nepodařil.' };
+    return { ok: false, isPro: false, cancelled: false, error: e?.message ?? t().paywall.purchaseFailed };
   }
 }
 
@@ -159,6 +160,6 @@ export async function restorePro(): Promise<PurchaseResult> {
     const info = await Purchases.restorePurchases();
     return { ok: true, isPro: !!info?.entitlements?.active?.[PRO_ENTITLEMENT], cancelled: false };
   } catch (e: any) {
-    return { ok: false, isPro: false, cancelled: false, error: e?.message ?? 'Obnovení se nepodařilo.' };
+    return { ok: false, isPro: false, cancelled: false, error: e?.message ?? t().paywall.restoreFailed };
   }
 }

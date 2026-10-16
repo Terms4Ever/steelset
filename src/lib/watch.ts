@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { t } from '@/i18n';
 import type { WatchEnded, WatchState } from '@/lib/watchState';
 
 // Most k hodinkové aplikaci (#15). Jen iOS s nativním modulem, jinde se nic nestane (web, Expo Go).
@@ -30,8 +31,8 @@ export const watch = {
       mod.pushState(state);
       mod
         .startWorkout()
-        .then((ok: boolean) => logWatch(ok ? 'hodinky spuštěné' : 'hodinky nespuštěné (nejsou spárované nebo nemají aplikaci)'))
-        .catch(() => logWatch('spuštění hodinek selhalo'));
+        .then((ok: boolean) => logWatch(ok ? t().diag.watchStarted : t().diag.watchNotStarted))
+        .catch(() => logWatch(t().diag.watchStartFailed));
     } catch {
       /* bez hodinek se nic neděje */
     }
@@ -50,7 +51,7 @@ export const watch = {
   end(state: WatchState) {
     if (!mod || startedForId !== state.workoutId) return;
     startedForId = null;
-    void logWatch(state.discard ? 'trénink zahozen, hodinky končí bez uložení' : 'trénink skončil v telefonu, hodinky končí');
+    void logWatch(state.discard ? t().diag.watchDiscarded : t().diag.watchEndedPhone);
     try {
       mod.pushState(state);
     } catch {

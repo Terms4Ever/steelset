@@ -1,8 +1,9 @@
+import { t } from '@/i18n';
 import { Exercise, Workout } from '@/data/types';
 
 /** Clean, importable CSV of full workout history (data ownership - no lock-in). */
 export function workoutsToCsv(workouts: Workout[], exercisesById: Record<string, Exercise>): string {
-  const rows: string[] = ['Datum;Trénink;Cvik;Série;Typ;Váha (kg);Opakování;RPE'];
+  const rows: string[] = [t().csv.header];
   const finished = [...workouts].filter((w) => w.finishedAt).sort((a, b) => a.finishedAt! - b.finishedAt!);
   for (const w of finished) {
     const date = new Date(w.finishedAt!).toISOString().slice(0, 10);

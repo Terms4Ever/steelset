@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useMiniBarSpace } from '@/components/MiniWorkoutBar';
 import { Txt } from '@/components/ui';
+import { useT } from '@/i18n/useT';
 import { palette, radius, space, type } from '@/constants/theme';
 import { dayName, fmtDateShort, NBSP } from '@/lib/format';
 import { haptic } from '@/lib/haptic';
@@ -14,6 +15,8 @@ import { useStore } from '@/store/useStore';
 const DAY = 86_400_000;
 
 export default function Trash() {
+  const tx = useT();
+  const tr = tx.trash;
   const router = useRouter();
   // plovoucí lišta běžícího tréninku leží nad obsahem, tohle jí drží místo dole
   const barSpace = useMiniBarSpace();
@@ -30,9 +33,9 @@ export default function Trash() {
     haptic.light();
   };
   const onDelete = (id: string, name: string) => {
-    Alert.alert('Smazat definitivně?', `„${name}" už nepůjde obnovit.`, [
-      { text: 'Zrušit', style: 'cancel' },
-      { text: 'Smazat', style: 'destructive', onPress: () => deleteTrashedForever(id) },
+    Alert.alert(tr.deleteTitle, tr.deleteText(name), [
+      { text: tx.common.cancel, style: 'cancel' },
+      { text: tx.common.delete, style: 'destructive', onPress: () => deleteTrashedForever(id) },
     ]);
   };
 
@@ -44,10 +47,10 @@ export default function Trash() {
         </Pressable>
         <View>
           <Txt size={type.h1} weight="bold">
-            Koš
+            {tr.title}
           </Txt>
           <Txt size={type.caption} weight="medium" color={palette.textMute}>
-            Zahozené tréninky - drží se 7 dní
+            {tr.subtitle}
           </Txt>
         </View>
       </View>
@@ -57,10 +60,10 @@ export default function Trash() {
           <View style={{ alignItems: 'center', marginTop: space.xxl }}>
             <Ionicons name="trash-outline" size={40} color={palette.surface3} />
             <Txt size={type.h2} weight="bold" style={{ marginTop: 12 }}>
-              Koš je prázdný
+              {tr.empty}
             </Txt>
             <Txt size={type.body} weight="medium" color={palette.textMute} style={{ textAlign: 'center', marginTop: 6 }}>
-              Když trénink zahodíš nebo smažeš, 7 dní ho tady jde obnovit.
+              {tr.emptyHint}
             </Txt>
           </View>
         ) : (
@@ -78,11 +81,11 @@ export default function Trash() {
                         {t.name}
                       </Txt>
                       <Txt size={type.caption} weight="medium" num color={palette.textMute} style={{ marginTop: 2 }}>
-                        {dayName(t.startedAt)} {fmtDateShort(t.startedAt)} · {t.exercises.length} cviků · {sets} sérií
+                        {dayName(t.startedAt)} {fmtDateShort(t.startedAt)} · {tx.common.exercises(t.exercises.length)} · {tx.common.sets(sets)}
                         {t.avgHr ? ` · ⌀${t.avgHr}${NBSP}tep` : ''}
                       </Txt>
                       <Txt size={type.caption} weight="semibold" color={dl <= 1 ? palette.red : palette.textMute} style={{ marginTop: 2 }}>
-                        {dl <= 0 ? 'smaže se dnes' : dl === 1 ? 'zbývá 1 den' : dl <= 4 ? `zbývají ${dl} dny` : `zbývá ${dl} dní`}
+                        {dl <= 0 ? tr.deletesToday : tr.daysLeft(dl)}
                       </Txt>
                     </View>
                   </View>
@@ -102,7 +105,7 @@ export default function Trash() {
                       })}>
                       <Ionicons name="arrow-undo" size={16} color={palette.bg} />
                       <Txt size={type.label} weight="bold" color={palette.bg}>
-                        Obnovit
+                        {tr.restore}
                       </Txt>
                     </Pressable>
                     <Pressable
@@ -120,7 +123,7 @@ export default function Trash() {
                       })}>
                       <Ionicons name="trash-outline" size={16} color={palette.red} />
                       <Txt size={type.label} weight="semibold" color={palette.red}>
-                        Smazat
+                        {tx.common.delete}
                       </Txt>
                     </Pressable>
                   </View>

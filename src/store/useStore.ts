@@ -7,6 +7,8 @@ import { Exercise, HrSample, LoggedExercise, MuscleGroup, Routine, SetEntry, Set
 import { isCountable, lastPerformance } from '@/lib/calc';
 import { exerciseUsage, isExerciseUsed } from '@/lib/exerciseUsage';
 import { buildPrefilledExercise, prefillSets } from '@/lib/prefill';
+import { t } from '@/i18n';
+import { seedExerciseName } from '@/i18n/catalog';
 import { moveBlock } from '@/lib/reorder';
 import { persistedStoreStorage, STORE_KEY } from '@/lib/storeKeys';
 
@@ -244,7 +246,9 @@ export const useStore = create<State & Actions>()(
           }
           const next = { ...s.exerciseNames };
           // prázdné jméno nebo jméno shodné s původním přepis ruší, ať nezůstává zbytečný záznam
-          if (!trimmed || trimmed === originalExerciseName(id)) delete next[id];
+          // původní název platí v obou jazycích, jinak by se po přepnutí jazyka z výchozího stal přepis
+          const seedCs = SEED_EXERCISES.find((e) => e.id === id)?.name;
+          if (!trimmed || trimmed === originalExerciseName(id) || trimmed === seedCs) delete next[id];
           else next[id] = trimmed;
           return { exerciseNames: next };
         }),
@@ -268,7 +272,7 @@ export const useStore = create<State & Actions>()(
       startWorkout: (routineId, manual = false) => {
         const st = get();
         const ws = st.workouts;
-        let name = manual ? 'Zápis tréninku' : 'Rychlý trénink';
+        let name = manual ? t().workout.manualName : t().workout.quickName;
         let exercises: LoggedExercise[] = [];
         if (routineId) {
           const r = st.routines.find((x) => x.id === routineId);
@@ -603,8 +607,10 @@ export const useStore = create<State & Actions>()(
 
 // ---- selectors ----
 /** Původní (vestavěný) název cviku, pokud jde o cvik ze seznamu v aplikaci. */
+/** Původní název vestavěného cviku v aktuálním jazyce (#20). */
 export function originalExerciseName(id: string): string | undefined {
-  return SEED_EXERCISES.find((e) => e.id === id)?.name;
+  const seed = SEED_EXERCISES.find((e) => e.id === id);
+  return seed ? seedExerciseName(seed.id, seed.name) : undefined;
 }
 
 type ExerciseSlice = Pick<State, 'customExercises'> &
@@ -618,7 +624,9 @@ export function allExercises(s: ExerciseSlice): Exercise[] {
   const overrides = s.exerciseMuscles ?? {};
   const names = s.exerciseNames ?? {};
   const hidden = new Set(s.hiddenExercises ?? []);
-  return [...SEED_EXERCISES, ...s.customExercises].map((e0) => {
+  // vestavěné cviky v jazyce aplikace, vlastní a přejmenované se nepřekládají (#20)
+  const seeds = SEED_EXERCISES.map((e) => ({ ...e, name: seedExerciseName(e.id, e.name) }));
+  return [...seeds, ...s.customExercises].map((e0) => {
     const e = hidden.has(e0.id) ? { ...e0, hidden: true } : e0;
     const o = overrides[e.id];
     const name = names[e.id];
@@ -646,9 +654,12 @@ export function useAllExercises(): Exercise[] {
   const exerciseMuscles = useStore((s) => s.exerciseMuscles);
   const exerciseNames = useStore((s) => s.exerciseNames);
   const hiddenExercises = useStore((s) => s.hiddenExercises);
+  // jazyk mění názvy vestavěných cviků, proto i on přepočítá seznam (#20)
+  const language = useStore((s) => s.settings.language);
   return useMemo(
     () => allExercises({ customExercises, exerciseMuscles, exerciseNames, hiddenExercises }),
-    [customExercises, exerciseMuscles, exerciseNames, hiddenExercises],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [customExercises, exerciseMuscles, exerciseNames, hiddenExercises, language],
   );
 }
 

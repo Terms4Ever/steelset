@@ -31,7 +31,7 @@ Jest přes `jest-expo`, soubory `tests/*.test.ts`, spouští se `npx jest`
 | `stepper.test.ts` | 13 | steppery v Profilu: přírůstek po pevném seznamu se vrátí na 2,5 kg i 5 lb, krok po mřížce z minima zpátky na výchozí u všech stepperů (#21) |
 | `watch.test.ts` | 19 | hodinky (#15, #23, #24, #25): zápis kalorií a tepu do Health, čas se setinami a bez nich při ztlumeném displeji; konec z hodinek ukončí telefon i bez shody id, starý konec z minula ne; hodinky pošlou konec dřív, než ukládají do Health; spouští se jen u živého tréninku a se zapnutým přepínačem, konec v telefonu je ukončí s uložením nebo bez, konec z hodinek ukončí telefon jen s hotovou sérií; klíče stavu sedí s `applyPhoneState` ve Swiftu |
 | `healthPlist.test.ts` | 5 | telefon i hodinky mají oba texty pro Apple Health; bez textu pro zápis Apple build odmítne (ITMS-90683, S39) |
-| `i18n.test.ts` | 8 | angličtina (#20): oba slovníky mají stejné klíče, anglický text bez českých znaků a prázdných řetězců, jen krátké pomlčky, české skloňování, výběr jazyka, čísla a data podle jazyka |
+| `i18n.test.ts` | 9 | angličtina (#20): obrazovky v `src/app` a `src/components` nemají český text natvrdo, oba slovníky mají stejné klíče, anglický text bez českých znaků a prázdných řetězců, jen krátké pomlčky, české skloňování, výběr jazyka, čísla a data podle jazyka |
 | `csv.test.ts` | 2 | export do CSV: nedokončené tréninky vynechá, zvláštní znaky ošetří |
 
 Běh 16. 10. 2026: 22 sad, 284 testů, všechny prošly. `store.test.ts` nově hlídá, že starý

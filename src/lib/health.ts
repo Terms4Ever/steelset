@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 import { Platform } from 'react-native';
 
 import type { HrSample } from '@/data/types';
@@ -24,31 +25,10 @@ export interface HealthWorkout {
   energyKcal?: number;
 }
 
-// HKWorkoutActivityType (numeric) → Czech label for common activities; unknown → "Trénink".
-const ACTIVITY_CZ: Record<number, string> = {
-  50: 'Silový trénink',
-  20: 'Funkční síla',
-  59: 'Core',
-  63: 'HIIT',
-  11: 'Kruhový trénink',
-  37: 'Běh',
-  52: 'Chůze',
-  13: 'Kolo',
-  24: 'Turistika',
-  35: 'Veslování',
-  16: 'Eliptical',
-  44: 'Schody',
-  57: 'Jóga',
-  66: 'Pilates',
-  62: 'Flexibilita',
-  64: 'Švihadlo',
-  65: 'Kickbox',
-  8: 'Box',
-  73: 'Kardio',
-  80: 'Zklidnění',
-};
+// HKWorkoutActivityType (numeric) → label for common activities in the app language (#20)
 function activityName(type: number): string {
-  return ACTIVITY_CZ[type] ?? 'Trénink';
+  const a = t().activities;
+  return a[String(type)] ?? a.other;
 }
 
 function hk(): any | null {
@@ -208,23 +188,24 @@ export async function bodyweightHistoryKg(sinceMs: number): Promise<{ at: number
 
 /** Run every Health step and report exactly what worked / failed — for on-device diagnosis. */
 export async function healthSelfTest(): Promise<string> {
-  if (Platform.OS !== 'ios') return 'Apple Health je dostupné jen na iPhonu.';
+  const d = t().diag;
+  if (Platform.OS !== 'ios') return d.iphoneOnly;
   const m = hk();
-  if (!m) return 'HealthKit modul se nenačetl (native require selhal).';
+  if (!m) return d.noModule;
   const out: string[] = [];
   const err = (e: any) => (e?.message ? String(e.message) : String(e)).slice(0, 200);
 
   try {
     const fn = m.isHealthDataAvailableAsync ?? m.isHealthDataAvailable;
-    out.push('Dostupnost: ' + (fn ? String(await fn()) : 'fn chybí'));
+    out.push(d.available + ': ' + (fn ? String(await fn()) : d.fnMissing));
   } catch (e) {
     out.push('Dostupnost CHYBA: ' + err(e));
   }
   try {
     const r = await m.requestAuthorization({ toShare: SHARE, toRead: READ });
-    out.push('Oprávnění (requestAuthorization): ' + String(r));
+    out.push(d.permission + ': ' + String(r));
   } catch (e) {
-    out.push('Oprávnění CHYBA: ' + err(e));
+    out.push(d.permissionError + ': ' + err(e));
   }
   try {
     const res = await m.queryWorkoutSamples({
@@ -232,9 +213,9 @@ export async function healthSelfTest(): Promise<string> {
       ascending: false,
       filter: { date: { startDate: new Date(Date.now() - 30 * 86400000) } },
     });
-    out.push('Tréninky v Health (30 dní): ' + (res?.length ?? 0));
+    out.push(d.workouts30 + ': ' + (res?.length ?? 0));
   } catch (e) {
-    out.push('Čtení tréninků CHYBA: ' + err(e));
+    out.push(d.workoutsError + ': ' + err(e));
   }
   try {
     const end = new Date();
@@ -245,11 +226,11 @@ export async function healthSelfTest(): Promise<string> {
       filter: { date: { startDate: start, endDate: end } },
     });
     const n = samples?.length ?? 0;
-    out.push('Tep – vzorků za 6 h: ' + n);
-    if (n) out.push('Poslední tep: ' + Math.round(samples[n - 1]?.quantity) + ' /min');
-    else out.push('(žádné HR vzorky – zaznamenej trénink na hodinkách v Apple Cvičení a chvíli počkej na sync)');
+    out.push(d.hr6h + ': ' + n);
+    if (n) out.push(d.lastHr + ': ' + Math.round(samples[n - 1]?.quantity) + ' /min');
+    else out.push(d.noHr);
   } catch (e) {
-    out.push('Tep CHYBA: ' + err(e));
+    out.push(d.hrError + ': ' + err(e));
   }
   return out.join('\n');
 }

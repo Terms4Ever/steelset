@@ -6,12 +6,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useMiniBarSpace } from '@/components/MiniWorkoutBar';
 import { PrimaryButton, Txt } from '@/components/ui';
+import { useT } from '@/i18n/useT';
 import { palette, radius, space, type } from '@/constants/theme';
 import { haptic } from '@/lib/haptic';
 import { canMove, moveBlock, stableKeys } from '@/lib/reorder';
 import { useExercisesById, useStore } from '@/store/useStore';
 
 export default function RoutineEditor() {
+  const tx = useT();
   const router = useRouter();
   // plovoucí lišta běžícího tréninku leží nad obsahem, tohle jí drží místo dole
   const barSpace = useMiniBarSpace();
@@ -27,9 +29,9 @@ export default function RoutineEditor() {
   if (!routine) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg, alignItems: 'center', justifyContent: 'center' }}>
-        <Txt color={palette.textDim}>Plán nenalezen.</Txt>
+        <Txt color={palette.textDim}>{tx.routine.notFound}</Txt>
         <Pressable onPress={() => router.back()} style={{ marginTop: 12 }}>
-          <Txt color={palette.accent}>Zpět</Txt>
+          <Txt color={palette.accent}>{tx.workout.back}</Txt>
         </Pressable>
       </SafeAreaView>
     );
@@ -78,7 +80,7 @@ export default function RoutineEditor() {
           <Ionicons name="chevron-back" size={26} color={palette.textDim} />
         </Pressable>
         <Txt size={type.h2} weight="bold">
-          Úprava plánu
+          {tx.routine.title}
         </Txt>
         <Pressable onPress={del} hitSlop={10}>
           <Ionicons name="trash-outline" size={22} color={palette.red} />
@@ -89,7 +91,7 @@ export default function RoutineEditor() {
         <TextInput
           value={routine.name}
           onChangeText={(t) => updateRoutine(routine.id, { name: t })}
-          placeholder="Název plánu"
+          placeholder={tx.routine.namePlaceholder}
           placeholderTextColor={palette.textMute}
           style={{ backgroundColor: palette.surface2, borderRadius: radius.sm, color: palette.text, fontFamily: 'Inter_700Bold', fontSize: 20, paddingHorizontal: 14, paddingVertical: 14 }}
         />
@@ -104,7 +106,7 @@ export default function RoutineEditor() {
               <View style={{ flex: 1 }}>
                 {supTag(re, i) && (
                   <Txt size={type.caption} weight="bold" color={palette.accent} style={{ letterSpacing: 1, marginBottom: 2 }}>
-                    SUPERSÉRIE {supTag(re, i)}
+                    {tx.workout.superset(supTag(re, i) ?? '')}
                   </Txt>
                 )}
                 <Txt size={type.body} weight="bold">
@@ -112,7 +114,7 @@ export default function RoutineEditor() {
                 </Txt>
               </View>
               <Pressable
-                accessibilityLabel="Posunout cvik nahoru"
+                accessibilityLabel={tx.workout.moveUp}
                 disabled={!canMove(routine.exercises, i, -1)}
                 onPress={() => moveEx(i, -1)}
                 hitSlop={6}
@@ -120,7 +122,7 @@ export default function RoutineEditor() {
                 <Ionicons name="chevron-up" size={20} color={palette.textDim} />
               </Pressable>
               <Pressable
-                accessibilityLabel="Posunout cvik dolů"
+                accessibilityLabel={tx.workout.moveDown}
                 disabled={!canMove(routine.exercises, i, 1)}
                 onPress={() => moveEx(i, 1)}
                 hitSlop={6}
@@ -132,8 +134,8 @@ export default function RoutineEditor() {
               </Pressable>
             </View>
             <View style={{ flexDirection: 'row', gap: 20, marginTop: 12 }}>
-              <Stepper label="Série" value={re.targetSets} onChange={(v) => setEx(i, { targetSets: v })} min={1} />
-              <Stepper label="Opakování" value={re.targetReps} onChange={(v) => setEx(i, { targetReps: v })} min={1} />
+              <Stepper label={tx.routine.sets} value={re.targetSets} onChange={(v) => setEx(i, { targetSets: v })} min={1} />
+              <Stepper label={tx.routine.reps} value={re.targetReps} onChange={(v) => setEx(i, { targetReps: v })} min={1} />
             </View>
           </View>
         ))}
@@ -142,12 +144,12 @@ export default function RoutineEditor() {
           onPress={() => router.push(`/exercises?target=routine&routineId=${routine.id}`)}
           style={{ paddingVertical: 14, alignItems: 'center', borderRadius: radius.sm, borderWidth: 1, borderColor: palette.hairline, borderStyle: 'dashed' }}>
           <Txt size={type.body} weight="semibold" color={palette.accent}>
-            + Přidat cvik
+            {tx.workout.addExercise}
           </Txt>
         </Pressable>
 
         <View style={{ marginTop: space.xxl }}>
-          <PrimaryButton label="Začít trénink" onPress={start} disabled={routine.exercises.length === 0} style={{ opacity: routine.exercises.length ? 1 : 0.4 }} />
+          <PrimaryButton label={tx.today.start} onPress={start} disabled={routine.exercises.length === 0} style={{ opacity: routine.exercises.length ? 1 : 0.4 }} />
         </View>
       </ScrollView>
     </SafeAreaView>

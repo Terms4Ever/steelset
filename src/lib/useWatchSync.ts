@@ -2,6 +2,7 @@ import { usePathname, useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 
+import { t } from '@/i18n';
 import { heartRateFor } from '@/lib/health';
 import { logWatch, watch } from '@/lib/watch';
 import type { WatchEnded } from '@/lib/watchState';
@@ -35,7 +36,7 @@ export function useWatchSync(ready: boolean) {
       const s = useStore.getState();
       const w = s.workouts.find((x) => x.id === s.activeWorkoutId);
       const result = finishFromWatch(ended);
-      void logWatch(`konec z hodinek (${via}): ${result.reason}`);
+      void logWatch(t().diag.endFromWatch(via, result.reason));
       if (!result.finished) return;
       if (w) pullHeartRateLater(w.id, w.startedAt, ended.at);
       if (pathRef.current === '/workout') router.replace('/');
@@ -47,10 +48,10 @@ export function useWatchSync(ready: boolean) {
       if (pending) onEnded(pending, via);
     };
     // nejdřív odběr, pak vyzvednout konec, který přišel před ním; jinak by mezi tím propadl
-    const off = watch.onEnded(() => takePending('událost'));
-    takePending('start aplikace');
+    const off = watch.onEnded(() => takePending(t().diag.viaEvent));
+    takePending(t().diag.viaStart);
     const sub = AppState.addEventListener('change', (st) => {
-      if (st === 'active') takePending('návrat do popředí');
+      if (st === 'active') takePending(t().diag.viaForeground);
     });
     return () => {
       off();

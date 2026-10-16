@@ -1,3 +1,4 @@
+import { t } from '@/i18n';
 import { liveActivity } from '@/lib/liveActivity';
 import { watch } from '@/lib/watch';
 import { endedState, runningState, startsWatch, type WatchEnded } from '@/lib/watchState';
@@ -49,15 +50,15 @@ export type FinishFromWatch = { finished: boolean; reason: string };
 export function finishFromWatch(ended: WatchEnded, api: Pick<WatchApi, 'forget'> = watch): FinishFromWatch {
   const s = useStore.getState();
   const activeId = s.activeWorkoutId;
-  if (!activeId) return { finished: false, reason: 'v telefonu neběží trénink' };
+  if (!activeId) return { finished: false, reason: t().diag.reasonNoWorkout };
   const w = s.workouts.find((x) => x.id === activeId);
-  if (!w || w.manual) return { finished: false, reason: 'aktivní trénink není živý' };
-  if (ended.at < w.startedAt) return { finished: false, reason: 'konec je z minulého tréninku' };
+  if (!w || w.manual) return { finished: false, reason: t().diag.reasonNotLive };
+  if (ended.at < w.startedAt) return { finished: false, reason: t().diag.reasonOld };
   api.forget(activeId);
   if (!w.exercises.some((le) => le.sets.some((st) => st.done))) {
-    return { finished: false, reason: 'trénink nemá hotovou sérii, zůstal otevřený' };
+    return { finished: false, reason: t().diag.reasonNoSet };
   }
   liveActivity.end();
   s.finishWorkout();
-  return { finished: true, reason: ended.workoutId && ended.workoutId !== activeId ? 'ukončen (id se lišilo)' : 'ukončen' };
+  return { finished: true, reason: ended.workoutId && ended.workoutId !== activeId ? t().diag.reasonEndedOtherId : t().diag.reasonEnded };
 }

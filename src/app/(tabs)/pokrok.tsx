@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 
 import { LineChart } from '@/components/LineChart';
 import { heatColor, MuscleMapChart, MuscleMapLegend } from '@/components/MuscleMapChart';
+import { useT } from '@/i18n/useT';
 import { Card, Screen, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { Workout } from '@/data/types';
@@ -39,6 +40,8 @@ function prCountInWindow(workouts: Workout[], now: number, windowMs: number) {
 
 export default function Pokrok() {
   const router = useRouter();
+  const tx = useT();
+  const g = tx.progress;
   const now = Date.now();
   const workouts = useStore((s) => s.workouts);
   const unit = useStore((s) => s.settings.unit);
@@ -80,7 +83,7 @@ export default function Pokrok() {
     <Screen>
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <Txt size={type.title} weight="bold">
-          Pokrok
+          {g.title}
         </Txt>
         <Pressable onPress={onExport} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: palette.surface2, paddingHorizontal: 12, paddingVertical: 7, borderRadius: radius.pill }}>
           <Ionicons name="download-outline" size={15} color={palette.textDim} />
@@ -93,14 +96,14 @@ export default function Pokrok() {
       {empty ? (
         <Card style={{ marginTop: space.xl }}>
           <Txt size={type.body} weight="medium" color={palette.textMute}>
-            Zaloguj první trénink a tady uvidíš silové skóre, grafy a objem podle svalů.
+            {g.empty}
           </Txt>
         </Card>
       ) : (
         <>
           <Card style={{ marginTop: space.lg, alignItems: 'center', paddingVertical: space.xl }}>
             <Txt size={type.caption} weight="bold" color={palette.textDim} style={{ letterSpacing: 1.2 }}>
-              SILOVÉ SKÓRE
+              {g.strengthScore}
             </Txt>
             <Txt size={56} weight="bold" num color={palette.accent} style={{ marginVertical: 4 }}>
               {score}
@@ -112,17 +115,17 @@ export default function Pokrok() {
                   +{delta}
                 </Txt>
                 <Txt size={type.label} weight="medium" color={palette.textMute}>
-                  za 30 dní
+                  {g.in30Days}
                 </Txt>
               </View>
             )}
           </Card>
 
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.md, marginTop: space.md }}>
-            <Stat label="Tento týden" value={fmtGrouped(toDisplayWeight(weekVol, unit))} unit={`${unit} objem`} />
-            <Stat label="Tréninků" value={String(weekCount)} unit="tento týden" />
-            <Stat label="Odhad 1RM dřep" value={squat1rm ? fmtGrouped(toDisplayWeight(squat1rm, unit)) : '-'} unit={unit} />
-            <Stat label="Rekordů" value={String(prs30)} unit="za 30 dní" />
+            <Stat label={g.thisWeek} value={fmtGrouped(toDisplayWeight(weekVol, unit))} unit={g.volumeUnit(unit)} />
+            <Stat label={g.workouts} value={String(weekCount)} unit={g.thisWeekLower} />
+            <Stat label={g.squat1rm} value={squat1rm ? fmtGrouped(toDisplayWeight(squat1rm, unit)) : '-'} unit={unit} />
+            <Stat label={g.records} value={String(prs30)} unit={g.in30Days} />
           </View>
 
           {trend.length >= 2 && (
@@ -145,7 +148,7 @@ export default function Pokrok() {
           )}
 
           <Txt size={type.label} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5, marginTop: space.xl, marginBottom: 10 }}>
-            SVALOVÁ MAPA · SÉRIE TÝDNĚ
+            {g.muscleMap}
           </Txt>
           <Pressable onPress={() => router.push('/muscle-map')}>
           <Card>
@@ -155,7 +158,7 @@ export default function Pokrok() {
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, marginTop: space.md }}>
               <Txt size={type.label} weight="semibold" color={palette.accent}>
-                Otevřít detail mapy
+                {g.openMap}
               </Txt>
               <Ionicons name="chevron-forward" size={14} color={palette.accent} />
             </View>

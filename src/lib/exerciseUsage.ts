@@ -1,4 +1,5 @@
 import { Routine, Workout } from '@/data/types';
+import { t } from '@/i18n';
 
 /**
  * Kde všude cvik leží. Podle toho se pozná, jestli se dá smazat natvrdo, nebo se musí jen schovat.
@@ -40,18 +41,10 @@ export function isExerciseUsed(u: ExerciseUsage): boolean {
  * nemaže nic, jen se přestane nabízet.
  */
 export function deleteExerciseWarning(name: string, u: ExerciseUsage): string {
+  const x = t().exercises;
   const parts: string[] = [];
-  if (u.workouts > 0) parts.push(`${u.workouts} ${plural(u.workouts, 'tréninku', 'trénincích', 'trénincích')}`);
-  if (u.routines > 0) parts.push(`${u.routines} ${plural(u.routines, 'plánu', 'plánech', 'plánech')}`);
-  if (!parts.length && !u.inTrash) {
-    return `Cvik „${name}" se smaže. Nikde není použitý, takže se nic dalšího nezmění.`;
-  }
-  const kde = parts.length ? ` Je v ${parts.join(' a v ')}` : ' Je v koši';
-  return `Cvik „${name}" se přestane nabízet, ale zůstane dohledatelný.${kde}, takže smazat nadobro by znamenalo přijít o ty záznamy.`;
-}
-
-function plural(n: number, one: string, few: string, many: string): string {
-  if (n === 1) return one;
-  if (n < 5) return few;
-  return many;
+  if (u.workouts > 0) parts.push(x.inWorkouts(u.workouts));
+  if (u.routines > 0) parts.push(x.inRoutines(u.routines));
+  if (!parts.length && !u.inTrash) return x.deleteUnused(name);
+  return x.deleteUsed(name, parts.length ? x.isIn(parts) : x.inTrash);
 }

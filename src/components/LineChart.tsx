@@ -1,6 +1,7 @@
 import { View } from 'react-native';
 import Svg, { Circle, Line, Polyline } from 'react-native-svg';
 
+import { t } from '@/i18n';
 import { palette } from '@/constants/theme';
 import { Txt } from '@/components/ui';
 
@@ -9,7 +10,7 @@ export function LineChart({ points, height = 140, color = palette.accent }: { po
     return (
       <View style={{ height, alignItems: 'center', justifyContent: 'center' }}>
         <Txt size={13} color={palette.textMute}>
-          Zaloguj víc tréninků a graf se zobrazí.
+          {t().chart.needMore}
         </Txt>
       </View>
     );

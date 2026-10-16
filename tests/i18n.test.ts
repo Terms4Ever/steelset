@@ -7,7 +7,17 @@ const CZECH = /[ěščřžýáíéůúťďňĚŠČŘŽÝÁÍÉŮÚ]/;
 function leaves(node: unknown, path = ''): { path: string; text: string }[] {
   if (typeof node === 'string') return [{ path, text: node }];
   if (typeof node === 'function') {
-    return [1, 2, 5].map((n) => ({ path: `${path}(${n})`, text: (node as (...a: any[]) => string)(String(n), String(n), String(n)) }));
+    const fn = node as (...a: any[]) => string;
+    return [1, 2, 5].map((n) => {
+      // parametry jsou čísla, řetězce nebo seznamy; řetězec s číslem poslouží prvním dvěma, seznam třetím
+      let text: string;
+      try {
+        text = fn(String(n), String(n), String(n));
+      } catch {
+        text = fn([String(n)], [String(n)], [String(n)]);
+      }
+      return { path: `${path}(${n})`, text };
+    });
   }
   if (Array.isArray(node)) return node.flatMap((v, i) => leaves(v, `${path}[${i}]`));
   if (node && typeof node === 'object') return Object.entries(node).flatMap(([k, v]) => leaves(v, path ? `${path}.${k}` : k));
@@ -77,5 +87,39 @@ describe('i18n · čísla a data podle jazyka', () => {
     expect(fmtHeaderDate(day)).toBe('FRIDAY · Oct 16');
     expect(relativeDay(day - 86_400_000, day)).toBe('yesterday');
     expect(relativeDay(day - 3 * 86_400_000, day)).toBe('3 days ago');
+  });
+});
+
+describe('i18n · obrazovky nemají české texty natvrdo (#20)', () => {
+  const { readdirSync, readFileSync, statSync } = require('fs');
+  const { join } = require('path');
+  const { MUSCLE_GROUP_OPTIONS } = require('@/data/types');
+  const { EQUIPMENT_OPTIONS } = require('@/data/exerciseOptions');
+  // hodnoty uložených dat (klíče partií a vybavení) a název češtiny ve volbě jazyka
+  const ALLOWED = new Set<string>([...MUSCLE_GROUP_OPTIONS, ...EQUIPMENT_OPTIONS, 'Čeština']);
+
+  const files = (dir: string): string[] =>
+    readdirSync(dir).flatMap((f: string) => {
+      const p = join(dir, f);
+      return statSync(p).isDirectory() ? files(p) : /\.tsx?$/.test(f) ? [p] : [];
+    });
+
+  it('každý český text v src/app a src/components jde přes slovník', () => {
+    const root = join(__dirname, '../src');
+    const found: string[] = [];
+    for (const file of [...files(join(root, 'app')), ...files(join(root, 'components'))]) {
+      const lines: string[] = readFileSync(file, 'utf8').split(/\r?\n/);
+      lines.forEach((line, i) => {
+        const code = line.replace(/\/\/.*$/, '').replace(/\{\/\*.*?\*\/\}/g, '');
+        if (/^\s*(\*|\/\*)/.test(code)) return;
+        const literals = [...code.matchAll(/(['"`])((?:(?!\1).)*)\1/g)].map((m) => m[2]);
+        // text mezi značkami JSX: řádek bez kódu (přiřazení, volání, podmínky)
+        const bare = /^\s*[^\s{<'"`/*][^<>{}=();?]*$/.test(code) ? [code.trim()] : [];
+        for (const text of [...literals, ...bare]) {
+          if (CZECH.test(text) && !ALLOWED.has(text)) found.push(`${file.slice(root.length + 1)}:${i + 1} ${text}`);
+        }
+      });
+    }
+    expect(found).toEqual([]);
   });
 });

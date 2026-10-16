@@ -18,6 +18,8 @@ import { canCopy, CopyField, dropIndex, valueToCopy } from '@/lib/copyValue';
 import { detectStall } from '@/lib/stall';
 import { showInterstitial } from '@/lib/ads';
 import { haptic } from '@/lib/haptic';
+import { muscleName } from '@/i18n/catalog';
+import { useT } from '@/i18n/useT';
 import { heartRateFor } from '@/lib/health';
 import { watch } from '@/lib/watch';
 import { runningState } from '@/lib/watchState';
@@ -35,6 +37,8 @@ type Focus = KeypadFocus;
 
 export default function Workout() {
   const router = useRouter();
+  const tx = useT();
+  const w = tx.workout;
   const workouts = useStore((s) => s.workouts);
   const activeId = useStore((s) => s.activeWorkoutId);
   const increment = useStore((s) => s.settings.increment);
@@ -136,7 +140,7 @@ export default function Workout() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg, alignItems: 'center', justifyContent: 'center', padding: space.xl }}>
         <Txt size={type.h1} weight="bold">
-          Žádný aktivní trénink
+          {w.noActive}
         </Txt>
         <Pressable
           onPress={() => {
@@ -144,11 +148,11 @@ export default function Workout() {
           }}
           style={{ marginTop: 16, backgroundColor: palette.accent, paddingHorizontal: 20, paddingVertical: 12, borderRadius: radius.md }}>
           <Txt size={type.body} weight="bold" color={palette.bg}>
-            Začít volný trénink
+            {w.startFree}
           </Txt>
         </Pressable>
         <Pressable onPress={() => router.back()} style={{ marginTop: 12 }}>
-          <Txt color={palette.textDim}>Zpět</Txt>
+          <Txt color={palette.textDim}>{w.back}</Txt>
         </Pressable>
       </SafeAreaView>
     );
@@ -259,7 +263,7 @@ export default function Workout() {
     if (!active.manual) setRestEndAt(Date.now() + restDefault * 1000);
     if (wasPR) {
       haptic.success();
-      setPr(`Nový rekord! ${bwEx ? fmtBwWeight(effWeight!, bwKg, unit) : fmtWeight(effWeight!, unit)} × ${s.reps}`);
+      setPr(w.newRecord(bwEx ? fmtBwWeight(effWeight!, bwKg, unit) : fmtWeight(effWeight!, unit), s.reps ?? 0));
     } else {
       haptic.light();
     }
@@ -353,11 +357,11 @@ export default function Workout() {
     if (!w.manual && !hasDone) {
       haptic.warning();
       Alert.alert(
-        'Žádná hotová série',
-        'Označ aspoň jednu sérii zeleným ✓ (ťukni kolečko vpravo u série) a pak dej Hotovo. Nebo trénink zahoď.',
+        tx.workout.noDoneTitle,
+        tx.workout.noDoneText,
         [
-          { text: 'Pokračovat v zápisu', style: 'cancel' },
-          { text: 'Zahodit trénink', style: 'destructive', onPress: () => { liveActivity.end(); discardWorkout(); router.replace('/'); } },
+          { text: tx.workout.keepLogging, style: 'cancel' },
+          { text: tx.workout.discard, style: 'destructive', onPress: () => { liveActivity.end(); discardWorkout(); router.replace('/'); } },
         ],
       );
       return;
@@ -385,9 +389,9 @@ export default function Workout() {
     };
     if (!hasAnything) return doDiscard(); // nothing to lose - no friction
     haptic.warning();
-    Alert.alert('Zahodit trénink?', 'Trénink se přesune do koše (Profil → Koš) a po 7 dnech smaže.', [
-      { text: 'Zpět', style: 'cancel' },
-      { text: 'Zahodit', style: 'destructive', onPress: doDiscard },
+    Alert.alert(w.discardTitle, w.discardText, [
+      { text: w.back, style: 'cancel' },
+      { text: tx.workout.discardShort, style: 'destructive', onPress: doDiscard },
     ]);
   };
 
@@ -407,7 +411,7 @@ export default function Workout() {
               selectTextOnFocus
               onSubmitEditing={saveName}
               onBlur={saveName}
-              placeholder="Název tréninku"
+              placeholder={w.namePlaceholder}
               placeholderTextColor={palette.textMute}
               style={{ minWidth: 180, textAlign: 'center', backgroundColor: palette.surface2, borderRadius: radius.sm, color: palette.text, fontFamily: 'Inter_700Bold', fontSize: type.h2, paddingHorizontal: 12, paddingVertical: 5 }}
             />
@@ -438,7 +442,7 @@ export default function Workout() {
             </View>
           ) : (
             <Txt size={type.caption} weight="medium" num color={palette.textMute}>
-              {fmtClock(elapsed)} · {doneCount}/{totalSets} sérií
+              {w.progress(fmtClock(elapsed), doneCount, totalSets)}
             </Txt>
           )}
         </View>
@@ -451,7 +455,7 @@ export default function Workout() {
         <Pressable onPress={closeKeypad} accessible={false}>
           {active.exercises.length === 0 && (
             <Txt size={type.body} weight="medium" color={palette.textMute} style={{ marginTop: 20, textAlign: 'center' }}>
-              Volný trénink - přidej první cvik.
+              {w.freeEmpty}
             </Txt>
           )}
 
@@ -471,7 +475,7 @@ export default function Workout() {
               }}>
               <Ionicons name="swap-vertical" size={15} color={palette.accent} />
               <Txt size={type.caption} weight="medium" color={palette.textDim} style={{ flex: 1 }}>
-                Pořadí cviků se liší od plánu.
+                {w.orderDiffers}
               </Txt>
               <Pressable
                 hitSlop={8}
@@ -481,7 +485,7 @@ export default function Workout() {
                   setOrderDirty(false);
                 }}>
                 <Txt size={type.caption} weight="bold" color={palette.accent}>
-                  Uložit do plánu
+                  {w.saveToPlan}
                 </Txt>
               </Pressable>
               <Pressable hitSlop={8} onPress={() => setOrderDirty(false)}>
@@ -493,7 +497,7 @@ export default function Workout() {
           {active.exercises.map((le, ex) => {
             const exDef = exById[le.exerciseId];
             const showW = showsW(le.exerciseId);
-            const repsLbl = exDef?.tracking === 'time' ? 'ČAS (s)' : 'OPAK.';
+            const repsLbl = exDef?.tracking === 'time' ? w.colTime : w.colReps;
             const prev = lastPerformance(workouts, le.exerciseId);
             // readable "last time" line instead of only the +/- deltas on the cells
             const prevSession = lastSession(workouts, le.exerciseId, active.id);
@@ -536,7 +540,7 @@ export default function Workout() {
                       })
                     }>
                     <Txt size={type.caption} weight="bold" color={palette.accent} style={{ letterSpacing: 1 }}>
-                      {tag ? `SUPERSÉRIE ${tag}` : `CVIK ${ex + 1}/${active.exercises.length}`}
+                      {tag ? w.superset(tag) : w.exerciseOf(ex + 1, active.exercises.length)}
                     </Txt>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
                       <Txt size={type.h1} weight="bold">
@@ -546,7 +550,7 @@ export default function Workout() {
                     </View>
                     {exDef && (
                       <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ marginTop: 1 }} numberOfLines={1}>
-                        {[exDef.primary, ...(exDef.secondary ?? [])].join(' · ')}
+                        {[exDef.primary, ...(exDef.secondary ?? [])].map(muscleName).join(' · ')}
                         {exDef.unilateral ? ' · 1-str.' : ''}
                       </Txt>
                     )}
@@ -555,7 +559,7 @@ export default function Workout() {
                       nad sebou v jednom sloupci, aby na název cviku zbylo místo */}
                   <View style={{ width: 32, height: 44, borderRadius: radius.sm, backgroundColor: palette.surface2, marginRight: 6, overflow: 'hidden' }}>
                     <Pressable
-                      accessibilityLabel="Posunout cvik nahoru"
+                      accessibilityLabel={w.moveUp}
                       disabled={!canMove(active.exercises, ex, -1)}
                       onPress={() => moveExercise(ex, -1)}
                       hitSlop={{ left: 8, right: 8, top: 4 }}
@@ -564,7 +568,7 @@ export default function Workout() {
                     </Pressable>
                     <View style={{ height: 1, backgroundColor: palette.bg }} />
                     <Pressable
-                      accessibilityLabel="Posunout cvik dolů"
+                      accessibilityLabel={w.moveDown}
                       disabled={!canMove(active.exercises, ex, 1)}
                       onPress={() => moveExercise(ex, 1)}
                       hitSlop={{ left: 8, right: 8, bottom: 4 }}
@@ -575,9 +579,9 @@ export default function Workout() {
                   <Pressable
                     hitSlop={6}
                     onPress={() =>
-                      Alert.alert('Odebrat cvik?', exDef?.name ?? 'Cvik', [
-                        { text: 'Zrušit', style: 'cancel' },
-                        { text: 'Odebrat', style: 'destructive', onPress: () => { setFocus(null); removeActiveExercise(ex); } },
+                      Alert.alert(w.removeTitle, exDef?.name ?? w.exerciseFallback, [
+                        { text: tx.common.cancel, style: 'cancel' },
+                        { text: w.remove, style: 'destructive', onPress: () => { setFocus(null); removeActiveExercise(ex); } },
                       ])
                     }
                     style={{ width: 44, height: 44, borderRadius: radius.sm, backgroundColor: palette.surface2, alignItems: 'center', justifyContent: 'center' }}>
@@ -627,15 +631,15 @@ export default function Workout() {
                     }}>
                     <Ionicons name="trending-up" size={14} color={palette.amber} />
                     <Txt size={type.caption} weight="medium" color={palette.textDim} style={{ flex: 1 }}>
-                      {stall.sessions}× po sobě {stallWeight(stall.weightKg)}. Zkusit {stallWeight(stall.nextKg)}?
+                      {w.stall(stall.sessions, stallWeight(stall.weightKg), stallWeight(stall.nextKg))}
                     </Txt>
                     <Pressable hitSlop={8} onPress={() => acceptStall(ex, stall.nextKg)}>
                       <Txt size={type.caption} weight="bold" color={palette.accent}>
-                        Zvýšit
+                        {w.stallAccept}
                       </Txt>
                     </Pressable>
                     <Pressable
-                      accessibilityLabel="Zavřít nabídku na zvýšení váhy"
+                      accessibilityLabel={w.stallClose}
                       hitSlop={8}
                       onPress={() => setStallHidden((h) => [...h, le.exerciseId])}>
                       <Ionicons name="close" size={15} color={palette.textMute} />
@@ -646,7 +650,7 @@ export default function Workout() {
                 {/* column headers */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4, marginBottom: 6 }}>
                   <Txt size={type.caption} weight="semibold" color={palette.textMute} style={{ width: 40 }}>
-                    SÉRIE
+                    {w.colSet}
                   </Txt>
                   {showW && (
                     <Txt size={type.caption} weight="semibold" color={palette.textMute} style={{ flex: 1, textAlign: 'center' }}>
@@ -734,7 +738,7 @@ export default function Workout() {
 
                 <Pressable onPress={() => addSet(ex)} style={{ paddingVertical: 11, alignItems: 'center', borderRadius: radius.sm, borderWidth: 1, borderColor: palette.hairline, borderStyle: 'dashed' }}>
                   <Txt size={type.label} weight="semibold" color={palette.textDim}>
-                    + Přidat sérii
+                    {w.addSet}
                   </Txt>
                 </Pressable>
 
@@ -750,7 +754,7 @@ export default function Workout() {
                         style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, marginTop: 6 }}>
                         <Ionicons name={linked ? 'unlink-outline' : 'git-merge-outline'} size={14} color={linked ? palette.textMute : palette.accent} />
                         <Txt size={type.caption} weight="semibold" color={linked ? palette.textMute : palette.accent}>
-                          {linked ? 'Zrušit supersérii' : 'Supersérie s dalším cvikem'}
+                          {linked ? w.unlinkSuperset : w.linkSuperset}
                         </Txt>
                       </Pressable>
                     );
@@ -763,7 +767,7 @@ export default function Workout() {
             onPress={() => router.push('/exercises?target=workout')}
             style={{ marginTop: 20, paddingVertical: 14, alignItems: 'center', borderRadius: radius.md, backgroundColor: palette.surface2 }}>
             <Txt size={type.body} weight="bold" color={palette.accent}>
-              + Přidat cvik
+              {w.addExercise}
             </Txt>
           </Pressable>
 
@@ -776,7 +780,7 @@ export default function Workout() {
             style={({ pressed }) => ({ paddingVertical: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, borderRadius: radius.md, backgroundColor: palette.accent, opacity: pressed ? 0.85 : 1 })}>
             <Ionicons name="checkmark-circle" size={20} color={palette.bg} />
             <Txt size={17} weight="bold" color={palette.bg}>
-              Ukončit trénink
+              {w.finish}
             </Txt>
           </Pressable>
 
@@ -785,7 +789,7 @@ export default function Workout() {
             style={({ pressed }) => ({ marginTop: 10, paddingVertical: 13, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7, borderRadius: radius.md, backgroundColor: palette.surface2, opacity: pressed ? 0.85 : 1 })}>
             <Ionicons name="trash-outline" size={17} color={palette.red} />
             <Txt size={type.label} weight="semibold" color={palette.red}>
-              Zahodit trénink
+              {w.discard}
             </Txt>
           </Pressable>
         </Pressable>
@@ -805,13 +809,13 @@ export default function Workout() {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Ionicons name="timer-outline" size={18} color={palette.accent} />
             <Txt size={type.body} weight="bold" num>
-              Odpočinek {fmtClock(restLeft)}
+              {w.rest(fmtClock(restLeft))}
             </Txt>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <RestBtn label="-15" onPress={() => setRestEndAt((e) => Math.max(Date.now(), (e ?? Date.now()) - 15000))} />
             <RestBtn label="+15" onPress={() => setRestEndAt((e) => Math.max(Date.now(), e ?? Date.now()) + 15000)} />
-            <RestBtn label="Přeskočit" onPress={() => setRestEndAt(null)} />
+            <RestBtn label={w.skip} onPress={() => setRestEndAt(null)} />
           </View>
         </Animated.View>
       )}
@@ -835,10 +839,10 @@ export default function Workout() {
                 <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
                   <View style={{ flex: 1 }}>
                     <Txt size={type.h1} weight="bold">
-                      Nastavení cviku
+                      {w.settingsTitle}
                     </Txt>
                     <Txt size={type.label} weight="medium" color={palette.textMute} style={{ marginTop: 2 }}>
-                      Změna platí všude - i v historii, v plánech a na svalové mapě
+                      {w.settingsHint}
                     </Txt>
                   </View>
                   {/* cesta ven nesmí záviset na trefení podkladu, ten klávesnice zakryje */}
@@ -857,12 +861,12 @@ export default function Workout() {
                 showsVerticalScrollIndicator={false}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: space.lg, marginBottom: 8 }}>
               <Txt size={type.caption} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5 }}>
-                NÁZEV
+                {w.name}
               </Txt>
               {originalExerciseName(muscleEdit.exId) && originalExerciseName(muscleEdit.exId) !== muscleEdit.name && (
                 <Pressable onPress={() => setMuscleEdit({ ...muscleEdit, name: originalExerciseName(muscleEdit.exId)! })} hitSlop={8}>
                   <Txt size={type.caption} weight="bold" color={palette.accent}>
-                    Obnovit původní
+                    {w.restoreName}
                   </Txt>
                 </Pressable>
               )}
@@ -870,13 +874,13 @@ export default function Workout() {
             <TextInput
               value={muscleEdit.name}
               onChangeText={(t) => setMuscleEdit({ ...muscleEdit, name: t })}
-              placeholder="Název cviku"
+              placeholder={w.exerciseNamePlaceholder}
               placeholderTextColor={palette.textMute}
               style={{ backgroundColor: palette.surface2, borderRadius: radius.sm, color: palette.text, fontFamily: 'Inter_600SemiBold', fontSize: type.body, paddingHorizontal: 14, paddingVertical: 12 }}
             />
 
             <Txt size={type.caption} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5, marginTop: space.lg, marginBottom: 8 }}>
-              HLAVNÍ PARTIE
+              {w.primary}
             </Txt>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {MUSCLE_GROUP_OPTIONS.map((m) => {
@@ -887,7 +891,7 @@ export default function Workout() {
                     onPress={() => setMuscleEdit({ ...muscleEdit, primary: m, secondary: muscleEdit.secondary.filter((x) => x !== m) })}
                     style={{ paddingHorizontal: 13, paddingVertical: 7, borderRadius: radius.pill, backgroundColor: on ? palette.accent : palette.surface2 }}>
                     <Txt size={type.label} weight="bold" color={on ? palette.bg : palette.textDim}>
-                      {m}
+                      {muscleName(m)}
                     </Txt>
                   </Pressable>
                 );
@@ -895,7 +899,7 @@ export default function Workout() {
             </View>
 
             <Txt size={type.caption} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5, marginTop: space.lg, marginBottom: 8 }}>
-              VEDLEJŠÍ (volitelné)
+              {w.secondary}
             </Txt>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {MUSCLE_GROUP_OPTIONS.filter((m) => m !== muscleEdit.primary).map((m) => {
@@ -911,7 +915,7 @@ export default function Workout() {
                     }
                     style={{ paddingHorizontal: 13, paddingVertical: 7, borderRadius: radius.pill, backgroundColor: on ? palette.accentDeep : palette.surface2, borderWidth: 1, borderColor: on ? palette.accent : 'transparent' }}>
                     <Txt size={type.label} weight="semibold" color={on ? palette.accent : palette.textDim}>
-                      {m}
+                      {muscleName(m)}
                     </Txt>
                   </Pressable>
                 );
@@ -936,10 +940,10 @@ export default function Workout() {
               </View>
               <View style={{ flex: 1 }}>
                 <Txt size={type.body} weight="semibold">
-                  Jednostranný cvik
+                  {w.unilateral}
                 </Txt>
                 <Txt size={type.caption} weight="medium" color={palette.textMute}>
-                  Cvičíš každou stranu zvlášť - objem se počítá 2×
+                  {w.unilateralHint}
                 </Txt>
               </View>
             </Pressable>
@@ -954,7 +958,7 @@ export default function Workout() {
               }}
               style={({ pressed }) => ({ marginTop: space.lg, paddingVertical: 14, alignItems: 'center', borderRadius: radius.md, backgroundColor: palette.accent, opacity: pressed ? 0.85 : 1 })}>
               <Txt size={type.body} weight="bold" color={palette.bg}>
-                Uložit nastavení cviku
+                {w.saveSettings}
               </Txt>
             </Pressable>
               </ScrollView>
@@ -1080,6 +1084,7 @@ function RestBtn({ label, onPress }: { label: string; onPress: () => void }) {
 }
 
 function Keypad({ onKey, onStep, onNext, onClose, inc }: { onKey: (k: string) => void; onStep: (d: number) => void; onNext: () => void; onClose: () => void; inc: { full: number; half: number } }) {
+  const tx = useT();
   const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'del'];
   // tažení za úchyt: keypad jede za prstem a pustí se, až když ujede dost daleko.
   // Zpátky se vrací animovaně, aby krátké šťouchnutí nevypadalo jako porucha.
@@ -1131,7 +1136,7 @@ function Keypad({ onKey, onStep, onNext, onClose, inc }: { onKey: (k: string) =>
         </View>
         <Pressable onPress={onNext} style={{ flex: 1, marginLeft: 8, marginVertical: 4, backgroundColor: palette.accent, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' }}>
           <Txt size={type.h2} weight="bold" color={palette.bg}>
-            Další
+            {tx.workout.next}
           </Txt>
         </Pressable>
       </View>

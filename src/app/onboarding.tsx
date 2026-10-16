@@ -5,11 +5,15 @@ import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { Card, PrimaryButton, Screen, Txt } from '@/components/ui';
+import { folderName } from '@/i18n/catalog';
+import { useT } from '@/i18n/useT';
 import { palette, radius, space, type } from '@/constants/theme';
 import { STARTER_ROUTINES } from '@/data/exercises';
 import { useStore } from '@/store/useStore';
 
 export default function Onboarding() {
+  const tx = useT();
+  const o = tx.onboarding;
   const router = useRouter();
   const completeOnboarding = useStore((s) => s.completeOnboarding);
   const [mode, setMode] = useState<'choose' | 'starters'>('choose');
@@ -32,7 +36,7 @@ export default function Onboarding() {
           contentFit="contain"
         />
         <Txt size={type.body} weight="medium" color={palette.textDim} style={{ marginTop: 8, textAlign: 'center' }}>
-          Silový deník, který ví, kdy jsi připravený.
+          {o.tagline}
         </Txt>
       </View>
 
@@ -43,10 +47,10 @@ export default function Onboarding() {
               <Ionicons name="rocket-outline" size={24} color={palette.accent} />
               <View style={{ flex: 1 }}>
                 <Txt size={type.h2} weight="bold">
-                  Pomoz mi začít
+                  {o.helpMe}
                 </Txt>
                 <Txt size={type.label} weight="medium" color={palette.textMute} style={{ marginTop: 2 }}>
-                  Vyber si ověřený plán a začni za minutu
+                  {o.helpMeHint}
                 </Txt>
               </View>
               <Ionicons name="chevron-forward" size={20} color={palette.textMute} />
@@ -58,10 +62,10 @@ export default function Onboarding() {
               <Ionicons name="barbell-outline" size={24} color={palette.text} />
               <View style={{ flex: 1 }}>
                 <Txt size={type.h2} weight="bold">
-                  Mám svůj plán
+                  {o.ownPlan}
                 </Txt>
                 <Txt size={type.label} weight="medium" color={palette.textMute} style={{ marginTop: 2 }}>
-                  Začni rovnou logovat, plány si vytvoříš sám
+                  {o.ownPlanHint}
                 </Txt>
               </View>
               <Ionicons name="chevron-forward" size={20} color={palette.textMute} />
@@ -69,13 +73,13 @@ export default function Onboarding() {
           </Pressable>
 
           <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ textAlign: 'center', marginTop: space.md }}>
-            Žádný účet není potřeba. Data zůstávají v telefonu.
+            {o.noAccount}
           </Txt>
         </View>
       ) : (
         <View style={{ marginTop: space.xl }}>
           <Txt size={type.label} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5, marginBottom: 10 }}>
-            VYBER PLÁNY (přidají se do Plánů)
+            {o.pickPlans}
           </Txt>
           <View style={{ gap: space.md }}>
             {STARTER_ROUTINES.map((r) => {
@@ -101,7 +105,7 @@ export default function Onboarding() {
                         {r.name}
                       </Txt>
                       <Txt size={type.label} weight="medium" color={palette.textMute}>
-                        {r.folder} · {r.exercises.length} cviků
+                        {folderName(r.folder)} · {tx.common.exercises(r.exercises.length)}
                       </Txt>
                     </View>
                   </Card>
@@ -110,10 +114,10 @@ export default function Onboarding() {
             })}
           </View>
           <View style={{ marginTop: space.xl }}>
-            <PrimaryButton label="Začít" onPress={() => finish(picked)} />
+            <PrimaryButton label={o.start} onPress={() => finish(picked)} />
             <Pressable onPress={() => setMode('choose')} style={{ marginTop: 10, alignItems: 'center', paddingVertical: 12 }}>
               <Txt size={type.body} weight="semibold" color={palette.textDim}>
-                Zpět
+                {tx.workout.back}
               </Txt>
             </Pressable>
           </View>

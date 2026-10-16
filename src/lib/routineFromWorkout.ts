@@ -1,7 +1,8 @@
+import { dict, t } from '@/i18n';
 import { Routine, RoutineExercise, SetEntry, Workout } from '@/data/types';
 
-/** Názvy, které nic neříkají - plán z nich dostane vlastní pracovní název. */
-const GENERIC_NAMES = ['Rychlý trénink', 'Zápis tréninku'];
+/** Názvy, které nic neříkají, v obou jazycích (#20) - plán z nich dostane vlastní pracovní název. */
+const GENERIC_NAMES = [dict('cs').workout.quickName, dict('cs').workout.manualName, dict('en').workout.quickName, dict('en').workout.manualName];
 
 /** Pracovní série = hotová a nezahřívací. Plán se staví jen z nich. */
 function workingSets(sets: SetEntry[]): SetEntry[] {
@@ -49,7 +50,7 @@ export function workoutToRoutine(w: Workout): Omit<Routine, 'id'> {
     }));
   const name = w.name.trim();
   return {
-    name: !name || GENERIC_NAMES.includes(name) ? 'Nový plán' : name,
+    name: !name || GENERIC_NAMES.includes(name) ? t().plans.newPlan : name,
     autoProgress: false,
     exercises,
   };

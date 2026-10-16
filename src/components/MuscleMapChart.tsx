@@ -2,6 +2,7 @@ import { Platform, View } from 'react-native';
 import Svg, { Circle, Ellipse, G, Path, Rect } from 'react-native-svg';
 
 import { Txt } from '@/components/ui';
+import { t } from '@/i18n';
 import { palette, type } from '@/constants/theme';
 import { setZone, SET_ZONES } from '@/lib/calc';
 
@@ -168,7 +169,7 @@ export function MuscleMapChart({ volumes, onPressMuscle, selected, height = 320 
             </G>
           </Svg>
           <Txt size={type.caption} weight="semibold" color={palette.textMute} style={{ marginTop: 6, letterSpacing: 1.5 }}>
-            PŘEDEK
+            {t().muscleMap.front}
           </Txt>
         </View>
 
@@ -227,7 +228,7 @@ export function MuscleMapChart({ volumes, onPressMuscle, selected, height = 320 
             </G>
           </Svg>
           <Txt size={type.caption} weight="semibold" color={palette.textMute} style={{ marginTop: 6, letterSpacing: 1.5 }}>
-            ZADEK
+            {t().muscleMap.back}
           </Txt>
         </View>
       </View>
@@ -240,9 +241,9 @@ export function MuscleMapLegend() {
   const items = [
     { c: '#2C313A', l: '0' },
     { c: palette.heatCold, l: `<${SET_ZONES.maintain}` },
-    { c: palette.accent, l: `${SET_ZONES.maintain}-${SET_ZONES.optimumMax - 1} optimum` },
+    { c: palette.accent, l: `${SET_ZONES.maintain}-${SET_ZONES.optimumMax - 1} ${t().muscleMap.legendOptimum}` },
     { c: palette.amber, l: `${SET_ZONES.optimumMax}-${SET_ZONES.highMax}` },
-    { c: palette.red, l: `${SET_ZONES.highMax}+ přetížení` },
+    { c: palette.red, l: `${SET_ZONES.highMax}+ ${t().muscleMap.legendOverload}` },
   ];
   return (
     <View>
@@ -257,7 +258,7 @@ export function MuscleMapLegend() {
         ))}
       </View>
       <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ textAlign: 'center', marginTop: 5 }}>
-        tvrdé série týdně
+        {t().muscleMap.legendCaption}
       </Txt>
     </View>
   );

@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
+import { useT } from '@/i18n/useT';
 import { Card, Screen, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
 import { weekStreak, workoutVolumeEx } from '@/lib/calc';
@@ -10,8 +11,6 @@ import { fmtWeight, NBSP, relativeDay } from '@/lib/format';
 import { Workout } from '@/data/types';
 import { history as historySel, useExercisesById, useStore } from '@/store/useStore';
 
-const WD = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
-const MONTHS = ['Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen', 'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec'];
 
 const dayKey = (ms: number) => {
   const d = new Date(ms);
@@ -20,6 +19,8 @@ const dayKey = (ms: number) => {
 
 export default function Kalendar() {
   const router = useRouter();
+  const tx = useT();
+  const c = tx.calendar;
   const now = Date.now();
   const today = new Date(now);
   const workouts = useStore((s) => s.workouts);
@@ -92,12 +93,12 @@ export default function Kalendar() {
     <Screen>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <Txt size={type.title} weight="bold">
-          Kalendář
+          {c.title}
         </Txt>
         {!isThisMonth && (
           <Pressable onPress={goToday} style={{ backgroundColor: palette.surface2, paddingHorizontal: 12, paddingVertical: 6, borderRadius: radius.pill }}>
             <Txt size={type.label} weight="bold" color={palette.accent}>
-              Dnes
+              {c.today}
             </Txt>
           </Pressable>
         )}
@@ -109,7 +110,7 @@ export default function Kalendar() {
           <Ionicons name="chevron-back" size={22} color={palette.textDim} />
         </Pressable>
         <Txt size={type.h1} weight="bold">
-          {MONTHS[view.m]} {view.y}
+          {c.months[view.m]} {view.y}
         </Txt>
         <Pressable onPress={next} hitSlop={10} style={{ padding: 4 }}>
           <Ionicons name="chevron-forward" size={22} color={palette.textDim} />
@@ -118,16 +119,16 @@ export default function Kalendar() {
 
       {/* month summary */}
       <Card style={{ marginTop: space.lg, flexDirection: 'row' }}>
-        <Stat value={String(monthWs.length)} label="tréninků" />
+        <Stat value={String(monthWs.length)} label={c.workouts} />
         <Divider />
-        <Stat value={fmtWeight(monthVol, unit)} label="objem" />
+        <Stat value={fmtWeight(monthVol, unit)} label={c.volume} />
         <Divider />
-        <Stat value={String(streak)} label={streak === 1 ? 'týden v řadě' : 'týdny v řadě'} accent />
+        <Stat value={String(streak)} label={c.streak(streak)} accent />
       </Card>
 
       {/* weekday header */}
       <View style={{ flexDirection: 'row', marginTop: space.xl, marginBottom: 6 }}>
-        {WD.map((d) => (
+        {c.weekdays.map((d) => (
           <Txt key={d} size={type.caption} weight="semibold" color={palette.textMute} style={{ flex: 1, textAlign: 'center' }}>
             {d}
           </Txt>
@@ -193,7 +194,7 @@ export default function Kalendar() {
                           {w.name}
                         </Txt>
                         <Txt size={type.caption} weight="medium" num color={palette.textMute}>
-                          {w.exercises.length} cviků · {sets} sérií
+                          {tx.common.exercises(w.exercises.length)} · {tx.common.sets(sets)}
                           {w.avgHr ? ` · ⌀${w.avgHr}${NBSP}tep` : ''}
                         </Txt>
                       </View>
@@ -210,7 +211,7 @@ export default function Kalendar() {
         ) : (
           <Card>
             <Txt size={type.body} weight="medium" color={palette.textMute}>
-              {finished.length === 0 ? 'Zatím žádné tréninky. Zaloguj první a naskočí do kalendáře.' : 'V tento den žádný trénink.'}
+              {finished.length === 0 ? c.emptyAll : c.emptyDay}
             </Txt>
           </Card>
         )}

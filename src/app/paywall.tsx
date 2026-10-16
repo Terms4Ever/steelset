@@ -5,6 +5,7 @@ import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, View } from '
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Txt } from '@/components/ui';
+import { useT } from '@/i18n/useT';
 import { palette, radius, space, type } from '@/constants/theme';
 import { haptic } from '@/lib/haptic';
 import { buyPro, getProPackages, ProPackage, purchasesAvailable, restorePro } from '@/lib/purchases';
@@ -15,13 +16,10 @@ const TERMS_URL = 'https://www.apple.com/legal/internet-services/itunes/dev/stde
 /** Zásady leží na webu autora (repozitář tomas.saroun.me), vlastní doménu aplikace nemá (#18). */
 const PRIVACY_URL = 'https://tomas.saroun.me/steelset/soukromi/';
 
-const BENEFITS = [
-  { icon: 'eye-off-outline' as const, title: 'Žádné reklamy', text: 'Bannery i celoobrazovkové reklamy zmizí.' },
-  { icon: 'flash-outline' as const, title: 'Nerušený zápis', text: 'Trénink bez čehokoliv navíc na obrazovce.' },
-  { icon: 'heart-outline' as const, title: 'Podpoříš vývoj', text: 'Steelset dělá jeden člověk, ne velká firma.' },
-];
+const BENEFIT_ICONS = ['eye-off-outline', 'flash-outline', 'heart-outline'] as const;
 
 export default function Paywall() {
+  const py = useT().paywall;
   const router = useRouter();
   const isPro = useStore((s) => s.isPro);
   const setPro = useStore((s) => s.setPro);
@@ -55,12 +53,12 @@ export default function Paywall() {
     if (res.ok && res.isPro) {
       setPro(true);
       haptic.success();
-      Alert.alert('Hotovo', 'Předplatné je aktivní, reklamy zmizely. Díky!');
+      Alert.alert(py.doneTitle, py.doneText);
       router.back();
       return;
     }
     haptic.warning();
-    Alert.alert('Nákup se nepodařil', res.error ?? 'Zkus to prosím znovu.');
+    Alert.alert(py.failTitle, res.error ?? py.tryAgain);
   };
 
   const onRestore = async () => {
@@ -71,18 +69,18 @@ export default function Paywall() {
     if (res.ok && res.isPro) {
       setPro(true);
       haptic.success();
-      Alert.alert('Obnoveno', 'Předplatné je zpátky aktivní.');
+      Alert.alert(py.restoredTitle, py.restoredText);
       router.back();
       return;
     }
-    Alert.alert('Nic k obnovení', 'Na tomhle Apple ID jsme aktivní předplatné nenašli.');
+    Alert.alert(py.nothingTitle, py.nothingText);
   };
 
   const renewalNote = current
     ? (current.trialDays
-        ? `Po ${current.trialDays} dnech zdarma se předplatné automaticky obnovuje za ${current.priceString}. `
-        : `Předplatné se automaticky obnovuje za ${current.priceString}. `) +
-      'Zrušit jde kdykoliv v Nastavení iPhonu, nejpozději 24 hodin před koncem období.'
+        ? py.renewTrial(current.trialDays, current.priceString)
+        : py.renew(current.priceString)) +
+      py.cancelInfo
     : '';
 
   return (
@@ -102,15 +100,15 @@ export default function Paywall() {
             Steelset Pro
           </Txt>
           <Txt size={type.body} weight="medium" color={palette.textMute} style={{ textAlign: 'center', marginTop: 6 }}>
-            Aplikace zůstane celá zdarma. Předplatné jen vypne reklamy.
+            {py.subtitle}
           </Txt>
         </View>
 
         <View style={{ marginTop: space.xl, gap: space.md }}>
-          {BENEFITS.map((b) => (
+          {py.benefits.map((b, bi) => (
             <View key={b.title} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <View style={{ width: 38, height: 38, borderRadius: 12, backgroundColor: palette.surface2, alignItems: 'center', justifyContent: 'center' }}>
-                <Ionicons name={b.icon} size={19} color={palette.accent} />
+                <Ionicons name={BENEFIT_ICONS[bi]} size={19} color={palette.accent} />
               </View>
               <View style={{ flex: 1 }}>
                 <Txt size={type.body} weight="bold">
@@ -127,10 +125,10 @@ export default function Paywall() {
         {isPro ? (
           <View style={{ marginTop: space.xl, backgroundColor: palette.accentDeep, borderRadius: radius.md, padding: space.lg, borderWidth: 1, borderColor: palette.accent }}>
             <Txt size={type.body} weight="bold" color={palette.accent}>
-              Předplatné máš aktivní
+              {py.activeTitle}
             </Txt>
             <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ marginTop: 2 }}>
-              Spravovat nebo zrušit jde v Nastavení iPhonu, v sekci Apple ID - Předplatné.
+              {py.activeText}
             </Txt>
           </View>
         ) : packages === null ? (
@@ -140,12 +138,12 @@ export default function Paywall() {
         ) : packages.length === 0 ? (
           <View style={{ marginTop: space.xl, backgroundColor: palette.surface, borderRadius: radius.md, padding: space.lg, borderWidth: 1, borderColor: palette.hairline }}>
             <Txt size={type.body} weight="semibold">
-              Předplatné teď nejde načíst
+              {py.unavailableTitle}
             </Txt>
             <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ marginTop: 4 }}>
               {purchasesAvailable()
-                ? 'Zkontroluj připojení k internetu a zkus to znovu.'
-                : 'V téhle verzi aplikace nákupy nejsou dostupné.'}
+                ? py.offline
+                : py.notInBuild}
             </Txt>
           </View>
         ) : (
@@ -183,24 +181,24 @@ export default function Paywall() {
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <Txt size={type.body} weight="bold">
-                        {annual ? 'Ročně' : 'Měsíčně'}
+                        {annual ? py.yearly : py.monthly}
                       </Txt>
                       {annual && (
                         <View style={{ backgroundColor: palette.accent, borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 2 }}>
                           <Txt size={type.caption} weight="bold" color={palette.bg}>
-                            nejvýhodnější
+                            {py.bestValue}
                           </Txt>
                         </View>
                       )}
                     </View>
                     {!!p.pricePerMonthString && (
                       <Txt size={type.caption} weight="medium" num color={palette.textMute} style={{ marginTop: 2 }}>
-                        {p.pricePerMonthString} za měsíc
+                        {py.perMonth(p.pricePerMonthString)}
                       </Txt>
                     )}
                     {!!p.trialDays && (
                       <Txt size={type.caption} weight="semibold" color={palette.accent} style={{ marginTop: 2 }}>
-                        {p.trialDays} dní zdarma
+                        {py.trialDays(p.trialDays)}
                       </Txt>
                     )}
                   </View>
@@ -226,7 +224,7 @@ export default function Paywall() {
                 <ActivityIndicator color={palette.bg} />
               ) : (
                 <Txt size={type.body} weight="bold" color={palette.bg}>
-                  {current?.trialDays ? 'Vyzkoušet zdarma' : 'Zapnout Pro'}
+                  {current?.trialDays ? py.tryFree : py.turnOn}
                 </Txt>
               )}
             </Pressable>
@@ -240,19 +238,19 @@ export default function Paywall() {
 
         <Pressable onPress={onRestore} disabled={busy} style={{ marginTop: space.lg, alignItems: 'center', paddingVertical: 10 }}>
           <Txt size={type.label} weight="semibold" color={palette.accent}>
-            Obnovit nákup
+            {py.restore}
           </Txt>
         </Pressable>
 
         <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 18, marginTop: 4 }}>
           <Pressable onPress={() => Linking.openURL(TERMS_URL)}>
             <Txt size={type.caption} weight="medium" color={palette.textMute}>
-              Podmínky
+              {py.terms}
             </Txt>
           </Pressable>
           <Pressable onPress={() => Linking.openURL(PRIVACY_URL)}>
             <Txt size={type.caption} weight="medium" color={palette.textMute}>
-              Ochrana soukromí
+              {py.privacy}
             </Txt>
           </Pressable>
         </View>

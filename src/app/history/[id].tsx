@@ -8,6 +8,8 @@ import { AdBanner } from '@/components/AdBanner';
 import { HrChart } from '@/components/HrChart';
 import { useMiniBarSpace } from '@/components/MiniWorkoutBar';
 import { PrimaryButton, Txt } from '@/components/ui';
+import { t } from '@/i18n';
+import { useT } from '@/i18n/useT';
 import { palette, radius, space, type } from '@/constants/theme';
 import { e1rm, exerciseVolumeFor, hrWindow, perExerciseHr, summarizeSets, workoutVolumeEx } from '@/lib/calc';
 import { dayName, fmtBwWeight, fmtClock, fmtDateShort, fmtGrouped, fmtWeight, NBSP, plural } from '@/lib/format';
@@ -15,7 +17,7 @@ import { heartRateFor } from '@/lib/health';
 import { canMakeRoutine, workoutToRoutine } from '@/lib/routineFromWorkout';
 import { useExercisesById, useStore } from '@/store/useStore';
 
-const TAG: Record<string, string> = { W: 'Z', R: '', D: 'D', F: 'F' };
+const TAG = (): Record<string, string> => ({ W: t().history.warmupTag, R: '', D: 'D', F: 'F' });
 
 /** "nejlepší 100 kg × 8" - the top set by estimated 1RM, so the summary shows the real effort. */
 function bestSetLabel(le: any, ex: any, w: any, unit: any): string {
@@ -25,10 +27,12 @@ function bestSetLabel(le: any, ex: any, w: any, unit: any): string {
   if (done.every((s: any) => s.weight === done[0].weight && s.reps === done[0].reps)) return '';
   const best = done.reduce((a: any, b: any) => (e1rm(b.weight, b.reps) > e1rm(a.weight, a.reps) ? b : a));
   const wLabel = ex?.tracking === 'weighted_bw' ? fmtBwWeight(best.weight, w.bodyweightKg ?? 80, unit) : fmtWeight(best.weight, unit);
-  return `nej ${wLabel} × ${best.reps}`;
+  return t().history.best(wLabel, best.reps);
 }
 
 export default function WorkoutDetail() {
+  const tx = useT();
+  const h = tx.history;
   const router = useRouter();
   // plovoucí lišta běžícího tréninku leží nad obsahem, tohle jí drží místo dole
   const barSpace = useMiniBarSpace();
@@ -65,12 +69,12 @@ export default function WorkoutDetail() {
   const updateSourceRoutine = () => {
     if (!w || !sourceRoutine) return;
     Alert.alert(
-      'Aktualizovat plán?',
-      `Plán „${sourceRoutine.name}" dostane cviky, série a opakování z tohoto tréninku. Původní nastavení plánu se přepíše.`,
+      h.updateTitle,
+      h.updateText(sourceRoutine.name),
       [
-        { text: 'Zrušit', style: 'cancel' },
+        { text: tx.common.cancel, style: 'cancel' },
         {
-          text: 'Aktualizovat',
+          text: h.update,
           onPress: () => {
             updateRoutine(sourceRoutine.id, { exercises: workoutToRoutine(w).exercises });
             router.push(`/routine/${sourceRoutine.id}`);
@@ -116,9 +120,9 @@ export default function WorkoutDetail() {
   if (!w) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg, alignItems: 'center', justifyContent: 'center' }}>
-        <Txt color={palette.textDim}>Trénink nenalezen.</Txt>
+        <Txt color={palette.textDim}>{h.notFound}</Txt>
         <Pressable onPress={() => router.back()} style={{ marginTop: 12 }}>
-          <Txt color={palette.accent}>Zpět</Txt>
+          <Txt color={palette.accent}>{tx.workout.back}</Txt>
         </Pressable>
       </SafeAreaView>
     );
@@ -128,7 +132,7 @@ export default function WorkoutDetail() {
   const durationSec = w.finishedAt && !w.manual ? Math.max(0, Math.round((w.finishedAt - w.startedAt) / 1000)) : 0;
   const metaParts = [
     `${dayName(when)} ${fmtDateShort(when)}`,
-    ...(w.exercises.length ? [`${w.exercises.length} cviků`, fmtWeight(workoutVolumeEx(w, exById), unit)] : []),
+    ...(w.exercises.length ? [tx.common.exercises(w.exercises.length), fmtWeight(workoutVolumeEx(w, exById), unit)] : []),
     ...(durationSec >= 30 ? [fmtClock(durationSec)] : []),
   ];
 
@@ -137,10 +141,10 @@ export default function WorkoutDetail() {
     router.replace('/workout');
   };
   const onDelete = () => {
-    Alert.alert('Smazat trénink?', 'Záznam se přesune do koše (Profil → Koš) a po 7 dnech smaže.', [
-      { text: 'Zrušit', style: 'cancel' },
+    Alert.alert(h.deleteTitle, h.deleteText, [
+      { text: tx.common.cancel, style: 'cancel' },
       {
-        text: 'Smazat',
+        text: tx.common.delete,
         style: 'destructive',
         onPress: () => {
           deleteWorkout(w.id);
@@ -157,7 +161,7 @@ export default function WorkoutDetail() {
           <Ionicons name="chevron-back" size={26} color={palette.textDim} />
         </Pressable>
         <Txt size={type.h2} weight="bold">
-          Detail tréninku
+          {h.title}
         </Txt>
         <Pressable onPress={onDelete} hitSlop={10}>
           <Ionicons name="trash-outline" size={22} color={palette.red} />
@@ -173,7 +177,7 @@ export default function WorkoutDetail() {
               autoFocus
               selectTextOnFocus
               onSubmitEditing={saveName}
-              placeholder="Název tréninku"
+              placeholder={tx.workout.namePlaceholder}
               placeholderTextColor={palette.textMute}
               style={{ flex: 1, backgroundColor: palette.surface2, borderRadius: radius.sm, color: palette.text, fontFamily: 'Inter_700Bold', fontSize: type.title, paddingHorizontal: 12, paddingVertical: 8 }}
             />
@@ -196,7 +200,7 @@ export default function WorkoutDetail() {
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 6 }}>
             <Ionicons name="heart-circle-outline" size={15} color={palette.accent} />
             <Txt size={type.caption} weight="semibold" color={palette.accent}>
-              Importováno z Apple Health
+              {h.fromHealth}
             </Txt>
           </View>
         )}
@@ -209,7 +213,7 @@ export default function WorkoutDetail() {
                   {w.avgHr ? `⌀${NBSP}${w.avgHr}` : ''}
                   {w.avgHr && w.maxHr ? ' · ' : ''}
                   {w.maxHr ? `max${NBSP}${w.maxHr}` : ''}
-                  {NBSP}tep/min
+                  {NBSP}{h.perMin}
                 </Txt>
               </View>
             )}
@@ -231,7 +235,7 @@ export default function WorkoutDetail() {
             style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, alignSelf: 'flex-start', backgroundColor: palette.surface2, paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.pill }}>
             <Ionicons name="heart-outline" size={15} color={palette.accent} />
             <Txt size={type.label} weight="semibold" color={palette.accent}>
-              {hrLoading ? 'Načítám…' : w.avgHr || w.maxHr ? 'Načíst tep znovu' : 'Načíst tep z Health'}
+              {hrLoading ? h.loading : w.avgHr || w.maxHr ? h.reloadHr : h.loadHr}
             </Txt>
           </Pressable>
         )}
@@ -239,12 +243,12 @@ export default function WorkoutDetail() {
         {w.hrSeries && hrWin && (
           <View style={{ marginTop: space.lg, backgroundColor: palette.surface, borderRadius: radius.md, padding: space.lg, borderWidth: 1, borderColor: palette.hairline }}>
             <Txt size={type.caption} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5, marginBottom: 10 }}>
-              TEP BĚHEM TRÉNINKU
+              {h.hrTitle}
             </Txt>
             <HrChart series={w.hrSeries} start={hrWin.start} end={hrWin.end} markers={setMarkers} />
             {setMarkers.length > 0 && (
               <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ marginTop: 8 }}>
-                Svislé čáry = dokončené série
+                {h.hrHint}
               </Txt>
             )}
           </View>
@@ -252,7 +256,7 @@ export default function WorkoutDetail() {
 
         {w.exercises.length === 0 && (
           <Txt size={type.body} weight="medium" color={palette.textMute} style={{ marginTop: space.xl }}>
-            Bez zapsaných sérií{w.source === 'health' ? ' · záznam z Apple Health' : ''}. Přes „Přidat série" doplníš cviky - tep zůstane.
+            {h.noSets(w.source === 'health')}
           </Txt>
         )}
 
@@ -262,11 +266,11 @@ export default function WorkoutDetail() {
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
                 <View style={{ flex: 1 }}>
                   <Txt size={type.h2} weight="bold">
-                    {exById[le.exerciseId]?.name ?? 'Cvik'}
+                    {exById[le.exerciseId]?.name ?? tx.workout.exerciseFallback}
                   </Txt>
                   <Txt size={type.caption} weight="medium" num color={palette.textMute} style={{ marginTop: 2 }} numberOfLines={1}>
                     {[
-                      (() => { const n = le.sets.filter((s) => s.done).length; return `${n} ${plural(n, 'série', 'série', 'sérií')}`; })(),
+                      tx.common.sets(le.sets.filter((s) => s.done).length),
                       summarizeSets(
                         le.sets.filter((s) => s.done),
                         (kg) => fmtWeight(kg, unit),
@@ -289,7 +293,7 @@ export default function WorkoutDetail() {
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 3 }}>
                       <Ionicons name="heart" size={11} color={palette.red} />
                       <Txt size={type.caption} weight="semibold" num color={palette.textMute}>
-                        ⌀{NBSP}{exHr[i]}{NBSP}tep
+                        ⌀{NBSP}{exHr[i]}{NBSP}{tx.common.bpm}
                       </Txt>
                     </View>
                   )}
@@ -299,7 +303,7 @@ export default function WorkoutDetail() {
                 {le.sets.map((s, si) => (
                   <View key={si} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                     <Txt size={type.label} weight="bold" color={palette.textMute} style={{ width: 24 }}>
-                      {TAG[s.type] || si + 1}
+                      {TAG()[s.type] || si + 1}
                     </Txt>
                     <Txt size={type.body} weight="semibold" num>
                       {s.weight != null
@@ -322,14 +326,14 @@ export default function WorkoutDetail() {
         </View>
 
         <View style={{ marginTop: space.xxl, gap: 10 }}>
-          <PrimaryButton label={w.exercises.length === 0 ? 'Přidat série' : 'Upravit trénink'} onPress={onEdit} />
+          <PrimaryButton label={w.exercises.length === 0 ? h.addSets : h.edit} onPress={onEdit} />
           {canSaveRoutine && (
             <Pressable
               onPress={saveAsRoutine}
               style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: radius.md, backgroundColor: palette.surface2, opacity: pressed ? 0.85 : 1 })}>
               <Ionicons name="bookmark-outline" size={17} color={palette.accent} />
               <Txt size={type.body} weight="bold" color={palette.accent}>
-                Uložit jako plán
+                {h.saveAsPlan}
               </Txt>
             </Pressable>
           )}
@@ -339,7 +343,7 @@ export default function WorkoutDetail() {
               style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: radius.md, backgroundColor: palette.surface2, opacity: pressed ? 0.85 : 1 })}>
               <Ionicons name="refresh-outline" size={17} color={palette.textDim} />
               <Txt size={type.body} weight="bold" color={palette.textDim} numberOfLines={1}>
-                Aktualizovat plán „{sourceRoutine.name}"
+                {h.updatePlan(sourceRoutine.name)}
               </Txt>
             </Pressable>
           )}

@@ -6,12 +6,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useMiniBarSpace } from '@/components/MiniWorkoutBar';
 import { Txt } from '@/components/ui';
+import { useT } from '@/i18n/useT';
 import { palette, radius, space, type } from '@/constants/theme';
 import { fmtClock, NBSP, relativeDay } from '@/lib/format';
 import { HealthWorkout, heartRateFor, listHealthWorkouts } from '@/lib/health';
 import { localCoversWindow, useStore } from '@/store/useStore';
 
 export default function HealthImport() {
+  const hi = useT().healthImport;
   const router = useRouter();
   // plovoucí lišta běžícího tréninku leží nad obsahem, tohle jí drží místo dole
   const barSpace = useMiniBarSpace();
@@ -84,7 +86,7 @@ export default function HealthImport() {
           <Ionicons name="chevron-back" size={26} color={palette.textDim} />
         </Pressable>
         <Txt size={type.h2} weight="bold">
-          Import z Apple Health
+          {hi.title}
         </Txt>
         <Pressable onPress={load} hitSlop={10} disabled={loading}>
           <Ionicons name="refresh" size={22} color={loading ? palette.surface3 : palette.textDim} />
@@ -93,7 +95,7 @@ export default function HealthImport() {
 
       <ScrollView contentContainerStyle={{ padding: space.xl, paddingBottom: 40 + barSpace }} showsVerticalScrollIndicator={false}>
         <Txt size={type.body} weight="medium" color={palette.textMute} style={{ marginBottom: space.lg }}>
-          Tréninky z hodinek / Kondice za posledních 30 dní. Ťukni pro přidání do Steelsetu i s tepem.
+          {hi.intro}
         </Txt>
 
         {healthEnabled && !loading && pending.length > 1 && (
@@ -107,7 +109,7 @@ export default function HealthImport() {
               <>
                 <Ionicons name="download" size={18} color={palette.bg} />
                 <Txt size={type.body} weight="bold" color={palette.bg}>
-                  Importovat vše ({pending.length})
+                  {hi.importAll(pending.length)}
                 </Txt>
               </>
             )}
@@ -116,7 +118,7 @@ export default function HealthImport() {
 
         {!healthEnabled ? (
           <Txt size={type.body} weight="medium" color={palette.textMute}>
-            Nejdřív připoj Apple Health v Profilu.
+            {hi.connectFirst}
           </Txt>
         ) : loading ? (
           <View style={{ paddingVertical: 40, alignItems: 'center' }}>
@@ -125,8 +127,8 @@ export default function HealthImport() {
         ) : visible.length === 0 ? (
           <Txt size={type.body} weight="medium" color={palette.textMute}>
             {Platform.OS === 'ios'
-              ? 'Žádné nové tréninky. Buď žádné na hodinkách, nebo už je máš zapsané v Steelsetu.'
-              : 'Import je dostupný jen na iPhonu.'}
+              ? hi.noneNew
+              : hi.iphoneOnly}
           </Txt>
         ) : (
           <View style={{ gap: space.sm }}>
@@ -165,7 +167,7 @@ export default function HealthImport() {
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                       <Ionicons name="checkmark-circle" size={20} color={palette.accent} />
                       <Txt size={type.label} weight="semibold" color={palette.accent}>
-                        Přidáno
+                        {hi.added}
                       </Txt>
                     </View>
                   ) : isBusy ? (

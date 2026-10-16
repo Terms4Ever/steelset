@@ -1,3 +1,5 @@
+import { t } from '@/i18n';
+import { muscleName } from '@/i18n/catalog';
 import { Exercise, LoggedExercise, MuscleGroup, SetEntry, Workout } from '@/data/types';
 
 const MS_DAY = 86_400_000;
@@ -348,11 +350,11 @@ export function muscleAlerts(setsPerWeek: Record<string, number>): { kind: 'weak
   const q = setsPerWeek['Kvadricepsy'] ?? 0;
   const h = setsPerWeek['Hamstringy'] ?? 0;
   if (q >= SET_ZONES.maintain && h === 0) {
-    out.push({ kind: 'weak', text: 'Hamstringy netrénuješ vůbec - přidej RDL nebo leg curl.' });
+    out.push({ kind: 'weak', text: t().alerts.noHamstrings });
   } else if (q > 0 && h > 0 && q / h >= 2.5) {
     out.push({
       kind: 'weak',
-      text: `Kvadricepsy máš ${Math.round((q / h) * 10) / 10}× víc sérií než hamstringy - přidej RDL nebo leg curl.`,
+      text: t().alerts.quadsVsHams(fmtSets(q / h)),
     });
   }
   // muscles above the high zone (per week)
@@ -363,7 +365,7 @@ export function muscleAlerts(setsPerWeek: Record<string, number>): { kind: 'weak
     const [name, v] = over[0];
     out.push({
       kind: 'overload',
-      text: `${name}: ${fmtSets(v)} sérií týdně - nad doporučených ${SET_ZONES.highMax}. Uber sérií nebo přidej den volna.`,
+      text: t().alerts.overload(muscleName(name), fmtSets(v), SET_ZONES.highMax),
     });
   }
   // trained muscles stuck in the maintenance zone while something else runs hot
@@ -373,7 +375,7 @@ export function muscleAlerts(setsPerWeek: Record<string, number>): { kind: 'weak
     const starved = trained.filter(([, v]) => v < SET_ZONES.maintain).sort((a, b) => a[1] - b[1]);
     if (top >= SET_ZONES.maintain && starved.length) {
       const [name, v] = starved[0];
-      out.push({ kind: 'weak', text: `${name}: jen ${fmtSets(v)} sérií týdně - pod ${SET_ZONES.maintain} to sotva udržuje.` });
+      out.push({ kind: 'weak', text: t().alerts.starved(muscleName(name), fmtSets(v), SET_ZONES.maintain) });
     }
   }
   return out;
@@ -382,7 +384,7 @@ export function muscleAlerts(setsPerWeek: Record<string, number>): { kind: 'weak
 /** 1 -> "1", 1.5 -> "1,5" (Czech, half-set precision). */
 export function fmtSets(n: number): string {
   const r = Math.round(n * 10) / 10;
-  return (Number.isInteger(r) ? String(r) : r.toFixed(1)).replace('.', ',');
+  return (Number.isInteger(r) ? String(r) : r.toFixed(1)).replace('.', t().format.decimal);
 }
 
 /** Number of completed working sets per muscle group in a window (for weekly set targets). */

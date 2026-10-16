@@ -6,6 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PrimaryButton, Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
+import { useT } from '@/i18n/useT';
+import { equipmentName, muscleName } from '@/i18n/catalog';
 import { EQUIPMENT_OPTIONS, TRACKING_OPTIONS } from '@/data/exerciseOptions';
 import { Equipment, MUSCLE_GROUP_OPTIONS, MuscleGroup, TrackingType } from '@/data/types';
 import { useStore } from '@/store/useStore';
@@ -30,6 +32,8 @@ function Chip({ label, on, onPress }: { label: string; on: boolean; onPress: () 
 }
 
 export default function ExerciseNew() {
+  const tx = useT();
+  const x = tx.exercises;
   const router = useRouter();
   const params = useLocalSearchParams<{ name?: string }>();
   const addExercise = useStore((s) => s.addExercise);
@@ -64,7 +68,7 @@ export default function ExerciseNew() {
     <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }} edges={['top']}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.xl, paddingVertical: 10 }}>
         <Txt size={type.title} weight="bold">
-          Nový cvik
+          {x.newTitle}
         </Txt>
         <Pressable onPress={() => router.back()} hitSlop={10}>
           <Ionicons name="close" size={26} color={palette.textDim} />
@@ -72,21 +76,21 @@ export default function ExerciseNew() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: space.xl, paddingBottom: 40 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <Label>Název</Label>
+        <Label>{x.nameLabel}</Label>
         <TextInput
           value={name}
           onChangeText={setName}
-          placeholder="např. Bench na multipressu"
+          placeholder={x.namePlaceholder}
           placeholderTextColor={palette.textMute}
           style={{ backgroundColor: palette.surface2, borderRadius: radius.sm, color: palette.text, fontFamily: 'Inter_600SemiBold', fontSize: 16, paddingHorizontal: 14, paddingVertical: 13 }}
         />
 
-        <Label>Primární sval *</Label>
+        <Label>{x.primaryLabel}</Label>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {MUSCLES.map((m) => (
             <Chip
               key={m}
-              label={m}
+              label={muscleName(m)}
               on={primary === m}
               onPress={() => {
                 setPrimary(m);
@@ -96,7 +100,7 @@ export default function ExerciseNew() {
           ))}
         </View>
 
-        <Label>Vedlejší svaly (volitelné)</Label>
+        <Label>{x.secondaryLabel}</Label>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {MUSCLES.filter((m) => m !== primary).map((m) => {
             const on = secondary.includes(m);
@@ -113,7 +117,7 @@ export default function ExerciseNew() {
                   borderColor: on ? palette.accent : 'transparent',
                 }}>
                 <Txt size={type.label} weight="semibold" color={on ? palette.accent : palette.textDim}>
-                  {m}
+                  {muscleName(m)}
                 </Txt>
               </Pressable>
             );
@@ -138,22 +142,22 @@ export default function ExerciseNew() {
           </View>
           <View style={{ flex: 1 }}>
             <Txt size={type.body} weight="semibold">
-              Jednostranný cvik
+              {tx.workout.unilateral}
             </Txt>
             <Txt size={type.caption} weight="medium" color={palette.textMute}>
-              Cvičíš každou stranu zvlášť - objem a série se počítají 2×
+              {x.unilateralHintNew}
             </Txt>
           </View>
         </Pressable>
 
-        <Label>Vybavení</Label>
+        <Label>{x.equipmentLabel}</Label>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {EQUIPMENT_OPTIONS.map((e) => (
-            <Chip key={e} label={e} on={equipment === e} onPress={() => setEquipment(e)} />
+            <Chip key={e} label={equipmentName(e)} on={equipment === e} onPress={() => setEquipment(e)} />
           ))}
         </View>
 
-        <Label>Typ měření</Label>
+        <Label>{x.trackingLabel}</Label>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
           {TRACKING_OPTIONS.map((t) => (
             <Chip key={t.value} label={t.label} on={tracking === t.value} onPress={() => setTracking(t.value)} />
@@ -161,7 +165,7 @@ export default function ExerciseNew() {
         </View>
 
         <View style={{ marginTop: space.xxl }}>
-          <PrimaryButton label="Uložit cvik" onPress={save} style={{ opacity: valid ? 1 : 0.4 }} disabled={!valid} />
+          <PrimaryButton label={x.save} onPress={save} style={{ opacity: valid ? 1 : 0.4 }} disabled={!valid} />
         </View>
       </ScrollView>
     </SafeAreaView>

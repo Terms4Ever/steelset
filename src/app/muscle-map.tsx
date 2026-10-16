@@ -8,6 +8,8 @@ import { AdBanner } from '@/components/AdBanner';
 import { heatColor, MuscleMapChart, MuscleMapLegend, MuscleRegion } from '@/components/MuscleMapChart';
 import { useMiniBarSpace } from '@/components/MiniWorkoutBar';
 import { Txt } from '@/components/ui';
+import { muscleName } from '@/i18n/catalog';
+import { useT } from '@/i18n/useT';
 import { palette, radius, space, type } from '@/constants/theme';
 import {
   fmtSets,
@@ -23,13 +25,10 @@ import {
 import { fmtNum, toDisplayWeight } from '@/lib/format';
 import { useExercisesById, useStore } from '@/store/useStore';
 
-const PERIODS = [
-  { days: 7, label: '7 dní' },
-  { days: 30, label: '30 dní' },
-  { days: 90, label: '90 dní' },
-];
+const PERIODS = [7, 30, 90].map((days) => ({ days }));
 
 export default function MuscleMap() {
+  const mm = useT().muscleMap;
   const router = useRouter();
   // plovoucí lišta běžícího tréninku leží nad obsahem, tohle jí drží místo dole
   const barSpace = useMiniBarSpace();
@@ -62,13 +61,7 @@ export default function MuscleMap() {
   const selPrev = sel ? (prevSets[sel] ?? 0) : 0;
   const trendPct = sel && selPrev > 0 ? Math.round(((selSets - selPrev) / selPrev) * 100) : null;
   const zone = setZone(selSets);
-  const ZONE_LABEL: Record<string, string> = {
-    none: 'netrénuješ',
-    low: 'udržovací',
-    optimum: 'optimum růstu',
-    high: 'hodně',
-    overload: 'riziko přetížení',
-  };
+  const ZONE_LABEL = mm.zones;
   const selTop = useMemo(
     () => (sel ? topExerciseSetsForMuscle(workouts, exById, sel, since).slice(0, 3) : []),
     [sel, workouts, exById, since],
@@ -84,10 +77,10 @@ export default function MuscleMap() {
         </Pressable>
         <View>
           <Txt size={type.h1} weight="bold">
-            Svalová mapa
+            {mm.title}
           </Txt>
           <Txt size={type.caption} weight="medium" color={palette.textMute}>
-            Objem podle svalů · Pokrok
+            {mm.subtitle}
           </Txt>
         </View>
       </View>
@@ -106,7 +99,7 @@ export default function MuscleMap() {
                 backgroundColor: days === p.days ? palette.accent : palette.surface2,
               }}>
               <Txt size={type.label} weight="bold" color={days === p.days ? palette.bg : palette.textDim}>
-                {p.label}
+                {mm.days(p.days)}
               </Txt>
             </Pressable>
           ))}
@@ -124,19 +117,19 @@ export default function MuscleMap() {
         {empty && (
           <View style={{ alignItems: 'center', marginTop: space.xl }}>
             <Txt size={type.h2} weight="bold">
-              {neverTrained ? 'Zatím žádná data' : `Za posledních ${days} dní nic`}
+              {neverTrained ? mm.noData : mm.nothingIn(days)}
             </Txt>
             <Txt size={type.body} weight="medium" color={palette.textMute} style={{ textAlign: 'center', marginTop: 6 }}>
               {neverTrained
-                ? 'Zapiš první trénink a mapa se rozsvítí podle toho, co trénuješ.'
-                : 'V tomhle období není žádný trénink - zkus delší období, nebo běž zapsat nový.'}
+                ? mm.noDataHint
+                : mm.nothingHint}
             </Txt>
             {neverTrained ? (
               <Pressable
                 onPress={() => router.replace('/')}
                 style={{ marginTop: space.lg, backgroundColor: palette.accent, paddingHorizontal: 22, paddingVertical: 13, borderRadius: radius.pill }}>
                 <Txt size={type.body} weight="bold" color={palette.bg}>
-                  Zaloguj první trénink
+                  {mm.logFirst}
                 </Txt>
               </Pressable>
             ) : (
@@ -144,7 +137,7 @@ export default function MuscleMap() {
                 onPress={() => setDays(90)}
                 style={{ marginTop: space.lg, backgroundColor: palette.surface2, paddingHorizontal: 22, paddingVertical: 13, borderRadius: radius.pill }}>
                 <Txt size={type.body} weight="bold" color={palette.accent}>
-                  Zobrazit 90 dní
+                  {mm.show90}
                 </Txt>
               </Pressable>
             )}
@@ -200,7 +193,7 @@ export default function MuscleMap() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: heatColor(selSets) }} />
                 <Txt size={type.h1} weight="bold">
-                  {sel}
+                  {muscleName(sel)}
                 </Txt>
               </View>
               <Pressable onPress={() => setSel(null)} hitSlop={10} style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: palette.surface2, alignItems: 'center', justifyContent: 'center' }}>
@@ -215,11 +208,11 @@ export default function MuscleMap() {
                     {fmtSets(selSets)}
                   </Txt>
                   <Txt size={type.body} weight="semibold" color={palette.textMute}>
-                    sérií / týden
+                    {mm.perWeek}
                   </Txt>
                 </View>
                 <Txt size={type.caption} weight="medium" color={palette.textMute}>
-                  {ZONE_LABEL[zone]} · doporučeno {SET_ZONES.maintain}-{SET_ZONES.optimumMax - 1}
+                  {mm.recommended(ZONE_LABEL[zone], SET_ZONES.maintain, SET_ZONES.optimumMax - 1)}
                 </Txt>
               </View>
               <View style={{ alignItems: 'flex-end' }}>
@@ -227,8 +220,8 @@ export default function MuscleMap() {
                   {fmtSets(selSetsTotal)}
                 </Txt>
                 <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ textAlign: 'right' }}>
-                  sérií za {days} dní
-                  {selVol > 0 ? `\n${fmtNum(toDisplayWeight(selVol, unit))} ${unit} objem` : ''}
+                  {mm.setsIn(days)}
+                  {selVol > 0 ? `\n${mm.volume(fmtNum(toDisplayWeight(selVol, unit)), unit)}` : ''}
                 </Txt>
               </View>
             </View>
@@ -250,8 +243,7 @@ export default function MuscleMap() {
                 }}>
                 <Ionicons name={trendPct >= 0 ? 'trending-up' : 'trending-down'} size={13} color={trendPct >= 0 ? palette.accent : palette.amber} />
                 <Txt size={type.caption} weight="semibold" num color={trendPct >= 0 ? palette.accent : palette.amber}>
-                  {trendPct >= 0 ? '+' : ''}
-                  {trendPct} % vs. předchozích {days} dní
+                  {mm.trend(`${trendPct >= 0 ? '+' : ''}${trendPct}`, days)}
                 </Txt>
               </View>
             )}
@@ -259,7 +251,7 @@ export default function MuscleMap() {
             {selTop.length > 0 && (
               <>
                 <Txt size={type.caption} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5, marginTop: space.lg, marginBottom: 8 }}>
-                  NEJVÍC SÉRIÍ
+                  {mm.mostSets}
                 </Txt>
                 <View style={{ gap: 9 }}>
                   {selTop.map((t) => (
@@ -280,7 +272,7 @@ export default function MuscleMap() {
             )}
             {selTop.length === 0 && (
               <Txt size={type.label} weight="medium" color={palette.textMute} style={{ marginTop: space.lg }}>
-                V tomhle období žádný cvik na {sel}.
+                {mm.noExercise(muscleName(sel))}
               </Txt>
             )}
           </Pressable>

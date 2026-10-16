@@ -6,6 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Txt } from '@/components/ui';
 import { palette, radius, space, type } from '@/constants/theme';
+import { useT } from '@/i18n/useT';
+import { equipmentName, muscleName } from '@/i18n/catalog';
 import { EQUIPMENT_OPTIONS, TRACKING_OPTIONS } from '@/data/exerciseOptions';
 import { Equipment, MUSCLE_GROUP_OPTIONS, MuscleGroup, TrackingType } from '@/data/types';
 import { deleteExerciseWarning, exerciseUsage } from '@/lib/exerciseUsage';
@@ -64,6 +66,9 @@ function SectionLabel({ children, style }: { children: string; style?: object })
  * z běžícího tréninku.
  */
 export default function Exercises() {
+  const tx = useT();
+  const x = tx.exercises;
+  const w = tx.workout;
   const router = useRouter();
   const params = useLocalSearchParams<{ target?: string; routineId?: string; mode?: string }>();
   const manage = params.mode === 'manage';
@@ -88,7 +93,7 @@ export default function Exercises() {
   const filtered = useMemo(() => {
     const nq = norm(q.trim());
     if (!nq) return visible;
-    return visible.filter((e) => norm(e.name).includes(nq) || norm(e.primary).includes(nq) || norm(e.equipment).includes(nq));
+    return visible.filter((e) => norm(e.name).includes(nq) || norm(e.primary).includes(nq) || norm(muscleName(e.primary)).includes(nq) || norm(e.equipment).includes(nq) || norm(equipmentName(e.equipment)).includes(nq));
   }, [visible, q]);
   const sorted = useMemo(() => {
     const favSet = new Set(favs);
@@ -133,10 +138,10 @@ export default function Exercises() {
 
   const askDelete = (id: string, name: string) => {
     const usage = exerciseUsage(id, workouts, routines, trashedWorkouts);
-    Alert.alert('Smazat cvik?', deleteExerciseWarning(name, usage), [
-      { text: 'Zrušit', style: 'cancel' },
+    Alert.alert(x.deleteTitle, deleteExerciseWarning(name, usage), [
+      { text: tx.common.cancel, style: 'cancel' },
       {
-        text: 'Smazat',
+        text: tx.common.delete,
         style: 'destructive',
         onPress: () => {
           deleteExercise(id);
@@ -159,7 +164,7 @@ export default function Exercises() {
     <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }} edges={['top']}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.xl, paddingVertical: 10 }}>
         <Txt size={type.title} weight="bold">
-          {manage ? 'Správa cviků' : 'Cviky'}
+          {manage ? x.manageTitle : x.title}
         </Txt>
         <Pressable onPress={() => router.back()} hitSlop={10}>
           <Ionicons name="close" size={26} color={palette.textDim} />
@@ -172,7 +177,7 @@ export default function Exercises() {
           <TextInput
             value={q}
             onChangeText={setQ}
-            placeholder="Hledat cvik…"
+            placeholder={x.search}
             placeholderTextColor={palette.textMute}
             style={{ flex: 1, color: palette.text, fontFamily: 'Inter_500Medium', fontSize: 15, paddingVertical: 12 }}
           />
@@ -185,7 +190,7 @@ export default function Exercises() {
             <Ionicons name="add" size={22} color={palette.accent} />
           </View>
           <Txt size={type.body} weight="semibold" color={palette.accent}>
-            {query.length > 0 ? `Vytvořit „${query}"` : 'Vytvořit vlastní cvik'}
+            {query.length > 0 ? x.createNamed(query) : x.createCustom}
           </Txt>
         </Pressable>
 
@@ -204,8 +209,8 @@ export default function Exercises() {
                   {e.name}
                 </Txt>
                 <Txt size={type.caption} weight="medium" color={palette.textMute}>
-                  {e.primary} · {e.equipment}
-                  {e.custom ? ' · vlastní' : ''}
+                  {muscleName(e.primary)} · {equipmentName(e.equipment)}
+                  {e.custom ? x.customSuffix : ''}
                 </Txt>
               </View>
               {!manage && (
@@ -223,15 +228,15 @@ export default function Exercises() {
 
         {filtered.length === 0 && query.length === 0 && (
           <Txt size={type.body} color={palette.textMute} style={{ marginTop: 20 }}>
-            Žádné cviky.
+            {x.none}
           </Txt>
         )}
 
         {manage && hidden.length > 0 && (
           <View style={{ marginTop: space.xxl }}>
-            <SectionLabel>SMAZANÉ</SectionLabel>
+            <SectionLabel>{x.deleted}</SectionLabel>
             <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ marginBottom: 8 }}>
-              Nenabízejí se, ale zůstávají v odcvičených trénincích. Ťuknutím je vrátíš zpátky.
+              {x.deletedHint}
             </Txt>
             {hidden.map((e) => (
               <Pressable
@@ -246,7 +251,7 @@ export default function Exercises() {
                     {e.name}
                   </Txt>
                   <Txt size={type.caption} weight="medium" color={palette.textMute}>
-                    {e.primary} · {e.equipment}
+                    {muscleName(e.primary)} · {equipmentName(e.equipment)}
                   </Txt>
                 </View>
                 <Ionicons name="arrow-undo-outline" size={20} color={palette.accent} />
@@ -268,10 +273,10 @@ export default function Exercises() {
                 <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
                   <View style={{ flex: 1 }}>
                     <Txt size={type.h1} weight="bold">
-                      Nastavení cviku
+                      {w.settingsTitle}
                     </Txt>
                     <Txt size={type.label} weight="medium" color={palette.textMute} style={{ marginTop: 2 }}>
-                      Změna platí všude - i v historii, v plánech a na svalové mapě
+                      {w.settingsHint}
                     </Txt>
                   </View>
                   {/* cesta ven nesmí záviset na trefení podkladu, ten klávesnice zakryje */}
@@ -290,12 +295,12 @@ export default function Exercises() {
                 showsVerticalScrollIndicator={false}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: space.lg, marginBottom: 8 }}>
                   <Txt size={type.caption} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5 }}>
-                    NÁZEV
+                    {w.name}
                   </Txt>
                   {originalExerciseName(detail.id) && originalExerciseName(detail.id) !== detail.name && (
                     <Pressable onPress={() => setDetail({ ...detail, name: originalExerciseName(detail.id)! })} hitSlop={8}>
                       <Txt size={type.caption} weight="bold" color={palette.accent}>
-                        Obnovit původní
+                        {w.restoreName}
                       </Txt>
                     </Pressable>
                   )}
@@ -303,31 +308,31 @@ export default function Exercises() {
                 <TextInput
                   value={detail.name}
                   onChangeText={(t) => setDetail({ ...detail, name: t })}
-                  placeholder="Název cviku"
+                  placeholder={w.exerciseNamePlaceholder}
                   placeholderTextColor={palette.textMute}
                   style={{ backgroundColor: palette.surface2, borderRadius: radius.sm, color: palette.text, fontFamily: 'Inter_600SemiBold', fontSize: type.body, paddingHorizontal: 14, paddingVertical: 12 }}
                 />
 
-                <SectionLabel>HLAVNÍ PARTIE</SectionLabel>
+                <SectionLabel>{w.primary}</SectionLabel>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                   {MUSCLE_GROUP_OPTIONS.map((m) => (
                     <Chip
                       key={m}
-                      label={m}
+                      label={muscleName(m)}
                       on={detail.primary === m}
                       onPress={() => setDetail({ ...detail, primary: m, secondary: detail.secondary.filter((x) => x !== m) })}
                     />
                   ))}
                 </View>
 
-                <SectionLabel>VEDLEJŠÍ (volitelné)</SectionLabel>
+                <SectionLabel>{w.secondary}</SectionLabel>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                   {MUSCLE_GROUP_OPTIONS.filter((m) => m !== detail.primary).map((m) => {
                     const on = detail.secondary.includes(m);
                     return (
                       <Chip
                         key={m}
-                        label={m}
+                        label={muscleName(m)}
                         on={on}
                         onPress={() =>
                           setDetail({
@@ -340,14 +345,14 @@ export default function Exercises() {
                   })}
                 </View>
 
-                <SectionLabel>VYBAVENÍ</SectionLabel>
+                <SectionLabel>{x.equipment}</SectionLabel>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                   {EQUIPMENT_OPTIONS.map((eq) => (
-                    <Chip key={eq} label={eq} on={detail.equipment === eq} disabled={!detail.custom} onPress={() => setDetail({ ...detail, equipment: eq })} />
+                    <Chip key={eq} label={equipmentName(eq)} on={detail.equipment === eq} disabled={!detail.custom} onPress={() => setDetail({ ...detail, equipment: eq })} />
                   ))}
                 </View>
 
-                <SectionLabel>TYP MĚŘENÍ</SectionLabel>
+                <SectionLabel>{x.tracking}</SectionLabel>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                   {TRACKING_OPTIONS.map((t) => (
                     <Chip key={t.value} label={t.label} on={detail.tracking === t.value} disabled={!detail.custom} onPress={() => setDetail({ ...detail, tracking: t.value })} />
@@ -355,8 +360,7 @@ export default function Exercises() {
                 </View>
                 {!detail.custom && (
                   <Txt size={type.caption} weight="medium" color={palette.textMute} style={{ marginTop: 8 }}>
-                    Vybavení a typ měření jdou měnit jen u vlastních cviků. U vestavěných by změna
-                    přepsala i význam už odcvičených sérií.
+                    {x.builtinLocked}
                   </Txt>
                 )}
 
@@ -378,10 +382,10 @@ export default function Exercises() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Txt size={type.body} weight="semibold">
-                      Jednostranný cvik
+                      {w.unilateral}
                     </Txt>
                     <Txt size={type.caption} weight="medium" color={palette.textMute}>
-                      Cvičíš každou stranu zvlášť - objem se počítá 2×
+                      {w.unilateralHint}
                     </Txt>
                   </View>
                 </Pressable>
@@ -390,7 +394,7 @@ export default function Exercises() {
                   onPress={saveDetail}
                   style={({ pressed }) => ({ marginTop: space.lg, paddingVertical: 14, alignItems: 'center', borderRadius: radius.md, backgroundColor: palette.accent, opacity: pressed ? 0.85 : 1 })}>
                   <Txt size={type.body} weight="bold" color={palette.bg}>
-                    Uložit nastavení cviku
+                    {w.saveSettings}
                   </Txt>
                 </Pressable>
 
@@ -398,7 +402,7 @@ export default function Exercises() {
                   onPress={() => askDelete(detail.id, detail.name)}
                   style={({ pressed }) => ({ marginTop: 10, paddingVertical: 14, alignItems: 'center', borderRadius: radius.md, backgroundColor: palette.surface2, opacity: pressed ? 0.85 : 1 })}>
                   <Txt size={type.body} weight="bold" color={palette.red}>
-                    Smazat cvik
+                    {x.deleteButton}
                   </Txt>
                 </Pressable>
               </ScrollView>
