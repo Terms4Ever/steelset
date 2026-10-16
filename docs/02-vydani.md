@@ -116,7 +116,13 @@ nejdou založit produkty předplatného, bez produktů nemá RevenueCat co nabí
    doplnit bankovní účet a daňový formulář. Bez toho předplatné neprodá nic.
 3. Status obchodníka podle DSA. Aplikace s reklamami a předplatným v EU znamená
    nejspíš obchodníka; Apple pak na stránce aplikace zveřejní adresu, telefon a e-mail.
-   Rozhodnutí a údaje jsou zadavatele.
+   Rozhodnutí a údaje jsou zadavatele. 16. 10. 2026 podáno znovu jako obchodník, stav
+   „In Review". První žádost z 5. 7. Apple zamítl, nejspíš kvůli nesouladu s dokladem:
+   adresa musí sedět s dokladem přesně (ulice s číslem v jednom řádku, kraj místo státu),
+   doklad se nahrává anglicky (čeština v nabídce není), stačí občanka s česko-anglickými
+   popisky. Veřejný e-mail je `tomas@saroun.me`. Téhož dne přijatá nová Paid Apps
+   Agreement a licenční smlouva pro vývojáře; Apple je aktualizuje průběžně a bez nich
+   neprojde build ani prodej.
 4. AdMob a RevenueCat podle `01-todo.md`. K AdMobu navíc zpráva o souhlasu
    (Privacy & messaging, GDPR): kód ji volá přes `AdsConsent.gatherConsent()`, ale
    bez nastavené zprávy se nic neukáže a v EU poběží reklamy jen omezeně. Klíče
