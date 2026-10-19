@@ -1157,3 +1157,12 @@ a sedm dní zdarma u obou. Roční cena je 589 Kč, protože hladinu 590 Kč App
 nemá; zadavatel vybral 589 Kč ze 580, 589 a 599 Kč. Produkty jsou `cz.setly.app.pro.monthly`
 a `cz.setly.app.pro.yearly` ve skupině `Steelset Pro`, dostupné všude, kde aplikace.
 Zkušební týden je úvodní nabídka bez data konce, paywall ji čte z obchodu.
+
+## S49 - RevenueCat s ručně zadanými produkty, bez klíče App Store Connect API (19. 10. 2026)
+
+**Rozhodnutí.** Projekt v RevenueCatu má jedinou aplikaci pro App Store s klíčem pro in-app
+nákupy (bez něj StoreKit 2 nákupy nezaznamená). Produkty jsou zadané ručně podle ID; klíč
+App Store Connect API, který by je importoval a hlídal ceny, se nezakládá, protože ceny čte
+paywall z obchodu a další klíč s širokými právy by byl jen riziko navíc. Průvodcem navržený
+entitlement „Steelset Pro“ a doživotní nákup se nepoužily: kód hledá identifikátor `pro`
+a doživotní Pro se neprodává. Klíče vkládá zadavatel sám, agent je nevidí.

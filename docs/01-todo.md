@@ -37,21 +37,28 @@ V AdMobu, Ochrana soukromí a sdělení, založit a zveřejnit zprávu GDPR pro
 aplikaci Steelset, česky a anglicky. Kód ji ukáže přes `AdsConsent.gatherConsent()`;
 bez zveřejněné zprávy se nic neukáže a v EU poběží jen omezené reklamy.
 
-### [ ] RevenueCat: projekt, entitlement a nabídka
+### [x] RevenueCat: projekt, entitlement a nabídka (19. 10. 2026)
 
-Na `revenuecat.com` (zdarma do obratu 2 500 dolarů měsíčně) založit projekt,
-propojit ho s App Store Connectem, vytvořit:
+Projekt `Steelset` na app.revenuecat.com (plán zdarma do 2 500 dolarů měsíčně,
+bez karty), účet zadavatele. V něm:
 
-- entitlement s identifikátorem **`pro`** (přesně takhle, kód ho hledá podle
-  jména v `PRO_ENTITLEMENT`)
-- nabídku (offering) s měsíčním a ročním balíčkem
+| Co | Hodnota |
+|---|---|
+| aplikace | `Steelset (App Store)`, bundle `cz.setly.app` |
+| klíč pro in-app nákupy | `SubscriptionKey_4C4BHM8Q26.p8` z App Store Connectu, „Valid credentials“; soubor má zadavatel, v repozitáři není |
+| produkty | `cz.setly.app.pro.monthly`, `cz.setly.app.pro.yearly` |
+| entitlement | **`pro`** (kód ho hledá v `PRO_ENTITLEMENT`), oba produkty připojené |
+| nabídka | `default`, aktuální, balíčky `$rc_monthly` a `$rc_annual` |
+| veřejný klíč | EAS `production`, `EXPO_PUBLIC_REVENUECAT_IOS_KEY` (`appl_...`) |
 
-Veřejný klíč pro App Store patří do `EXPO_PUBLIC_REVENUECAT_IOS_KEY`.
+Klíč vložil zadavatel. S ním se skrytý přepínač Pro v Profilu (S7) od dalšího
+buildu schová a nákup v TestFlightu jde přes sandbox Applu. Produkty hlásí
+„Could not check“: bez klíče App Store Connect API je RevenueCat neověří ani
+nenaimportuje ceny. Nákupu to nevadí, ceny bere aplikace přímo z obchodu.
 
-Tenhle bod musí být hotový **dřív, než aplikace půjde do veřejného prodeje**.
-Do té doby je v Profilu skrytý přepínač předplatného pro testování, který se
-schovává právě podmínkou na chybějící klíč (rozhodnutí S7). Ve veřejné verzi
-bez klíče by z něj byla skutečná díra.
+Volitelné: v App Store Connectu (Informace o aplikaci) nastavit oznámení
+serveru Applu na adresu z RevenueCatu (aplikace, Apple Server Notification
+URL); stav předplatného se pak aktualizuje i bez otevření aplikace.
 
 ### [x] App Store Connect: skupina předplatného a produkty (19. 10. 2026)
 

@@ -95,9 +95,11 @@ Všechno z toho ověřené na zařízení v buildu 27 (#1 až #14).
 Rozepsané i s postupem v `01-todo.md`. Ve zkratce:
 
 - Vydání v App Storu (#18), pořadí kroků v `02-vydani.md` (Cesta do App Store).
-  AdMob má od 19. 10. aplikaci, tři jednotky a `app-ads.txt` (S47); další build
-  ukazuje skutečné reklamy. Chybí zpráva o souhlasu GDPR v AdMobu, RevenueCat,
-  produkty předplatného, App Privacy, popis v obchodě a schválení DSA.
+  AdMob má od 19. 10. aplikaci, tři jednotky a `app-ads.txt` (S47), předplatné
+  je v App Store Connectu (S48) i v RevenueCatu s klíčem v EAS (S49). Další build
+  je první se skutečnými reklamami a nákupem přes sandbox. Chybí zpráva o souhlasu
+  GDPR v AdMobu, snímky nákupu pro kontrolu, App Privacy, popis v obchodě
+  a schválení DSA.
 - Aplikace pro watchOS (#15): spuštění tréninku i na hodinkách a jediná cesta
   k tepu v reálném čase.
 - Podklady pro App Store: snímky obrazovek a popis, před veřejným vydáním.

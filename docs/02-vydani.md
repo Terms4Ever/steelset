@@ -124,8 +124,8 @@ nejdou založit produkty předplatného, bez produktů nemá RevenueCat co nabí
    popisky. Veřejný e-mail je `tomas@saroun.me`. Téhož dne přijatá nová Paid Apps
    Agreement a licenční smlouva pro vývojáře; Apple je aktualizuje průběžně a bez nich
    neprojde build ani prodej.
-4. AdMob a RevenueCat podle `01-todo.md`. AdMob má od 19. 10. aplikaci a tři
-   jednotky (S47), chybí ještě zpráva o souhlasu
+4. AdMob a RevenueCat podle `01-todo.md`. RevenueCat je od 19. 10. hotový (S49).
+   AdMob má od 19. 10. aplikaci a tři jednotky (S47), chybí ještě zpráva o souhlasu
    (Privacy & messaging, GDPR): kód ji volá přes `AdsConsent.gatherConsent()`, ale
    bez nastavené zprávy se nic neukáže a v EU poběží reklamy jen omezeně. Klíče
    patří do proměnných prostředí EAS (`eas env`), ne do repozitáře.
