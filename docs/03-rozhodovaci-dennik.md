@@ -1149,3 +1149,11 @@ na testovacích jednotkách (`src/lib/ads.ts`). `app-ads.txt` je v kořeni tomas
 
 **Pozor.** TestFlight jede z profilu `production`, takže od dalšího buildu ukazuje skutečné
 reklamy. Na vlastní reklamy se neklikat.
+
+## S48 - Předplatné Pro za 79 Kč měsíčně a 589 Kč ročně, týden zdarma (19. 10. 2026)
+
+**Rozhodnutí (zadavatel).** Návrh cen z `01-todo.md` platí: 79 Kč měsíčně, ročně se slevou
+a sedm dní zdarma u obou. Roční cena je 589 Kč, protože hladinu 590 Kč Apple v korunách
+nemá; zadavatel vybral 589 Kč ze 580, 589 a 599 Kč. Produkty jsou `cz.setly.app.pro.monthly`
+a `cz.setly.app.pro.yearly` ve skupině `Steelset Pro`, dostupné všude, kde aplikace.
+Zkušební týden je úvodní nabídka bez data konce, paywall ji čte z obchodu.

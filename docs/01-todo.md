@@ -53,14 +53,24 @@ Do té doby je v Profilu skrytý přepínač předplatného pro testování, kte
 schovává právě podmínkou na chybějící klíč (rozhodnutí S7). Ve veřejné verzi
 bez klíče by z něj byla skutečná díra.
 
-### [ ] App Store Connect: skupina předplatného a produkty
+### [x] App Store Connect: skupina předplatného a produkty (19. 10. 2026)
 
-Vytvořit skupinu předplatného a v ní dva produkty, měsíční a roční. Návrh cen,
-který čeká na potvrzení:
+Skupina `Steelset Pro` (ID 22493692), název pro uživatele česky i anglicky
+„Steelset Pro“. Oba produkty ve všech 175 zemích, s českým i anglickým názvem
+a popisem a se sedmi dny zdarma pro nové předplatitele (bez konce nabídky):
 
-- měsíčně 79 Kč
-- ročně 590 Kč, tedy úspora 38 procent
-- sedm dní zdarma na začátku
+| Produkt | Apple ID | Cena |
+|---|---|---|
+| `cz.setly.app.pro.monthly`, 1 měsíc | 6824557268 | 79 Kč (2,99 $, 2,99 €) |
+| `cz.setly.app.pro.yearly`, 1 rok | 6824559912 | 589 Kč (22,99 $, 24,99 €) |
+
+Ceny potvrdil zadavatel. 590 Kč Apple nenabízí, nejblíž je 589 Kč (úspora
+38 procent proti 948 Kč za dvanáct měsíců). Ostatní země přepočítal Apple.
+Úroveň 1 je měsíční, 2 roční; přeřadit jde jen přetažením.
+
+Před odesláním ke kontrole chybí u každého produktu snímek obrazovky
+s nákupem (Review Information). První předplatné jde ke kontrole jen spolu
+s novou verzí aplikace.
 
 Ceny se nikde v kódu nepíšou. Paywall je čte z obchodu, včetně délky zkušební
 doby, takže změna ceny nevyžaduje nový build.
