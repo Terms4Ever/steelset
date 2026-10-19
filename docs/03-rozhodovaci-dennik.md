@@ -1134,3 +1134,18 @@ anglickou nebo českou verzi podle jazyka.
 
 **Čím ověřeno.** Shoda tvaru snímku se Swiftem (`widgetSnapshot.test.ts`), klíče stavu hodinek
 (`watch.test.ts`), texty oprávnění v obou jazycích (`healthPlist.test.ts`). Swift ověří build.
+
+## S47 - Skutečné reklamní jednotky AdMobu, jen v prostředí production (19. 10. 2026)
+
+**Stav.** Vydání jde rovnou s reklamami a Pro (#18). Aplikace dosud běžela na testovacích
+jednotkách Googlu, které vydělávají nulu.
+
+**Rozhodnutí.** V AdMobu účet `pub-7354938030435296`, aplikace Steelset pro iOS bez propojení
+s obchodem (propojí se po vydání) a tři jednotky: banner, vsunutá reklama po tréninku, reklama
+při otevření. App ID je v `app.json`, ID jednotek v proměnných EAS prostředí `production`
+(veřejné hodnoty, nejsou tajemství). Profil `production` v `eas.json` prostředí načítá výslovně,
+aby build nezávisel na výchozím chování EAS. Vývoj (`__DEV__`) a build bez proměnné dál běží
+na testovacích jednotkách (`src/lib/ads.ts`). `app-ads.txt` je v kořeni tomas.saroun.me (T14).
+
+**Pozor.** TestFlight jede z profilu `production`, takže od dalšího buildu ukazuje skutečné
+reklamy. Na vlastní reklamy se neklikat.

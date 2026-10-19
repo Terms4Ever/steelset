@@ -10,22 +10,32 @@ Kód pro reklamy i předplatné je hotový a ověřený, ale běží na testovac
 jednotkách Googlu, které vydělávají nulu. Chybí účty a klíče. Bez nich se
 nedá vydat verze, která by něco vydělala.
 
-### [ ] AdMob: založit aplikaci a reklamní jednotky
+### [x] AdMob: založit aplikaci a reklamní jednotky (19. 10. 2026)
 
-Na `admob.google.com` přidat aplikaci pro identifikátor `cz.setly.app`
-a vytvořit tři jednotky: banner, interstitial, app open.
+Účet vydavatele `pub-7354938030435296`, aplikace Steelset pro iOS (zatím bez
+propojení s obchodem, AdMob ji zkontroluje až po vydání). Hodnoty jsou veřejné,
+každá je beztak v binárce aplikace:
 
-Výsledkem jsou čtyři hodnoty, které patří do proměnných prostředí:
-
-| Proměnná | Co do ní patří |
+| Kde | Hodnota |
 |---|---|
-| `EXPO_PUBLIC_ADMOB_BANNER_IOS` | ID banneru |
-| `EXPO_PUBLIC_ADMOB_INTERSTITIAL_IOS` | ID celoobrazovkové reklamy |
-| `EXPO_PUBLIC_ADMOB_APP_OPEN_IOS` | ID reklamy při otevření |
-| (do `app.json`) | App ID, nahradí testovací `ca-app-pub-3940256099942544~1458002511` |
+| `app.json`, `iosAppId` | `ca-app-pub-7354938030435296~3775723271` |
+| EAS `production`, `EXPO_PUBLIC_ADMOB_BANNER_IOS` | `ca-app-pub-7354938030435296/2789944665` |
+| EAS `production`, `EXPO_PUBLIC_ADMOB_INTERSTITIAL_IOS` | `ca-app-pub-7354938030435296/1955550151` |
+| EAS `production`, `EXPO_PUBLIC_ADMOB_APP_OPEN_IOS` | `ca-app-pub-7354938030435296/6210314923` |
 
 Dokud `EXPO_PUBLIC_ADMOB_BANNER_IOS` chybí, `src/lib/ads.ts` sám přepne na
-testovací jednotky. Přepínač je jen tahle jedna proměnná.
+testovací jednotky. Proměnné jsou jen v prostředí `production` a profil
+`production` v `eas.json` ho výslovně načítá, takže **od dalšího buildu běží
+v TestFlightu skutečné reklamy**. Na vlastní reklamy neklikat, AdMob to bere
+jako podvod; na testování slouží testovací zařízení v nastavení AdMobu.
+
+`app-ads.txt` běží na https://tomas.saroun.me/app-ads.txt (tomas.saroun.me T14).
+
+### [ ] AdMob: zpráva o souhlasu podle GDPR
+
+V AdMobu, Ochrana soukromí a sdělení, založit a zveřejnit zprávu GDPR pro
+aplikaci Steelset, česky a anglicky. Kód ji ukáže přes `AdsConsent.gatherConsent()`;
+bez zveřejněné zprávy se nic neukáže a v EU poběží jen omezené reklamy.
 
 ### [ ] RevenueCat: projekt, entitlement a nabídka
 
