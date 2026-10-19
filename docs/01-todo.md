@@ -37,6 +37,12 @@ V AdMobu, Ochrana soukromí a sdělení, založit a zveřejnit zprávu GDPR pro
 aplikaci Steelset, česky a anglicky. Kód ji ukáže přes `AdsConsent.gatherConsent()`;
 bez zveřejněné zprávy se nic neukáže a v EU poběží jen omezené reklamy.
 
+Účet AdMob je schválený od 19. 10. 2026. Stránka Ochrana soukromí a sdělení
+se ale v Chromu zadavatele načte prázdná: skripty `user-messaging/app.dart.js`
+z `www.gstatic.com` dostanou v Chromu 503, mimo Chrome 200. Nejspíš je blokuje
+některé z blokovačů reklam v Chromu; před dalším pokusem je vypnout pro
+`admob.google.com`.
+
 ### [x] RevenueCat: projekt, entitlement a nabídka (19. 10. 2026)
 
 Projekt `Steelset` na app.revenuecat.com (plán zdarma do 2 500 dolarů měsíčně,
