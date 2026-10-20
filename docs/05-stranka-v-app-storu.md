@@ -134,6 +134,13 @@ node scripts/app-store-snimky/shots.mjs cs docs/prilohy/app-store/cs
 node scripts/app-store-snimky/shots.mjs en docs/prilohy/app-store/en
 ```
 
+App Store Connect u verze 1.0 vyžaduje skupinu „iPhone with Dynamic Island (medium display)“,
+tedy 6,1" a 6,3" (1206 × 2622); 6,9" je volitelný. Nahrané jsou zmenšené kopie
+z `docs/prilohy/app-store/cs-6.3/` a `en-6.3/` (20. 10. 2026, angličtina jako hlavní, čeština
+zvlášť). Poměr stran se liší o 0,06 %, zmenšení nic neořízne. iPad se nevyplňuje
+(`supportsTablet: false`). Aplikace pro hodinky potřebuje aspoň jeden snímek z Apple Watch,
+ten jde udělat jen na hodinkách.
+
 `serve.mjs` běží na portu 8090 a musí běžet při focení. Vývojový server se nehodí: ukazuje
 vývojářské hlášky přes obrazovku. Po exportu `git checkout -- tsconfig.json`.
 
