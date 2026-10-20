@@ -1166,3 +1166,20 @@ App Store Connect API, který by je importoval a hlídal ceny, se nezakládá, p
 paywall z obchodu a další klíč s širokými právy by byl jen riziko navíc. Průvodcem navržený
 entitlement „Steelset Pro“ a doživotní nákup se nepoužily: kód hledá identifikátor `pro`
 a doživotní Pro se neprodává. Klíče vkládá zadavatel sám, agent je nevidí.
+
+## S50 - Jazyk pod React Compilerem: slovník podle jazyka a přemontování stromu (20. 10. 2026)
+
+**Stav.** V buildu 40 po volbě English zůstal Profil česky, přeložily se jen texty z pomocných
+funkcí mimo komponenty (stav zálohy). Aplikace běží s React Compilerem a ten v `useT` zapamatoval
+volání `t()` při prvním vykreslení, protože nemá reaktivní vstup. Komentář v `src/i18n/index.ts`
+sliboval přemontování stromu, které v kořenovém layoutu nebylo.
+
+**Rozhodnutí.** `useT` vrací `dict(lang)`, takže kompilátor slovník přepočítá se změnou jazyka;
+hlídá to `tests/i18nCompiler.test.ts`, který `useT` překládá stejným kompilátorem. Kořenový
+layout navíc při změně jazyka přemontuje strom (`key={lang}`) a vrátí uživatele do Profilu:
+kompilátor si v komponentách pamatuje i texty spočítané z dat (data, názvy partií a cviků)
+a ty by bez přemontování zůstaly ve starém jazyce. Jazyk se mění zřídka, ztráta stavu
+obrazovek při přepnutí je přijatelná.
+
+**Pozor.** V komponentách nevolat `t()` ani jinou funkci, která čte jazyk z modulu, bez vstupu
+závislého na jazyce; kompilátor výsledek zapamatuje. Přemontování to dnes kryje.

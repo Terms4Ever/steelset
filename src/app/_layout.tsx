@@ -8,7 +8,7 @@ import {
 import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,7 +21,7 @@ import { useMonetization } from '@/lib/useMonetization';
 import { useBodyweightSync } from '@/lib/useBodyweightSync';
 import { useWatchSync } from '@/lib/useWatchSync';
 import { useWidgetSync } from '@/lib/useWidgetSync';
-import { useT } from '@/i18n/useT';
+import { useLang, useT } from '@/i18n/useT';
 import { useStore } from '@/store/useStore';
 
 /**
@@ -64,6 +64,14 @@ export default function RootLayout() {
   const ready = loaded && hydrated;
   // jazyk aplikace podle nastavení nebo telefonu, dřív než se vykreslí cokoli dalšího (#20)
   useT();
+  const lang = useLang();
+  // jazyk se přepíná v Profilu; přemontovaný strom by na iPhonu začal na Dnešku
+  const shownLang = useRef(lang);
+  useEffect(() => {
+    if (shownLang.current === lang) return;
+    shownLang.current = lang;
+    router.navigate('/profil');
+  }, [lang, router]);
 
   // subscription state + ads (no-op for Pro subscribers)
   useMonetization(ready);
@@ -107,7 +115,10 @@ export default function RootLayout() {
 
   return (
     // gesta z react-native-gesture-handler (přetahování hodnot, keypad) potřebují tenhle kořen
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    // Po přepnutí jazyka se strom přemontuje (key). React Compiler si v komponentách pamatuje
+    // texty spočítané z dat (data, názvy partií, cviků) a bez přemontování by zůstaly ve starém
+    // jazyce až do další změny dat (#20).
+    <GestureHandlerRootView key={lang} style={{ flex: 1 }}>
       <SafeAreaProvider>
         <StatusBar style="light" />
         <Stack

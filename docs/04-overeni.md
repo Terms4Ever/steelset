@@ -32,10 +32,11 @@ Jest přes `jest-expo`, soubory `tests/*.test.ts`, spouští se `npx jest`
 | `watch.test.ts` | 19 | hodinky (#15, #23, #24, #25): zápis kalorií a tepu do Health, čas se setinami a bez nich při ztlumeném displeji; konec z hodinek ukončí telefon i bez shody id, starý konec z minula ne; hodinky pošlou konec dřív, než ukládají do Health; spouští se jen u živého tréninku a se zapnutým přepínačem, konec v telefonu je ukončí s uložením nebo bez, konec z hodinek ukončí telefon jen s hotovou sérií; klíče stavu sedí s `applyPhoneState` ve Swiftu |
 | `healthPlist.test.ts` | 8 | telefon i hodinky mají oba texty pro Apple Health; bez textu pro zápis Apple build odmítne (ITMS-90683, S39) |
 | `i18n.test.ts` | 9 | angličtina (#20): obrazovky v `src/app` a `src/components` nemají český text natvrdo, oba slovníky mají stejné klíče, anglický text bez českých znaků a prázdných řetězců, jen krátké pomlčky, české skloňování, výběr jazyka, čísla a data podle jazyka |
+| `i18nCompiler.test.ts` | 3 | `useT` přeložený React Compilerem jako v aplikaci: stejná komponenta po přepnutí jazyka dostane nový slovník (build 40 zůstal v Profilu česky, #20) |
 | `csv.test.ts` | 2 | export do CSV: nedokončené tréninky vynechá, zvláštní znaky ošetří |
 
-Běh 16. 10. 2026: 22 sad, 288 testů, všechny prošly. `store.test.ts` nově hlídá, že starý
-persist s přihlášením přes Apple se načte a jméno ani e-mail v něm nezůstanou (#19).
+Běh 20. 10. 2026: 23 sad, 291 testů, všechny prošly. Nový `i18nCompiler.test.ts` se starým
+`useT` padá („ZÁLOHA“ místo „BACKUP“), s opraveným prochází.
 
 ## Kde běží
 
@@ -64,7 +65,11 @@ po každém pushi ověřuje, že běh doopravdy prošel.
 - **Aplikace pro hodinky (#15).** Swift z Windows nejde zkompilovat. Test hlídá
   logiku v telefonu a klíče zpráv; spuštění hodinek, záznam tréninku, odpočet
   a uložení do Health jen na spárovaných hodinkách.
-- **Reklamy a nákupy.** V prohlížeči se nespustí a dokud chybí klíč
-  RevenueCatu, nejde Pro koupit ani na zařízení.
+- **Reklamy a nákupy.** V prohlížeči se nespustí. Od buildu 40 jdou na zařízení
+  přes skutečné jednotky AdMobu a sandbox Applu; jestli se reklama načte, říká
+  jen telefon a se zpožděním přehled v AdMobu.
+- **Přepnutí jazyka na iPhonu.** Na webu se po přepnutí přeloží celý strom
+  a zůstane otevřený Profil; na iPhonu se návrat do Profilu po přemontování
+  ověří až v TestFlightu.
 - **Typy a web export mimo tenhle počítač.** V CI se nepouští, jen ručně
   jako brána před commitem.
