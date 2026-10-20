@@ -72,6 +72,7 @@ načtou ze starého klíče.
 | `docs/02-vydani.md` | vydání: brány, build, TestFlight, App Privacy a podklady pro App Store |
 | `docs/03-rozhodovaci-dennik.md` | co bylo kdy rozhodnuto a proč. Nové rozhodnutí je nový záznam |
 | `docs/04-overeni.md` | co testy dokazují, kde běží a co se dá ověřit jen na zařízení |
+| `docs/05-stranka-v-app-storu.md` | texty stránky v App Storu česky a anglicky: název, popis, klíčová slova, odkazy |
 
 ---
 
