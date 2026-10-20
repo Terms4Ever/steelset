@@ -150,6 +150,34 @@ ořízne do zakulaceného displeje. Znovu: `node scripts/app-store-snimky/hodink
 `serve.mjs` běží na portu 8090 a musí běžet při focení. Vývojový server se nehodí: ukazuje
 vývojářské hlášky přes obrazovku. Po exportu `git checkout -- tsconfig.json`.
 
+## Poznámka pro kontrolu Applu
+
+Pole App Review Information u verze, anglicky (čte ho recenzent Applu). Vložené 20. 10. 2026,
+přihlášení není potřeba (Sign-in required vypnuté), vydání ruční. Kontaktní jméno, telefon
+a e-mail vyplňuje zadavatel.
+
+```
+Steelset is a strength training log. There is no account or sign-in; every feature works
+without logging in. Workout data stays on the device and in the user's own iCloud; the app
+has no server.
+
+Apple Health (optional): Profile > Apple Health > Connect. The iPhone app only reads heart
+rate, workouts and body weight to attach them to logged workouts; it does not write to Health.
+The Apple Watch app saves the finished workout to Health as Traditional Strength Training.
+
+Apple Watch: start a workout on the iPhone (Today > Start workout, or a plan) and the watch
+app starts automatically when it is installed. It shows time, heart rate, calories and the rest
+timer. The workout can be ended on either device.
+
+Steelset Pro is an auto-renewable subscription (monthly or yearly, 7-day free trial) that only
+removes ads; the app is fully usable for free. Open it from Profile > Steelset Pro. It can be
+purchased with a sandbox account, and Restore Purchases is on the same screen.
+
+Ads are served by Google AdMob. In the EEA, UK and Switzerland the app shows Google's consent
+form first, then the App Tracking Transparency prompt. Consent can be changed later in
+Profile > Ad consent.
+```
+
 ## Další pole
 
 | Pole | Hodnota |
@@ -161,3 +189,5 @@ vývojářské hlášky přes obrazovku. Po exportu `git checkout -- tsconfig.js
 | Věkové hodnocení | 9+ (Brazílie 12+, Korea ALL): reklama ano, zdraví a wellness ano, vše ostatní žádné; kategorie Not Applicable |
 | Obsah třetích stran | ne |
 | Regulovaný zdravotnický prostředek | ne, v žádné zemi |
+| Cena a dostupnost | zdarma, všech 175 zemí i budoucí; bez Macu a Vision Pro (hodinky, Health ani Live Activity tam nejsou) |
+| Snímek ke kontrole předplatného | `docs/prilohy/app-store/predplatne-kontrola.png` (nabídka z buildu 40), u měsíčního i ročního |
