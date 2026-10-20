@@ -1207,3 +1207,14 @@ délkou a aktivní energií ze statistiky tréninku (`src/lib/healthDiag.ts`); c
 označí. Podle toho se rozhodne, jestli jde o oprávnění, nebo o to, jak Kondice tréninky třetích
 stran zobrazuje. Hodinky po Ukončit hned přejdou do fáze `saving` s ukazatelem „Ukládám do
 Zdraví…“; seknutí bylo čekání na uzavření a uložení záznamu, během kterého obrazovka stála.
+
+## S53 - Reklamy chybí kvůli souhlasu GDPR, ne kvůli kódu (20. 10. 2026)
+
+**Stav.** Deník reklam (S51) z buildu 41: jednotky skutečné, `consent-update-failed` (pro App ID
+`ca-app-pub-7354938030435296~3775723271` není v AdMobu žádná zpráva), SDK se spustilo, banner
+třikrát `googleMobileAds/no-fill`. Pro je vypnuté, RevenueCat běží.
+
+**Rozhodnutí.** Kód reklam se nemění. Chybí zpráva o souhlasu GDPR v AdMobu (`01-todo.md`)
+a kontrola aplikace v AdMobu, která proběhne až po vydání a propojení s App Storem; do té doby
+čekáme málo reklam i se souhlasem. Deník zapisuje události za sebou, souběžné zápisy si
+přepisovaly řádky (chyběl řádek o sledování).

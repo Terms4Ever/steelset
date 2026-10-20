@@ -33,11 +33,11 @@ Jest přes `jest-expo`, soubory `tests/*.test.ts`, spouští se `npx jest`
 | `healthPlist.test.ts` | 8 | telefon i hodinky mají oba texty pro Apple Health; bez textu pro zápis Apple build odmítne (ITMS-90683, S39) |
 | `i18n.test.ts` | 9 | angličtina (#20): obrazovky v `src/app` a `src/components` nemají český text natvrdo, oba slovníky mají stejné klíče, anglický text bez českých znaků a prázdných řetězců, jen krátké pomlčky, české skloňování, výběr jazyka, čísla a data podle jazyka |
 | `i18nCompiler.test.ts` | 3 | `useT` přeložený React Compilerem jako v aplikaci: stejná komponenta po přepnutí jazyka dostane nový slovník (build 40 zůstal v Profilu česky, #20) |
-| `adsLog.test.ts` | 4 | deník reklam v Profilu (#18): chyba od Googlu s kódem i zprávou, posledních 30 událostí, poškozený deník nic neshodí |
+| `adsLog.test.ts` | 5 | deník reklam v Profilu (#18): chyba od Googlu s kódem i zprávou, posledních 30 událostí, souběžné zápisy se neztratí, poškozený deník nic neshodí |
 | `healthDiag.test.ts` | 3 | diagnostika Apple Health vypíše u posledních tréninků kalorie, chybějící označí, protože Kondice pak ukáže čas (#25) |
 | `csv.test.ts` | 2 | export do CSV: nedokončené tréninky vynechá, zvláštní znaky ošetří |
 
-Běh 20. 10. 2026: 25 sad, 300 testů, všechny prošly. `watch.test.ts` nově hlídá, že hodinky po
+Běh 20. 10. 2026: 25 sad, 301 testů, všechny prošly. `watch.test.ts` nově hlídá, že hodinky po
 Ukončit hned ukážou ukládání (21 testů). Nový `i18nCompiler.test.ts` se starým
 `useT` padá („ZÁLOHA“ místo „BACKUP“), s opraveným prochází.
 

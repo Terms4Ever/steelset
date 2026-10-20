@@ -37,6 +37,10 @@ V AdMobu, Ochrana soukromí a sdělení, založit a zveřejnit zprávu GDPR pro
 aplikaci Steelset, česky a anglicky. Kód ji ukáže přes `AdsConsent.gatherConsent()`;
 bez zveřejněné zprávy se nic neukáže a v EU poběží jen omezené reklamy.
 
+Deník reklam v buildu 41 to potvrdil: `consent-update-failed ... no form(s) configured
+for the input app ID` a banner pak `googleMobileAds/no-fill`. SDK běží, bez zprávy
+o souhlasu ale Google v EU reklamy nedá.
+
 Účet AdMob je schválený od 19. 10. 2026. Stránka Ochrana soukromí a sdělení
 se ale v Chromu zadavatele načte prázdná: skripty `user-messaging/app.dart.js`
 z `www.gstatic.com` dostanou v Chromu 503, mimo Chrome 200. Nejspíš je blokuje

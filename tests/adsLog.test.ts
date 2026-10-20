@@ -31,6 +31,11 @@ describe('deník reklam', () => {
     expect(log[29]).toEqual({ at: 1034, text: 'e34' });
   });
 
+  it('souběžné zápisy se neztratí (build 41 ztratil řádek o sledování)', async () => {
+    await Promise.all([logAds('consent', 1), logAds('tracking', 2), logAds('sdk', 3)]);
+    expect((await readAdsLog()).map((e) => e.text)).toEqual(['consent', 'tracking', 'sdk']);
+  });
+
   it('poškozený deník nic neshodí', async () => {
     await AsyncStorage.setItem('steelset-ads-log', '{rozbité');
     await expect(readAdsLog()).resolves.toEqual([]);

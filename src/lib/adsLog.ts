@@ -5,20 +5,27 @@ const LOG_MAX = 30;
 
 export type AdsLogEntry = { at: number; text: string };
 
+// Zápisy jdou za sebou: souběžné čtení a zápis by si navzájem přepsaly události (build 41
+// ztratil řádek o sledování, který přišel hned po souhlasu).
+let queue: Promise<void> = Promise.resolve();
+
 /**
  * Deník reklam v telefonu (#18). V buildu 40 se nezobrazila žádná reklama a chyby SDK se
  * polykaly, takže nešlo poznat, jestli chybí souhlas, start SDK, nebo jen Google reklamu
  * nedodal. Profil ukáže, co se dělo, i s kódem chyby od Googlu.
  */
-export async function logAds(text: string, now = Date.now()): Promise<void> {
-  try {
-    const raw = await AsyncStorage.getItem(LOG_KEY);
-    const list: AdsLogEntry[] = raw ? JSON.parse(raw) : [];
-    list.push({ at: now, text });
-    await AsyncStorage.setItem(LOG_KEY, JSON.stringify(list.slice(-LOG_MAX)));
-  } catch {
-    /* deník nesmí shodit nic jiného */
-  }
+export function logAds(text: string, now = Date.now()): Promise<void> {
+  queue = queue.then(async () => {
+    try {
+      const raw = await AsyncStorage.getItem(LOG_KEY);
+      const list: AdsLogEntry[] = raw ? JSON.parse(raw) : [];
+      list.push({ at: now, text });
+      await AsyncStorage.setItem(LOG_KEY, JSON.stringify(list.slice(-LOG_MAX)));
+    } catch {
+      /* deník nesmí shodit nic jiného */
+    }
+  });
+  return queue;
 }
 
 export async function readAdsLog(): Promise<AdsLogEntry[]> {
