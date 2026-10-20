@@ -80,6 +80,19 @@ export function onProChange(cb: (isPro: boolean) => void): () => void {
   }
 }
 
+/**
+ * Load the offering in the background so the paywall opens with prices already there. The SDK
+ * caches it; in build 41 every paywall open waited for the network first (#18).
+ */
+export function prefetchOfferings(): void {
+  if (!purchasesAvailable()) return;
+  void initPurchases()
+    .then(() => Purchases.getOfferings())
+    .catch(() => {
+      /* the paywall fetches again when it opens */
+    });
+}
+
 const MONTHS: Record<string, number> = { MONTHLY: 1, TWO_MONTH: 2, THREE_MONTH: 3, SIX_MONTH: 6, ANNUAL: 12 };
 
 /** Packages from RevenueCat's current offering, cheapest period first. */

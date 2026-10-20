@@ -2,7 +2,7 @@ jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 
-import { checkPro, getProPackages, purchasesAvailable, restorePro } from '@/lib/purchases.web';
+import { checkPro, getProPackages, prefetchOfferings, purchasesAvailable, restorePro } from '@/lib/purchases.web';
 import { useStore } from '@/store/useStore';
 
 const s = () => useStore.getState();
@@ -22,6 +22,10 @@ describe('subscription state', () => {
     // offline / SDK missing must NOT resolve to false - that would put ads in front of a paying user
     expect(purchasesAvailable()).toBe(false);
     await expect(checkPro()).resolves.toBeNull();
+  });
+
+  it('prefetching the offering without a store does nothing and never throws', () => {
+    expect(() => prefetchOfferings()).not.toThrow();
   });
 
   it('purchase helpers fail safely when the store is unavailable', async () => {

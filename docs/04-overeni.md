@@ -25,7 +25,7 @@ Jest přes `jest-expo`, soubory `tests/*.test.ts`, spouští se `npx jest`
 | `prefill.test.ts` | 7 | předvyplnění sérií z minula, váha se sama nenavyšuje |
 | `keypad.test.ts` | 5 | fokus klávesnice po smazání série |
 | `storeKeys.test.ts` | 5 | přechod ze starého klíče `setly-store-v1`, smazaná data se nevzkřísí (S7) |
-| `monetization.test.ts` | 3 | Pro bez spojení s obchodem nedostane reklamy, nákup bez obchodu selže bezpečně |
+| `monetization.test.ts` | 4 | Pro bez spojení s obchodem nedostane reklamy, nákup bez obchodu selže bezpečně, přednačtení nabídky bez obchodu nic neshodí |
 | `backupStatus.test.ts` | 7 | stav zálohy v Profilu: čas poslední zálohy lidsky, vypnutý iCloud jako varování, posluchač se ozve jen po úspěšné záloze (#19) |
 | `cloudHealth.test.ts` | 7 | záloha do iCloudu je bez tepu, kalorií a vážení z Health a každé pole tréninku popsané jako data z Health se vynechá; obnova nechá telefonu jeho tep, po obnovení se tep dotáhne z Health (#18) |
 | `stepper.test.ts` | 13 | steppery v Profilu: přírůstek po pevném seznamu se vrátí na 2,5 kg i 5 lb, krok po mřížce z minima zpátky na výchozí u všech stepperů (#21) |
@@ -38,7 +38,7 @@ Jest přes `jest-expo`, soubory `tests/*.test.ts`, spouští se `npx jest`
 | `adsConsent.test.ts` | 3 | řádek Souhlas s reklamami v Profilu jen tam, kde Google změnu souhlasu vyžaduje, chyba ho schová, otevření formuláře se zapíše do deníku (#18) |
 | `csv.test.ts` | 2 | export do CSV: nedokončené tréninky vynechá, zvláštní znaky ošetří |
 
-Běh 20. 10. 2026: 26 sad, 304 testů, všechny prošly. `watch.test.ts` nově hlídá, že hodinky po
+Běh 20. 10. 2026: 26 sad, 305 testů, všechny prošly. `watch.test.ts` nově hlídá, že hodinky po
 Ukončit hned ukážou ukládání (21 testů). Nový `i18nCompiler.test.ts` se starým
 `useT` padá („ZÁLOHA“ místo „BACKUP“), s opraveným prochází.
 
@@ -72,6 +72,9 @@ po každém pushi ověřuje, že běh doopravdy prošel.
 - **Reklamy a nákupy.** V prohlížeči se nespustí. Od buildu 40 jdou na zařízení
   přes skutečné jednotky AdMobu a sandbox Applu; jestli se reklama načte, říká
   jen telefon (Profil, Reklamy (diagnostika)) a se zpožděním přehled v AdMobu.
+  Zkušební nákup ročního Pro na buildu 41 (20. 10.) prošel: okno Applu za 589 Kč
+  s týdnem zdarma, Profil „Aktivní - bez reklam“, zákazník se sandboxovým nákupem
+  v RevenueCatu. Každý krok trval asi pět sekund, většinou na straně Applu.
 - **Přepnutí jazyka na iPhonu.** Na webu se po přepnutí přeloží celý strom
   a zůstane otevřený Profil; na iPhonu se návrat do Profilu po přemontování
   ověří až v TestFlightu.

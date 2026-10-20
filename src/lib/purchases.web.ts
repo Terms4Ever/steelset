@@ -18,6 +18,7 @@ export async function checkPro(): Promise<boolean | null> {
 export function onProChange(_cb: (isPro: boolean) => void): () => void {
   return () => {};
 }
+export function prefetchOfferings(): void {}
 export async function getProPackages(): Promise<ProPackage[]> {
   return [];
 }

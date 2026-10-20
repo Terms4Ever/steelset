@@ -104,7 +104,9 @@ Rozepsané i s postupem v `01-todo.md`. Ve zkratce:
   deník reklam (S51), ukládání na hodinkách po Ukončit a kalorie v diagnostice
   Apple Health (S52); Apple ho přijal. Na zařízení angličtina funguje, deník reklam
   ukázal chybějící zprávu GDPR (S53). Ta je od 20. 10. zveřejněná; řádek pro změnu
-  souhlasu v Profilu přijde s dalším buildem. Chybí zpráva o souhlasu
+  souhlasu v Profilu přijde s dalším buildem. Zkušební nákup Pro prošel; nabídka
+  ukazuje ceny v dolarech, okno Applu v korunách (testovací prostředí). Další build
+  načte nabídku předem, aby se Steelset Pro otevřel hned. Chybí zpráva o souhlasu
   GDPR v AdMobu, snímky nákupu pro kontrolu, App Privacy, popis v obchodě
   a schválení DSA.
 - Aplikace pro watchOS (#15): spuštění tréninku i na hodinkách a jediná cesta

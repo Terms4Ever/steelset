@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 
 import { disableAds, initAds, showAppOpen } from '@/lib/ads';
-import { checkPro, initPurchases, onProChange } from '@/lib/purchases';
+import { checkPro, initPurchases, onProChange, prefetchOfferings } from '@/lib/purchases';
 import { useStore } from '@/store/useStore';
 
 /**
@@ -29,6 +29,8 @@ export function useMonetization(ready: boolean) {
       const pro = await checkPro();
       // null = couldn't ask (offline / no SDK): keep whatever was cached
       if (!cancelled && pro !== null) setPro(pro);
+      // warm the offering so the paywall opens with prices already loaded (#18)
+      if (!cancelled && pro !== true) prefetchOfferings();
     })();
     const unsub = onProChange((pro) => setPro(pro));
     return () => {
