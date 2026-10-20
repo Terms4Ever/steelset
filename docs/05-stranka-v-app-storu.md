@@ -138,8 +138,14 @@ App Store Connect u verze 1.0 vyžaduje skupinu „iPhone with Dynamic Island (m
 tedy 6,1" a 6,3" (1206 × 2622); 6,9" je volitelný. Nahrané jsou zmenšené kopie
 z `docs/prilohy/app-store/cs-6.3/` a `en-6.3/` (20. 10. 2026, angličtina jako hlavní, čeština
 zvlášť). Poměr stran se liší o 0,06 %, zmenšení nic neořízne. iPad se nevyplňuje
-(`supportsTablet: false`). Aplikace pro hodinky potřebuje aspoň jeden snímek z Apple Watch,
-ten jde udělat jen na hodinkách.
+(`supportsTablet: false`).
+
+Apple Watch: tři snímky 422 × 514 (Ultra) v každém jazyce, `docs/prilohy/app-store/cs-watch/`
+a `en-watch/`: míry tréninku, odpočinek, souhrn. Hodinky z Windows spustit nejde a zadavatel
+je fotit nechce, proto jsou obrazovky překreslené v `scripts/app-store-snimky/hodinky.html`
+podle `targets/watch/Views.swift` (texty, barvy, velikosti, rozložení). Při změně obrazovek
+hodinek se upraví i tenhle soubor. Okraje drží bezpečnou oblast: App Store Connect snímek
+ořízne do zakulaceného displeje. Znovu: `node scripts/app-store-snimky/hodinky.mjs cs docs/prilohy/app-store/cs-watch`.
 
 `serve.mjs` běží na portu 8090 a musí běžet při focení. Vývojový server se nehodí: ukazuje
 vývojářské hlášky přes obrazovku. Po exportu `git checkout -- tsconfig.json`.

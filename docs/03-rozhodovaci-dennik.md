@@ -1250,3 +1250,13 @@ do Profilu po přepnutí jazyka (S50) se spouštěl i při startu, když se ulo�
 jazyka telefonu, takže aplikace pokaždé otevřela Profil; teď jen po načtení nastavení
 (`src/i18n/langSwitch.ts`). Nadpis grafu v Pokroku byl natvrdo česky a test ho nechytil, protože
 neměl diakritiku; test teď hlídá i takový text.
+
+## S57 - Snímky hodinek překreslené podle kódu (20. 10. 2026)
+
+**Rozhodnutí (zadavatel).** App Store Connect chce u aplikace s hodinkami aspoň jeden snímek
+z Apple Watch. Zadavatel je na hodinkách fotit nechce, proto vznikly z HTML, které věrně
+opakuje `targets/watch/Views.swift` (`scripts/app-store-snimky/hodinky.html`). Písmo je
+náhrada (Nunito a Inter místo SF), jinak stejné texty, barvy a rozložení. První verze měla
+text u kraje a App Store Connect ji v zakulaceném displeji ořízl; okraje teď drží bezpečnou
+oblast a dlouhý název se zkrátí třemi tečkami jako na hodinkách. Po cestě se ukázalo, že
+setiny na hodinkách mají čárku i anglicky; teď oddělovač podle jazyka.

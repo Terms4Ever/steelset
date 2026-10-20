@@ -21,12 +21,13 @@ func steelsetClock(_ interval: TimeInterval) -> String {
 }
 
 /// Čas tréninku se setinami jako ve Cvičení od Applu: „42:15,37", „1:02:15,37" (#24).
-/// Desetinná čárka podle češtiny. Bez setin, když je displej ztlumený.
+/// Desetinný oddělovač podle jazyka aplikace (#20): česky čárka, anglicky tečka.
+/// Bez setin, když je displej ztlumený.
 func steelsetClockPrecise(_ interval: TimeInterval, hundredths: Bool) -> String {
   let base = steelsetClock(interval)
   if !hundredths { return base }
   let centis = Int((max(0, interval) * 100).rounded(.down)) % 100
-  return base + "," + String(format: "%02d", centis)
+  return base + steelsetWL(",", ".") + String(format: "%02d", centis)
 }
 
 func steelsetNumber(_ value: Double) -> String {

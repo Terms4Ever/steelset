@@ -205,6 +205,11 @@ describe('hodinky · kalorie do Health a setiny (#24, #25)', () => {
     expect(metrics).toContain('isLuminanceReduced');
     expect(metrics).toContain('hundredths: !isLuminanceReduced');
   });
+
+  it('setiny mají oddělovač podle jazyka, anglicky tečku (#20)', () => {
+    const fn = views.slice(views.indexOf('func steelsetClockPrecise'), views.indexOf('func steelsetNumber'));
+    expect(fn).toContain('steelsetWL(",", ".")');
+  });
 });
 
 describe('hodinky · po Ukončit hned stav ukládání', () => {
