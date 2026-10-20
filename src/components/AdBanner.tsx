@@ -3,6 +3,7 @@ import { View } from 'react-native';
 
 import { palette } from '@/constants/theme';
 import { AD_UNITS, adsAvailable } from '@/lib/ads';
+import { adError, logAds } from '@/lib/adsLog';
 import { useStore } from '@/store/useStore';
 
 let BannerAd: any = null;
@@ -30,8 +31,14 @@ export function AdBanner({ style }: { style?: any }) {
       <BannerAd
         unitId={AD_UNITS.banner}
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-        onAdLoaded={() => setLoaded(true)}
-        onAdFailedToLoad={() => setLoaded(false)}
+        onAdLoaded={() => {
+          setLoaded(true);
+          void logAds('banner loaded');
+        }}
+        onAdFailedToLoad={(e: unknown) => {
+          setLoaded(false);
+          void logAds(`banner failed: ${adError(e)}`);
+        }}
       />
     </View>
   );

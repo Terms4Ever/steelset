@@ -98,8 +98,10 @@ Rozepsané i s postupem v `01-todo.md`. Ve zkratce:
   AdMob má od 19. 10. aplikaci, tři jednotky a `app-ads.txt` (S47), předplatné
   je v App Store Connectu (S48) i v RevenueCatu s klíčem v EAS (S49). Build 40
   (19. 10., commit `4747b5f`) je první se skutečnými reklamami a nákupem přes
-  sandbox; Apple ho přijal, v TestFlightu je „Ready to Submit“, test na zařízení
-  čeká na zadavatele. Chybí zpráva o souhlasu
+  sandbox; Apple ho přijal. Na zařízení: nabídka Pro se načte (ceny v dolarech,
+  testovací účet je americký), reklamy se ale neukázaly a Profil zůstal po volbě
+  English česky. Jazyk opravuje S50, pro reklamy je v Profilu deník (S51); obojí
+  přijde s dalším buildem. Chybí zpráva o souhlasu
   GDPR v AdMobu, snímky nákupu pro kontrolu, App Privacy, popis v obchodě
   a schválení DSA.
 - Aplikace pro watchOS (#15): spuštění tréninku i na hodinkách a jediná cesta

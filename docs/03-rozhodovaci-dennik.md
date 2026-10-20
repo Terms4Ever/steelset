@@ -1183,3 +1183,15 @@ obrazovek při přepnutí je přijatelná.
 
 **Pozor.** V komponentách nevolat `t()` ani jinou funkci, která čte jazyk z modulu, bez vstupu
 závislého na jazyce; kompilátor výsledek zapamatuje. Přemontování to dnes kryje.
+
+## S51 - Deník reklam v Profilu (20. 10. 2026)
+
+**Stav.** Build 40 nezobrazil žádnou reklamu, i když Pro není aktivní a nabídka předplatného se
+načte. SDK chyby polykalo, takže nešlo poznat příčinu: chybějící zpráva o souhlasu v EU,
+omezené doručování u aplikace, která ještě není v App Storu („Nutná kontrola“ v AdMobu),
+nebo chyba při startu.
+
+**Rozhodnutí.** `src/lib/adsLog.ts` zapisuje do telefonu posledních 30 událostí: jednotky
+(testovací, nebo skutečné), výsledek souhlasu, odpověď na dotaz na sledování, start SDK
+a načtení nebo chybu banneru, vsunuté reklamy a reklamy při otevření i s kódem od Googlu.
+Profil je ukáže v řádku Reklamy (diagnostika), stejně jako události hodinek (#23).

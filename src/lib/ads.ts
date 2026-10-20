@@ -1,5 +1,7 @@
 import { Platform } from 'react-native';
 
+import { adError, logAds } from '@/lib/adsLog';
+
 /**
  * AdMob for the free tier. Pro subscribers never see an ad, so nothing here is even initialised
  * for them. Degrades to a no-op on web / without the native module, so the web preview still works.
@@ -46,27 +48,34 @@ const FULLSCREEN_COOLDOWN_MS = 120_000;
 export async function initAds(): Promise<void> {
   if (!ads || initialised) return;
   initialised = true;
+  void logAds(`start: ${isTest ? 'test units' : 'real units'}`);
   try {
     const { default: mobileAds, AdsConsent, MaxAdContentRating } = ads;
     try {
-      await AdsConsent.gatherConsent(); // GDPR / EU consent form, no-op elsewhere
-    } catch {
+      const info = await AdsConsent.gatherConsent(); // GDPR / EU consent form, no-op elsewhere
+      void logAds(`consent: ${info?.status}, canRequestAds=${info?.canRequestAds}, form=${info?.isConsentFormAvailable}`);
+    } catch (e) {
       /* consent failures must not block ads entirely - Google serves non-personalised ones */
+      void logAds(`consent failed: ${adError(e)}`);
     }
     if (Platform.OS === 'ios') {
       try {
         const { requestTrackingPermissionsAsync } = require('expo-tracking-transparency');
-        await requestTrackingPermissionsAsync();
-      } catch {
+        const tracking = await requestTrackingPermissionsAsync();
+        void logAds(`tracking: ${tracking?.status}`);
+      } catch (e) {
         /* ignore - ads still work without tracking permission */
+        void logAds(`tracking failed: ${adError(e)}`);
       }
     }
     await mobileAds().setRequestConfiguration({ maxAdContentRating: MaxAdContentRating.PG });
     await mobileAds().initialize();
+    void logAds('sdk initialized');
     preloadInterstitial();
     preloadAppOpen();
-  } catch {
+  } catch (e) {
     /* ignore: no ads is better than a crash */
+    void logAds(`init failed: ${adError(e)}`);
   }
 }
 
@@ -79,8 +88,10 @@ function preloadInterstitial() {
       interstitial = null;
       preloadInterstitial(); // keep one warm for the next workout
     });
-    interstitial.addAdEventListener(AdEventType.ERROR, () => {
+    interstitial.addAdEventListener(AdEventType.LOADED, () => void logAds('interstitial loaded'));
+    interstitial.addAdEventListener(AdEventType.ERROR, (e: unknown) => {
       interstitial = null;
+      void logAds(`interstitial failed: ${adError(e)}`);
     });
     interstitial.load();
   } catch {
@@ -97,8 +108,10 @@ function preloadAppOpen() {
       appOpen = null;
       preloadAppOpen();
     });
-    appOpen.addAdEventListener(AdEventType.ERROR, () => {
+    appOpen.addAdEventListener(AdEventType.LOADED, () => void logAds('app open loaded'));
+    appOpen.addAdEventListener(AdEventType.ERROR, (e: unknown) => {
       appOpen = null;
+      void logAds(`app open failed: ${adError(e)}`);
     });
     appOpen.load();
   } catch {

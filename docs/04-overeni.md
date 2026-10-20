@@ -33,9 +33,10 @@ Jest přes `jest-expo`, soubory `tests/*.test.ts`, spouští se `npx jest`
 | `healthPlist.test.ts` | 8 | telefon i hodinky mají oba texty pro Apple Health; bez textu pro zápis Apple build odmítne (ITMS-90683, S39) |
 | `i18n.test.ts` | 9 | angličtina (#20): obrazovky v `src/app` a `src/components` nemají český text natvrdo, oba slovníky mají stejné klíče, anglický text bez českých znaků a prázdných řetězců, jen krátké pomlčky, české skloňování, výběr jazyka, čísla a data podle jazyka |
 | `i18nCompiler.test.ts` | 3 | `useT` přeložený React Compilerem jako v aplikaci: stejná komponenta po přepnutí jazyka dostane nový slovník (build 40 zůstal v Profilu česky, #20) |
+| `adsLog.test.ts` | 4 | deník reklam v Profilu (#18): chyba od Googlu s kódem i zprávou, posledních 30 událostí, poškozený deník nic neshodí |
 | `csv.test.ts` | 2 | export do CSV: nedokončené tréninky vynechá, zvláštní znaky ošetří |
 
-Běh 20. 10. 2026: 23 sad, 291 testů, všechny prošly. Nový `i18nCompiler.test.ts` se starým
+Běh 20. 10. 2026: 24 sad, 295 testů, všechny prošly. Nový `i18nCompiler.test.ts` se starým
 `useT` padá („ZÁLOHA“ místo „BACKUP“), s opraveným prochází.
 
 ## Kde běží
@@ -67,7 +68,7 @@ po každém pushi ověřuje, že běh doopravdy prošel.
   a uložení do Health jen na spárovaných hodinkách.
 - **Reklamy a nákupy.** V prohlížeči se nespustí. Od buildu 40 jdou na zařízení
   přes skutečné jednotky AdMobu a sandbox Applu; jestli se reklama načte, říká
-  jen telefon a se zpožděním přehled v AdMobu.
+  jen telefon (Profil, Reklamy (diagnostika)) a se zpožděním přehled v AdMobu.
 - **Přepnutí jazyka na iPhonu.** Na webu se po přepnutí přeloží celý strom
   a zůstane otevřený Profil; na iPhonu se návrat do Profilu po přemontování
   ověří až v TestFlightu.

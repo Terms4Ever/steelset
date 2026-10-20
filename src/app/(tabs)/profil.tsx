@@ -13,6 +13,7 @@ import { backupHint, backupLabel, BackupStatus } from '@/lib/backupStatus';
 import { purchasesAvailable } from '@/lib/purchases';
 import { INCREMENT_OPTIONS_KG, INCREMENT_OPTIONS_LB, stepNumber, stepOption } from '@/lib/stepper';
 import { onBackupDone, readBackupStatus } from '@/lib/sync';
+import { readAdsLog } from '@/lib/adsLog';
 import { readWatchLog } from '@/lib/watch';
 import { locale } from '@/i18n';
 import { useT } from '@/i18n/useT';
@@ -62,6 +63,20 @@ export default function Profil() {
   const onTestHealth = async () => {
     const res = await healthSelfTest();
     Alert.alert(p.healthTestTitle, res);
+  };
+
+  // co se dělo s reklamami: souhlas, sledování, start SDK a chyby od Googlu (#18)
+  const onAdsLog = async () => {
+    const log = await readAdsLog();
+    const head = `Pro: ${isPro} · ${purchasesAvailable() ? 'RevenueCat' : 'no RevenueCat'}`;
+    const text = log.length
+      ? log
+          .slice()
+          .reverse()
+          .map((e) => `${new Date(e.at).toLocaleString(locale())}  ${e.text}`)
+          .join('\n')
+      : p.adsLogEmpty;
+    Alert.alert(p.adsLogTitle, `${head}\n\n${text}`);
   };
 
   const onWatchLog = async () => {
@@ -237,7 +252,14 @@ export default function Profil() {
       <Section title="STEELSET">
         <Pressable
           onPress={() => router.push('/paywall')}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: 14, padding: space.lg }}>
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 14,
+            padding: space.lg,
+            borderBottomWidth: Platform.OS === 'ios' ? 1 : 0,
+            borderBottomColor: palette.hairline,
+          }}>
           <Ionicons name={isPro ? 'star' : 'star-outline'} size={20} color={isPro ? palette.accent : palette.textDim} />
           <View style={{ flex: 1 }}>
             <Txt size={type.body} weight="medium">
@@ -249,6 +271,7 @@ export default function Profil() {
           </View>
           <Ionicons name="chevron-forward" size={18} color={palette.textMute} />
         </Pressable>
+        {Platform.OS === 'ios' && <RowButton icon="megaphone-outline" label={p.adsLog} last onPress={onAdsLog} />}
       </Section>
 
       {testerUnlocked && (
