@@ -1218,3 +1218,12 @@ třikrát `googleMobileAds/no-fill`. Pro je vypnuté, RevenueCat běží.
 a kontrola aplikace v AdMobu, která proběhne až po vydání a propojení s App Storem; do té doby
 čekáme málo reklam i se souhlasem. Deník zapisuje události za sebou, souběžné zápisy si
 přepisovaly řádky (chyběl řádek o sledování).
+
+## S54 - Zpráva GDPR s tlačítkem Nesouhlasím a změna souhlasu v Profilu (20. 10. 2026)
+
+**Rozhodnutí.** Zpráva „Steelset GDPR“ v AdMobu má vedle Souhlasím i Nesouhlasím ve všech
+zemích, protože zásady soukromí slibují, že bez souhlasu aplikace funguje stejně, a odmítnutí
+má být stejně snadné. Výchozí jazyk angličtina, k ní čeština a slovenština; odkaz na anglické
+zásady, které vedou i na české. Profil dostal řádek Souhlas s reklamami
+(`AdsConsent.showPrivacyOptionsForm`), který Google po zveřejnění vyžaduje; zobrazí se jen
+při `privacyOptionsRequirementStatus` REQUIRED a bez Pro.

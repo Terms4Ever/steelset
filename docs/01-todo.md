@@ -31,7 +31,7 @@ jako podvod; na testování slouží testovací zařízení v nastavení AdMobu.
 
 `app-ads.txt` běží na https://tomas.saroun.me/app-ads.txt (tomas.saroun.me T14).
 
-### [ ] AdMob: zpráva o souhlasu podle GDPR
+### [x] AdMob: zpráva o souhlasu podle GDPR (20. 10. 2026)
 
 V AdMobu, Ochrana soukromí a sdělení, založit a zveřejnit zprávu GDPR pro
 aplikaci Steelset, česky a anglicky. Kód ji ukáže přes `AdsConsent.gatherConsent()`;
@@ -40,6 +40,12 @@ bez zveřejněné zprávy se nic neukáže a v EU poběží jen omezené reklamy
 Deník reklam v buildu 41 to potvrdil: `consent-update-failed ... no form(s) configured
 for the input app ID` a banner pak `googleMobileAds/no-fill`. SDK běží, bez zprávy
 o souhlasu ale Google v EU reklamy nedá.
+
+Zveřejněná 20. 10. 2026 jako „Steelset GDPR“: aplikace Steelset, angličtina jako výchozí,
+čeština a slovenština, tlačítka Nesouhlasím (ve všech zemích), Souhlasím a Spravovat
+možnosti, zásady https://tomas.saroun.me/steelset/privacy/. Text je standardní od Googlu.
+Google po zveřejnění vyžaduje, aby šel souhlas změnit: Profil má řádek Souhlas
+s reklamami, jen kde to Google žádá. Zpráva se do aplikace dostane do hodiny, bez buildu.
 
 Účet AdMob je schválený od 19. 10. 2026. Stránka Ochrana soukromí a sdělení
 se ale v Chromu zadavatele načte prázdná: skripty `user-messaging/app.dart.js`

@@ -53,7 +53,9 @@ export async function initAds(): Promise<void> {
     const { default: mobileAds, AdsConsent, MaxAdContentRating } = ads;
     try {
       const info = await AdsConsent.gatherConsent(); // GDPR / EU consent form, no-op elsewhere
-      void logAds(`consent: ${info?.status}, canRequestAds=${info?.canRequestAds}, form=${info?.isConsentFormAvailable}`);
+      void logAds(
+        `consent: ${info?.status}, canRequestAds=${info?.canRequestAds}, form=${info?.isConsentFormAvailable}, privacyOptions=${info?.privacyOptionsRequirementStatus}`,
+      );
     } catch (e) {
       /* consent failures must not block ads entirely - Google serves non-personalised ones */
       void logAds(`consent failed: ${adError(e)}`);
@@ -144,6 +146,31 @@ export function showAppOpen(): boolean {
     return true;
   } catch {
     return false;
+  }
+}
+
+/**
+ * Does Google require a way to change the consent later? True in the EU once the GDPR message
+ * is published; the Profile then shows a row that reopens the form (Google policy, #18).
+ */
+export async function privacyOptionsRequired(): Promise<boolean> {
+  if (!ads) return false;
+  try {
+    const info = await ads.AdsConsent.getConsentInfo();
+    return info?.privacyOptionsRequirementStatus === 'REQUIRED';
+  } catch {
+    return false;
+  }
+}
+
+/** Reopen Google's consent form so the user can change or withdraw consent. */
+export async function showPrivacyOptions(): Promise<void> {
+  if (!ads) return;
+  try {
+    const info = await ads.AdsConsent.showPrivacyOptionsForm();
+    await logAds(`privacy options: ${info?.status}, canRequestAds=${info?.canRequestAds}`);
+  } catch (e) {
+    await logAds(`privacy options failed: ${adError(e)}`);
   }
 }
 

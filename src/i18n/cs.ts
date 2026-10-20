@@ -385,6 +385,7 @@ export const cs = {
     watchLog: 'Události hodinek (diagnostika)',
     watchLogTitle: 'Události hodinek',
     watchLogEmpty: 'Zatím žádné události.',
+    adsConsent: 'Souhlas s reklamami',
     adsLog: 'Reklamy (diagnostika)',
     adsLogTitle: 'Reklamy',
     adsLogEmpty: 'Zatím žádné události. Reklamy se spouští jen bez Pro.',

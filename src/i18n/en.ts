@@ -383,6 +383,7 @@ export const en: Dict = {
     watchLog: 'Watch events (diagnostics)',
     watchLogTitle: 'Watch events',
     watchLogEmpty: 'No events yet.',
+    adsConsent: 'Ad consent',
     adsLog: 'Ads (diagnostics)',
     adsLogTitle: 'Ads',
     adsLogEmpty: 'No events yet. Ads only start without Pro.',

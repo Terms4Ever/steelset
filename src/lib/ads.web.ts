@@ -9,3 +9,7 @@ export function showAppOpen(): boolean {
   return false;
 }
 export function disableAds(): void {}
+export async function privacyOptionsRequired(): Promise<boolean> {
+  return false;
+}
+export async function showPrivacyOptions(): Promise<void> {}

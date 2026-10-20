@@ -35,9 +35,10 @@ Jest přes `jest-expo`, soubory `tests/*.test.ts`, spouští se `npx jest`
 | `i18nCompiler.test.ts` | 3 | `useT` přeložený React Compilerem jako v aplikaci: stejná komponenta po přepnutí jazyka dostane nový slovník (build 40 zůstal v Profilu česky, #20) |
 | `adsLog.test.ts` | 5 | deník reklam v Profilu (#18): chyba od Googlu s kódem i zprávou, posledních 30 událostí, souběžné zápisy se neztratí, poškozený deník nic neshodí |
 | `healthDiag.test.ts` | 3 | diagnostika Apple Health vypíše u posledních tréninků kalorie, chybějící označí, protože Kondice pak ukáže čas (#25) |
+| `adsConsent.test.ts` | 3 | řádek Souhlas s reklamami v Profilu jen tam, kde Google změnu souhlasu vyžaduje, chyba ho schová, otevření formuláře se zapíše do deníku (#18) |
 | `csv.test.ts` | 2 | export do CSV: nedokončené tréninky vynechá, zvláštní znaky ošetří |
 
-Běh 20. 10. 2026: 25 sad, 301 testů, všechny prošly. `watch.test.ts` nově hlídá, že hodinky po
+Běh 20. 10. 2026: 26 sad, 304 testů, všechny prošly. `watch.test.ts` nově hlídá, že hodinky po
 Ukončit hned ukážou ukládání (21 testů). Nový `i18nCompiler.test.ts` se starým
 `useT` padá („ZÁLOHA“ místo „BACKUP“), s opraveným prochází.
 

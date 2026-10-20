@@ -13,6 +13,7 @@ import { backupHint, backupLabel, BackupStatus } from '@/lib/backupStatus';
 import { purchasesAvailable } from '@/lib/purchases';
 import { INCREMENT_OPTIONS_KG, INCREMENT_OPTIONS_LB, stepNumber, stepOption } from '@/lib/stepper';
 import { onBackupDone, readBackupStatus } from '@/lib/sync';
+import { privacyOptionsRequired, showPrivacyOptions } from '@/lib/ads';
 import { readAdsLog } from '@/lib/adsLog';
 import { readWatchLog } from '@/lib/watch';
 import { locale } from '@/i18n';
@@ -37,6 +38,14 @@ export default function Profil() {
   // Sedm ťuknutí na řádek s verzí odemkne ruční přepínač. Jakmile obchod ožije, zmizí sám.
   const [versionTaps, setVersionTaps] = useState(0);
   const testerUnlocked = versionTaps >= 7 && !purchasesAvailable();
+  const [consentRow, setConsentRow] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    void privacyOptionsRequired().then((v) => alive && setConsentRow(v));
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const finishedCount = workouts.filter((w) => w.finishedAt).length;
 
@@ -271,6 +280,8 @@ export default function Profil() {
           </View>
           <Ionicons name="chevron-forward" size={18} color={palette.textMute} />
         </Pressable>
+        {/* změna souhlasu s reklamami, kde ji Google vyžaduje (EU, #18) */}
+        {consentRow && !isPro && <RowButton icon="shield-checkmark-outline" label={p.adsConsent} onPress={() => void showPrivacyOptions()} />}
         {Platform.OS === 'ios' && <RowButton icon="megaphone-outline" label={p.adsLog} last onPress={onAdsLog} />}
       </Section>
 
