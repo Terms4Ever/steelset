@@ -1227,3 +1227,13 @@ má být stejně snadné. Výchozí jazyk angličtina, k ní čeština a sloven�
 zásady, které vedou i na české. Profil dostal řádek Souhlas s reklamami
 (`AdsConsent.showPrivacyOptionsForm`), který Google po zveřejnění vyžaduje; zobrazí se jen
 při `privacyOptionsRequirementStatus` REQUIRED a bez Pro.
+
+## S55 - App Privacy: reklamní data propojená a ke sledování, tréninky ne (20. 10. 2026)
+
+**Rozhodnutí (zadavatel).** Reklamní údaje z AdMobu (poloha podle IP, ID zařízení, interakce,
+údaje o reklamách) jsou přiznané jako propojené s identitou a použité ke sledování. Apple
+propojení definuje i přes zařízení a AdMob je sbírá spolu s reklamním ID; aplikace žádá
+o povolení sledování. Pády a výkon (AdMob) a historie nákupů (RevenueCat, anonymní ID) jsou
+nepropojené a bez sledování. Tréninky a data z Health se nepřiznávají: neopouští telefon
+a uživatelův iCloud, ke kterému vývojář nemá přístup. Původní návrh „nepropojené“ u reklamních
+dat se obrátil při vyplňování, kdy Apple ukázal svou definici.

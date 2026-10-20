@@ -175,6 +175,21 @@ by byla nepravdivá deklarace vůči Applu.** Od verze s monetizací je potřeba
 Bez stránky se zásadami ochrany soukromí (`docs/01-todo.md`) Apple aplikaci
 s reklamami a předplatným zamítne.
 
+**Zveřejněno 20. 10. 2026 (S55).** Podklady: přehled dat od Googlu pro Google Mobile Ads SDK
+a návod RevenueCatu k App Privacy. Zásady: https://tomas.saroun.me/steelset/privacy/
+
+| Typ | Účel | Propojené | Sledování |
+|---|---|---|---|
+| Přibližná poloha | reklama třetích stran, analytika | ano | ano |
+| ID zařízení | reklama třetích stran, analytika | ano | ano |
+| Interakce s produktem | reklama třetích stran, analytika | ano | ano |
+| Údaje o reklamách | reklama třetích stran, analytika | ano | ano |
+| Údaje o výkonu | analytika, reklama třetích stran | ne | ne |
+| Údaje o pádech | analytika | ne | ne |
+| Historie nákupů | funkce aplikace, analytika | ne | ne |
+
+Když přibude SDK nebo se změní, co se posílá, odpovědi se upraví ještě před vydáním.
+
 ---
 
 ## Podklady pro App Store
