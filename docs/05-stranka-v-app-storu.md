@@ -2,7 +2,8 @@
 
 **Stav 20. 10. 2026:** texty níže jsou vložené v App Store Connectu u verze 1.0 (angličtina
 je hlavní jazyk, čeština jako druhá lokalizace) i v Informacích o aplikaci, včetně kategorie
-a odkazů na podporu a soukromí podle jazyka. Snímky obrazovky a věkové hodnocení zbývají.
+a odkazů na podporu a soukromí podle jazyka. Věkové hodnocení a prohlášení jsou vyplněné
+(tabulka dole), zbývají snímky obrazovky.
 
 Texty pro App Store Connect, česky a anglicky (#18, #20). Slovenský obchod ukazuje češtinu.
 Co se tu změní, se přepíše i v App Store Connectu, ať se texty nerozejdou. Limity: název
@@ -128,3 +129,6 @@ Privacy Policy: https://tomas.saroun.me/steelset/privacy/
 | URL podpory | https://tomas.saroun.me/steelset/podpora/ (anglicky https://tomas.saroun.me/steelset/support/) |
 | URL zásad soukromí | https://tomas.saroun.me/steelset/soukromi/ (anglicky https://tomas.saroun.me/steelset/privacy/) |
 | Copyright | 2026 Tomáš Šaroun |
+| Věkové hodnocení | 9+ (Brazílie 12+, Korea ALL): reklama ano, zdraví a wellness ano, vše ostatní žádné; kategorie Not Applicable |
+| Obsah třetích stran | ne |
+| Regulovaný zdravotnický prostředek | ne, v žádné zemi |
