@@ -206,3 +206,22 @@ describe('hodinky · kalorie do Health a setiny (#24, #25)', () => {
     expect(metrics).toContain('hundredths: !isLuminanceReduced');
   });
 });
+
+describe('hodinky · po Ukončit hned stav ukládání', () => {
+  const manager = readFileSync(join(__dirname, '../targets/watch/WorkoutManager.swift'), 'utf8');
+  const views = readFileSync(join(__dirname, '../targets/watch/Views.swift'), 'utf8');
+
+  it('Ukončit přepne na ukládání dřív, než watchOS záznam uzavře a uloží (seknutí na hodinkách)', () => {
+    expect(manager).toMatch(/enum SteelsetPhase \{[\s\S]*?case saving[\s\S]*?\}/);
+    const end = manager.slice(manager.indexOf('func end(save: Bool, notifyPhone: Bool)'), manager.indexOf('func togglePause'));
+    expect(end).toContain('.saving');
+    expect(end.indexOf('.saving')).toBeLessThan(end.indexOf('session.end()'));
+  });
+
+  it('obrazovka ukládání má vlastní pohled s ukazatelem', () => {
+    const phase = views.slice(views.indexOf('struct SteelsetPhaseView'), views.indexOf('/// Stránky běžícího tréninku'));
+    expect(phase).toMatch(/case \.saving:\s*SteelsetSavingView\(\)/);
+    const saving = views.slice(views.indexOf('struct SteelsetSavingView'));
+    expect(saving).toContain('ProgressView()');
+  });
+});

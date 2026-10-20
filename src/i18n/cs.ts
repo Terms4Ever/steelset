@@ -336,6 +336,8 @@ export const cs = {
     permissionError: 'Oprávnění CHYBA',
     workouts30: 'Tréninky v Health (30 dní)',
     workoutsError: 'Čtení tréninků CHYBA',
+    recentWorkouts: 'Poslední tréninky (kalorie vidí Kondice)',
+    kcalMissing: '(chybí, Kondice ukáže čas)',
     hr6h: 'Tep - vzorků za 6 h',
     lastHr: 'Poslední tep',
     noHr: '(žádné HR vzorky - zaznamenej trénink na hodinkách a chvíli počkej na sync)',

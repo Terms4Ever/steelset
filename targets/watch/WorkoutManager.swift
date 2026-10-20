@@ -27,6 +27,9 @@ enum SteelsetPhase {
   case idle
   case running
   case paused
+  /// Po Ukončit: watchOS záznam uzavírá a ukládá do Zdraví, to trvá pár sekund. Bez vlastní
+  /// obrazovky zůstal běžící trénink beze změny a hodinky působily zaseknutě.
+  case saving
   case summary
 }
 
@@ -143,6 +146,8 @@ final class WorkoutManager: NSObject, ObservableObject {
     // telefon se o konci dozví hned, ne až po uložení do Health: když uložení vázne nebo selže,
     // trénink i Live Activity by v telefonu běžely dál (#23)
     if notifyPhone { PhoneLink.shared.sendEnded(workoutId: phoneWorkoutId) }
+    // hned ukázat, že se ukládá; souhrn přijde, až finishWorkout doběhne
+    if save { DispatchQueue.main.async { self.phase = .saving } }
     session.end()
   }
 
@@ -283,9 +288,9 @@ extension WorkoutManager: HKWorkoutSessionDelegate {
     DispatchQueue.main.async {
       switch toState {
       case .running:
-        self.phase = .running
+        if !self.isEnding { self.phase = .running }
       case .paused:
-        self.phase = .paused
+        if !self.isEnding { self.phase = .paused }
       case .ended:
         self.finish(at: date)
       default:

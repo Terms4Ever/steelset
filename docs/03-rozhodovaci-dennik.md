@@ -1195,3 +1195,15 @@ nebo chyba při startu.
 (testovací, nebo skutečné), výsledek souhlasu, odpověď na dotaz na sledování, start SDK
 a načtení nebo chybu banneru, vsunuté reklamy a reklamy při otevření i s kódem od Googlu.
 Profil je ukáže v řádku Reklamy (diagnostika), stejně jako události hodinek (#23).
+
+## S52 - Hodinky po Ukončit hned ukládají, diagnostika ukáže kalorie tréninků (20. 10. 2026)
+
+**Stav.** Kondice dál ukazuje u tréninků ze Steelsetu čas místo kalorií (#25), i po buildu 38,
+který o zápis kalorií žádá. Z kódu nejde poznat, jestli zápis na zařízení prošel: rozhoduje
+oprávnění ve Zdraví. Zadavatel navíc hlásí, že se hodinky při Ukončit na pár sekund seknou.
+
+**Rozhodnutí.** Diagnostika Apple Health v Profilu vypíše pět posledních tréninků se zdrojem,
+délkou a aktivní energií ze statistiky tréninku (`src/lib/healthDiag.ts`); chybějící kalorie
+označí. Podle toho se rozhodne, jestli jde o oprávnění, nebo o to, jak Kondice tréninky třetích
+stran zobrazuje. Hodinky po Ukončit hned přejdou do fáze `saving` s ukazatelem „Ukládám do
+Zdraví…“; seknutí bylo čekání na uzavření a uložení záznamu, během kterého obrazovka stála.

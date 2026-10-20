@@ -334,6 +334,8 @@ export const en: Dict = {
     permissionError: 'Permission ERROR',
     workouts30: 'Workouts in Health (30 days)',
     workoutsError: 'Reading workouts ERROR',
+    recentWorkouts: 'Recent workouts (Fitness shows the calories)',
+    kcalMissing: '(missing, Fitness shows time)',
     hr6h: 'Heart rate - samples in 6 h',
     lastHr: 'Last heart rate',
     noHr: '(no HR samples - record a workout on your watch and wait a moment for sync)',

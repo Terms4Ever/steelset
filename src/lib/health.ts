@@ -1,7 +1,8 @@
-import { t } from '@/i18n';
+import { locale, t } from '@/i18n';
 import { Platform } from 'react-native';
 
 import type { HrSample } from '@/data/types';
+import { DiagWorkout, describeRecentWorkouts } from '@/lib/healthDiag';
 
 // Apple Health (HealthKit) wrapper. iOS only. Calls degrade safely.
 // Cannot be tested off-device — healthSelfTest() surfaces real errors on the phone.
@@ -214,6 +215,29 @@ export async function healthSelfTest(): Promise<string> {
       filter: { date: { startDate: new Date(Date.now() - 30 * 86400000) } },
     });
     out.push(d.workouts30 + ': ' + (res?.length ?? 0));
+    // kalorie u posledních tréninků: bez nich Kondice ukáže čas (#25)
+    const recent: DiagWorkout[] = [];
+    for (const proxy of (res ?? []).slice(0, 5)) {
+      const w = typeof proxy?.toJSON === 'function' ? proxy.toJSON() : proxy;
+      let activeKcal: number | undefined;
+      try {
+        const stat = await proxy?.getStatistic?.(ACTIVE_ENERGY, 'kcal');
+        if (typeof stat?.sumQuantity?.quantity === 'number') activeKcal = stat.sumQuantity.quantity;
+      } catch {
+        /* statistika chybí, zůstane totalEnergyBurned */
+      }
+      recent.push({
+        start: new Date(w?.startDate).getTime(),
+        durationSec: typeof w?.duration?.quantity === 'number' ? w.duration.quantity : 0,
+        source: String(w?.sourceRevision?.source?.name ?? '?'),
+        activeKcal,
+        totalKcal: typeof w?.totalEnergyBurned?.quantity === 'number' ? w.totalEnergyBurned.quantity : undefined,
+      });
+    }
+    if (recent.length) {
+      out.push(d.recentWorkouts + ':');
+      out.push(...describeRecentWorkouts(recent, (ms) => new Date(ms).toLocaleString(locale()), d.kcalMissing));
+    }
   } catch (e) {
     out.push(d.workoutsError + ': ' + err(e));
   }

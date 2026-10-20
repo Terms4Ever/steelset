@@ -57,6 +57,8 @@ struct SteelsetPhaseView: View {
       SteelsetIdleView()
     case .summary:
       SteelsetSummaryView()
+    case .saving:
+      SteelsetSavingView()
     case .running, .paused:
       SteelsetWorkoutPager()
     }
@@ -282,6 +284,19 @@ struct SteelsetIdleView: View {
         .multilineTextAlignment(.center)
     }
     .onAppear { manager.requestAuthorization() }
+  }
+}
+
+// MARK: 5b - ukládání po Ukončit
+
+struct SteelsetSavingView: View {
+  var body: some View {
+    VStack(spacing: 10) {
+      ProgressView()
+      Text(steelsetWL("Ukládám do Zdraví…", "Saving to Health…"))
+        .font(.system(size: 15, weight: .semibold))
+        .multilineTextAlignment(.center)
+    }
   }
 }
 

@@ -29,14 +29,16 @@ Jest přes `jest-expo`, soubory `tests/*.test.ts`, spouští se `npx jest`
 | `backupStatus.test.ts` | 7 | stav zálohy v Profilu: čas poslední zálohy lidsky, vypnutý iCloud jako varování, posluchač se ozve jen po úspěšné záloze (#19) |
 | `cloudHealth.test.ts` | 7 | záloha do iCloudu je bez tepu, kalorií a vážení z Health a každé pole tréninku popsané jako data z Health se vynechá; obnova nechá telefonu jeho tep, po obnovení se tep dotáhne z Health (#18) |
 | `stepper.test.ts` | 13 | steppery v Profilu: přírůstek po pevném seznamu se vrátí na 2,5 kg i 5 lb, krok po mřížce z minima zpátky na výchozí u všech stepperů (#21) |
-| `watch.test.ts` | 19 | hodinky (#15, #23, #24, #25): zápis kalorií a tepu do Health, čas se setinami a bez nich při ztlumeném displeji; konec z hodinek ukončí telefon i bez shody id, starý konec z minula ne; hodinky pošlou konec dřív, než ukládají do Health; spouští se jen u živého tréninku a se zapnutým přepínačem, konec v telefonu je ukončí s uložením nebo bez, konec z hodinek ukončí telefon jen s hotovou sérií; klíče stavu sedí s `applyPhoneState` ve Swiftu |
+| `watch.test.ts` | 21 | hodinky (#15, #23, #24, #25): zápis kalorií a tepu do Health, čas se setinami a bez nich při ztlumeném displeji; konec z hodinek ukončí telefon i bez shody id, starý konec z minula ne; hodinky pošlou konec dřív, než ukládají do Health; spouští se jen u živého tréninku a se zapnutým přepínačem, konec v telefonu je ukončí s uložením nebo bez, konec z hodinek ukončí telefon jen s hotovou sérií; klíče stavu sedí s `applyPhoneState` ve Swiftu |
 | `healthPlist.test.ts` | 8 | telefon i hodinky mají oba texty pro Apple Health; bez textu pro zápis Apple build odmítne (ITMS-90683, S39) |
 | `i18n.test.ts` | 9 | angličtina (#20): obrazovky v `src/app` a `src/components` nemají český text natvrdo, oba slovníky mají stejné klíče, anglický text bez českých znaků a prázdných řetězců, jen krátké pomlčky, české skloňování, výběr jazyka, čísla a data podle jazyka |
 | `i18nCompiler.test.ts` | 3 | `useT` přeložený React Compilerem jako v aplikaci: stejná komponenta po přepnutí jazyka dostane nový slovník (build 40 zůstal v Profilu česky, #20) |
 | `adsLog.test.ts` | 4 | deník reklam v Profilu (#18): chyba od Googlu s kódem i zprávou, posledních 30 událostí, poškozený deník nic neshodí |
+| `healthDiag.test.ts` | 3 | diagnostika Apple Health vypíše u posledních tréninků kalorie, chybějící označí, protože Kondice pak ukáže čas (#25) |
 | `csv.test.ts` | 2 | export do CSV: nedokončené tréninky vynechá, zvláštní znaky ošetří |
 
-Běh 20. 10. 2026: 24 sad, 295 testů, všechny prošly. Nový `i18nCompiler.test.ts` se starým
+Běh 20. 10. 2026: 25 sad, 300 testů, všechny prošly. `watch.test.ts` nově hlídá, že hodinky po
+Ukončit hned ukážou ukládání (21 testů). Nový `i18nCompiler.test.ts` se starým
 `useT` padá („ZÁLOHA“ místo „BACKUP“), s opraveným prochází.
 
 ## Kde běží
