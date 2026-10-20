@@ -3,7 +3,7 @@
 **Stav 20. 10. 2026:** texty níže jsou vložené v App Store Connectu u verze 1.0 (angličtina
 je hlavní jazyk, čeština jako druhá lokalizace) i v Informacích o aplikaci, včetně kategorie
 a odkazů na podporu a soukromí podle jazyka. Věkové hodnocení a prohlášení jsou vyplněné
-(tabulka dole), zbývají snímky obrazovky.
+(tabulka dole). Snímky jsou v `docs/prilohy/app-store/`.
 
 Texty pro App Store Connect, česky a anglicky (#18, #20). Slovenský obchod ukazuje češtinu.
 Co se tu změní, se přepíše i v App Store Connectu, ať se texty nerozejdou. Limity: název
@@ -120,6 +120,22 @@ end of the period; cancel in your iPhone Settings under Subscriptions.
 
 Terms of Use: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
 Privacy Policy: https://tomas.saroun.me/steelset/privacy/
+
+## Snímky obrazovky
+
+Pět snímků pro iPhone 6,9" (1320 × 2868) v každém jazyce, v `docs/prilohy/app-store/cs/`
+a `en/`: Dnešek, živý trénink, Pokrok, detail tréninku s tepem a Kalendář. Jsou z webového
+exportu aplikace s ukázkovými daty (šest týdnů Push, Pull, Legs), ne z telefonu. Znovu:
+
+```bash
+npx expo export --platform web
+node scripts/app-store-snimky/serve.mjs dist
+node scripts/app-store-snimky/shots.mjs cs docs/prilohy/app-store/cs
+node scripts/app-store-snimky/shots.mjs en docs/prilohy/app-store/en
+```
+
+`serve.mjs` běží na portu 8090 a musí běžet při focení. Vývojový server se nehodí: ukazuje
+vývojářské hlášky přes obrazovku. Po exportu `git checkout -- tsconfig.json`.
 
 ## Další pole
 

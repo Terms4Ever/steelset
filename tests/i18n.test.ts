@@ -118,6 +118,12 @@ describe('i18n · obrazovky nemají české texty natvrdo (#20)', () => {
         for (const text of [...literals, ...bare]) {
           if (CZECH.test(text) && !ALLOWED.has(text)) found.push(`${file.slice(root.length + 1)}:${i + 1} ${text}`);
         }
+        // text JSX před výrazem na stejném řádku („TREND ODHADU 1RM · {název}“): bez diakritiky ho
+        // CZECH nepozná, a natvrdo nesmí být ani anglicky, jinak se nepřeloží (build 41, Pokrok)
+        const lead = code.match(/^\s*([A-Za-zÀ-ž][^<>{}=();?'"`]*?)\s*\{/);
+        if (lead && !/^(import|export|const|let|var|return|type|interface|function|async|await|case|if|else)\b/.test(lead[1]) && /[A-Za-zÀ-ž]{2,}\s+[A-Za-zÀ-ž]{2,}/.test(lead[1]) && !ALLOWED.has(lead[1].trim())) {
+          found.push(`${file.slice(root.length + 1)}:${i + 1} ${lead[1].trim()}`);
+        }
       });
     }
     expect(found).toEqual([]);

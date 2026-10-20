@@ -21,6 +21,8 @@ import { useMonetization } from '@/lib/useMonetization';
 import { useBodyweightSync } from '@/lib/useBodyweightSync';
 import { useWatchSync } from '@/lib/useWatchSync';
 import { useWidgetSync } from '@/lib/useWidgetSync';
+import type { Lang } from '@/i18n';
+import { langSwitchTarget } from '@/i18n/langSwitch';
 import { useLang, useT } from '@/i18n/useT';
 import { useStore } from '@/store/useStore';
 
@@ -65,13 +67,14 @@ export default function RootLayout() {
   // jazyk aplikace podle nastavení nebo telefonu, dřív než se vykreslí cokoli dalšího (#20)
   useT();
   const lang = useLang();
-  // jazyk se přepíná v Profilu; přemontovaný strom by na iPhonu začal na Dnešku
-  const shownLang = useRef(lang);
+  // jazyk se přepíná v Profilu; přemontovaný strom by na iPhonu začal na Dnešku. Jen po načtení
+  // nastavení, změna při startu (jazyk telefonu, pak uložená volba) do Profilu nevede (S56)
+  const shownLang = useRef<Lang | null>(null);
   useEffect(() => {
-    if (shownLang.current === lang) return;
-    shownLang.current = lang;
-    router.navigate('/profil');
-  }, [lang, router]);
+    const next = langSwitchTarget(shownLang.current, lang, ready);
+    shownLang.current = next.shown;
+    if (next.openProfile) router.navigate('/profil');
+  }, [ready, lang, router]);
 
   // subscription state + ads (no-op for Pro subscribers)
   useMonetization(ready);

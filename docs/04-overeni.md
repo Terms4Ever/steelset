@@ -36,9 +36,10 @@ Jest přes `jest-expo`, soubory `tests/*.test.ts`, spouští se `npx jest`
 | `adsLog.test.ts` | 5 | deník reklam v Profilu (#18): chyba od Googlu s kódem i zprávou, posledních 30 událostí, souběžné zápisy se neztratí, poškozený deník nic neshodí |
 | `healthDiag.test.ts` | 3 | diagnostika Apple Health vypíše u posledních tréninků kalorie, chybějící označí, protože Kondice pak ukáže čas (#25) |
 | `adsConsent.test.ts` | 3 | řádek Souhlas s reklamami v Profilu jen tam, kde Google změnu souhlasu vyžaduje, chyba ho schová, otevření formuláře se zapíše do deníku (#18) |
+| `langSwitch.test.ts` | 2 | návrat do Profilu jen po přepnutí jazyka, ne při startu, kdy se uložená volba načte po jazyku telefonu (S56) |
 | `csv.test.ts` | 2 | export do CSV: nedokončené tréninky vynechá, zvláštní znaky ošetří |
 
-Běh 20. 10. 2026: 26 sad, 305 testů, všechny prošly. `watch.test.ts` nově hlídá, že hodinky po
+Běh 20. 10. 2026: 27 sad, 307 testů, všechny prošly. `i18n.test.ts` nově hlídá i text JSX bez diakritiky před výrazem na řádku (nadpis grafu v Pokroku byl natvrdo česky). `watch.test.ts` nově hlídá, že hodinky po
 Ukončit hned ukážou ukládání (21 testů). Nový `i18nCompiler.test.ts` se starým
 `useT` padá („ZÁLOHA“ místo „BACKUP“), s opraveným prochází.
 

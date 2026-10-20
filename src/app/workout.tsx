@@ -189,9 +189,10 @@ export default function Workout() {
 
 
   const cellValue = (ex: number, set: number, field: 'weight' | 'reps'): string => {
-    if (focus && focus.ex === ex && focus.set === set && focus.field === field) return draft;
+    // rozepsaná hodnota drží tečku, zobrazí se s oddělovačem podle jazyka (česky 82,5)
+    if (focus && focus.ex === ex && focus.set === set && focus.field === field) return draft.replace('.', tx.format.decimal);
     const d = toDisp(active.exercises[ex].sets[set][field], field, active.exercises[ex].exerciseId);
-    return d === null ? '' : fmtNum(d, 2).replace(',', '.');
+    return d === null ? '' : fmtNum(d, 2);
   };
 
   const focusCell = (ex: number, set: number, field: 'weight' | 'reps') => {
@@ -705,7 +706,7 @@ export default function Workout() {
                         <Cell
                           focused={isFocus(focus, ex, si, 'weight')}
                           value={cellValue(ex, si, 'weight')}
-                          ghost={p?.weight != null ? fmtNum(toDisplayWeight(isBw(le.exerciseId) ? p.weight - bwKg : p.weight, unit), 2).replace(',', '.') : ''}
+                          ghost={p?.weight != null ? fmtNum(toDisplayWeight(isBw(le.exerciseId) ? p.weight - bwKg : p.weight, unit), 2) : ''}
                           done={s.done}
                           delta={dW}
                           onPress={() => focusCell(ex, si, 'weight')}
@@ -1130,7 +1131,7 @@ function Keypad({ onKey, onStep, onNext, onClose, inc }: { onKey: (k: string) =>
         <View style={{ flex: 3, flexDirection: 'row', flexWrap: 'wrap' }}>
           {KEYS.map((k) => (
             <Pressable key={k} onPress={() => onKey(k)} style={{ width: '33.33%', height: 52, alignItems: 'center', justifyContent: 'center' }}>
-              {k === 'del' ? <Ionicons name="backspace-outline" size={24} color={palette.text} /> : <Txt size={24} weight="semibold" num>{k}</Txt>}
+              {k === 'del' ? <Ionicons name="backspace-outline" size={24} color={palette.text} /> : <Txt size={24} weight="semibold" num>{k === '.' ? tx.format.decimal : k}</Txt>}
             </Pressable>
           ))}
         </View>

@@ -1237,3 +1237,16 @@ o povolení sledování. Pády a výkon (AdMob) a historie nákupů (RevenueCat,
 nepropojené a bez sledování. Tréninky a data z Health se nepřiznávají: neopouští telefon
 a uživatelův iCloud, ke kterému vývojář nemá přístup. Původní návrh „nepropojené“ u reklamních
 dat se obrátil při vyplňování, kdy Apple ukázal svou definici.
+
+## S56 - Snímky do App Storu z webového exportu, tři chyby po cestě (20. 10. 2026)
+
+**Rozhodnutí (zadavatel).** Snímky 6,9" se dělají z webového exportu s ukázkovými daty, ne
+z telefonu (`scripts/app-store-snimky/`, postup v `05-stranka-v-app-storu.md`). Vývojový server
+ukazuje vývojářské hlášky, proto export.
+
+**Co snímky odhalily.** Buňky sérií v živém tréninku ukazovaly desetinnou tečku i česky (82.5),
+od prvního commitu; teď oddělovač podle jazyka, i na klávesnici, interně tečka zůstává. Návrat
+do Profilu po přepnutí jazyka (S50) se spouštěl i při startu, když se uložená volba lišila od
+jazyka telefonu, takže aplikace pokaždé otevřela Profil; teď jen po načtení nastavení
+(`src/i18n/langSwitch.ts`). Nadpis grafu v Pokroku byl natvrdo česky a test ho nechytil, protože
+neměl diakritiku; test teď hlídá i takový text.

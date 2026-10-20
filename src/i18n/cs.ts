@@ -63,6 +63,7 @@ export const cs = {
     thisWeekLower: 'tento týden',
     squat1rm: 'Odhad 1RM dřep',
     records: 'Rekordů',
+    trend1rm: 'TREND ODHADU 1RM',
     muscleMap: 'SVALOVÁ MAPA · SÉRIE TÝDNĚ',
     openMap: 'Otevřít detail mapy',
   },

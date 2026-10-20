@@ -131,7 +131,7 @@ export default function Pokrok() {
           {trend.length >= 2 && (
             <>
               <Txt size={type.label} weight="semibold" color={palette.textDim} style={{ letterSpacing: 0.5, marginTop: space.xl, marginBottom: 10 }}>
-                TREND ODHADU 1RM · {exById[trendExId!]?.name?.toUpperCase()}
+                {g.trend1rm} · {exById[trendExId!]?.name?.toUpperCase()}
               </Txt>
               <Card>
                 <LineChart points={trend.map((p) => p.value)} />

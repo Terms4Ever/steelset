@@ -61,6 +61,7 @@ export const en: Dict = {
     thisWeekLower: 'this week',
     squat1rm: 'Squat 1RM estimate',
     records: 'Records',
+    trend1rm: 'ESTIMATED 1RM TREND',
     muscleMap: 'MUSCLE MAP · SETS THIS WEEK',
     openMap: 'Open map details',
   },
