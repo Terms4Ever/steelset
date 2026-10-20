@@ -102,7 +102,9 @@ Rozepsané i s postupem v `01-todo.md`. Ve zkratce:
   testovací účet je americký), reklamy se ale neukázaly a Profil zůstal po volbě
   English česky. Build 41 (20. 10., commit `075af49`) nese opravu jazyka (S50),
   deník reklam (S51), ukládání na hodinkách po Ukončit a kalorie v diagnostice
-  Apple Health (S52); Apple ho přijal. Na zařízení angličtina funguje, deník reklam
+  Apple Health (S52); Apple ho přijal. Build 42 (20. 10., commit `8dfd225`) nese navíc
+  řádek Souhlas s reklamami, přednačtené ceny Pro, čárku v sériích, start bez skoku do Profilu
+  a setiny na hodinkách podle jazyka (S54, S56, S57); Apple ho přijal, test čeká na zadavatele. Na zařízení angličtina funguje, deník reklam
   ukázal chybějící zprávu GDPR (S53). Ta je od 20. 10. zveřejněná; řádek pro změnu
   souhlasu v Profilu přijde s dalším buildem. Zkušební nákup Pro prošel; nabídka
   ukazuje ceny v dolarech, okno Applu v korunách (testovací prostředí). Další build
